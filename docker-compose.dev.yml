@@ -13,7 +13,7 @@ services:
       - NEXT_TELEMETRY_DISABLED=1
       - DATABASE_URL=${DATABASE_URL}
     volumes:
-      - .:/app
+      - ./web:/app
       - /app/node_modules
       - /app/.next
     depends_on:
