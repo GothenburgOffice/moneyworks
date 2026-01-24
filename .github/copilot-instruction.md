@@ -7,10 +7,19 @@
 
 ---
 
+## Repository Information
+
+- **GitHub**: <https://github.com/hkarn/moneyworks>
+- **Owner**: hkarn
+- **Name**: moneyworks
+
+---
+
 ## Project Architecture
 
 ### Directory Structure
 
+```text
 moneyworks/
 ├── web/                          # Next.js application
 │   ├── src/
@@ -35,6 +44,7 @@ moneyworks/
 ├── .dockerignore                 # Excludes unnecessary files from Docker builds
 ├── LICENSE                       # MIT License
 └── README.md                     # Project documentation
+```
 
 ### Docker Setup (Development)
 
@@ -104,12 +114,12 @@ docker compose -f docker-compose.dev.yml down
 
 ### Phase 1: MVP
 
-- [ ] FIRE Calculator page (`/calculator`)
+- [ ] FIRE Calculator page (`/calculators/fire`)
   - Input: annual spending, withdrawal rate, current savings
   - Output: years to retirement, retirement date
   - Store scenarios in database (optional for v1)
 - [ ] Database schema (User, FireScenario models)
-- [ ] API endpoint: POST `/api/calculator` (accept params, return projection)
+- [ ] API endpoint: POST `/api/calculators/fire` (accept params, return projection)
 
 ### Phase 2: Persistence & Auth
 
@@ -144,6 +154,7 @@ docker compose -f docker-compose.dev.yml down
 
 ### File Organization
 
+```text
 src/
 ├── app/
 │   ├── layout.tsx           # Root layout
@@ -165,6 +176,7 @@ src/
 │   └── globals.css
 └── types/
     └── index.ts             # Shared types
+```
 
 ### API Routes
 
