@@ -7,7 +7,7 @@
 
 ---
 
-## Repository Information2
+## Repository Information
 
 - **GitHub**: <https://github.com/hkarn/moneyworks>
 - **Owner**: hkarn
