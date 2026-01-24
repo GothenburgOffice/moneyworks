@@ -1,6 +1,6 @@
-# Clean up conflicting files
-Write-Host "Cleaning up conflicting files..."
-Get-Item .env, .env.example, Dockerfile.dev, README.md, bootstrap.bat, bootstrap.sh, docker-compose.dev.yml -ErrorAction SilentlyContinue | Remove-Item -Force
+# Clean up ONLY conflicting bootstrap/Docker files
+Write-Host "Cleaning up conflicting bootstrap files..."
+Get-Item bootstrap.bat, bootstrap.sh, Dockerfile.dev, docker-compose.dev.yml -ErrorAction SilentlyContinue | Remove-Item -Force
 
 Write-Host ""
 Write-Host "Pulling Node 20 Alpine and generating Next.js project..."
