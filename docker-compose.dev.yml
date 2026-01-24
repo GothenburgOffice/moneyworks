@@ -1,8 +1,8 @@
 services:
   web:
     build:
-      context: .
-      dockerfile: Dockerfile.dev
+      context: ./web
+      dockerfile: ../Dockerfile.dev
     container_name: moneyworks-next-dev
     working_dir: /app
     command: npm run dev
