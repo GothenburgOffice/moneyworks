@@ -12,6 +12,8 @@ services:
       - NODE_ENV=development
       - NEXT_TELEMETRY_DISABLED=1
       - DATABASE_URL=${DATABASE_URL}
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
     volumes:
       - ./web:/app
       - /app/node_modules
