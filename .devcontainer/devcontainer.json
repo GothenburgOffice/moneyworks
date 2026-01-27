@@ -1,0 +1,24 @@
+{
+    "name": "Existing Docker Compose (Extend)",
+    "dockerComposeFile": [
+        "../docker-compose.dev.yml"
+    ],
+    "service": "web",
+    "workspaceFolder": "/workspace",
+    "postCreateCommand": "cd web && npm ci",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "dbaeumer.vscode-eslint",
+                "esbenp.prettier-vscode"
+            ],
+            "settings": {
+                "typescript.tsdk": "/app/node_modules/typescript/lib",
+                "typescript.enablePromptUseWorkspaceTsdk": true,
+                "eslint.workingDirectories": [
+                    "web"
+                ]
+            }
+        }
+    }
+}
