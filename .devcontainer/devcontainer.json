@@ -1,11 +1,14 @@
 {
-    "name": "Existing Docker Compose (Extend)",
+    "name": "Moneyworks",
     "dockerComposeFile": [
-        "../docker-compose.dev.yml"
+        "../docker-compose.dev.yml",
+        "docker-compose.yml"
     ],
     "service": "web",
     "workspaceFolder": "/workspace",
-    "postCreateCommand": "cd web && npm ci",
+    "shutdownAction": "stopCompose",
+    "forwardPorts": [3000],
+    "postCreateCommand": "cd /workspace/web && npm ci",
     "customizations": {
         "vscode": {
             "extensions": [
@@ -13,7 +16,7 @@
                 "esbenp.prettier-vscode"
             ],
             "settings": {
-                "typescript.tsdk": "/app/node_modules/typescript/lib",
+                "typescript.tsdk": "/workspace/web/node_modules/typescript/lib",
                 "typescript.enablePromptUseWorkspaceTsdk": true,
                 "eslint.workingDirectories": [
                     "web"

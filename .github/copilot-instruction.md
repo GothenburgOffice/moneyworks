@@ -1,9 +1,11 @@
 # Moneyworks - Copilot Instructions
 
 **Project**: Moneyworks - Open-source financial tools site (FIRE and other calculators + forum/blog)  
-**Stack**: Next.js 15 (latest) + TypeScript + Tailwind CSS + PostgreSQL 16 + Prisma ORM  
+**Stack**: Next.js 16.4.3 + React 19.3.1 + TypeScript 6.0.3 + Tailwind CSS 4.3.3 + PostgreSQL 18.6 + Prisma 7.10.1
 **Deployment**: Docker Compose (dev) + VPS (production)  
 **License**: MIT (open-source, attribution required)
+
+**Implementation status**: Localized hello-world page and development infrastructure only. The feature/API/component directories and roadmap below are future plans, not completed functionality; see the root README for current commands and compatibility exceptions.
 
 ---
 
@@ -23,7 +25,7 @@
 moneyworks/
 ├── web/                          # Next.js application
 │   ├── src/
-│   │   ├── app/                  # App Router (Next.js 15)
+│   │   ├── app/                  # App Router (Next.js 16)
 │   │   │   ├── layout.tsx        # Root layout
 │   │   │   ├── page.tsx          # Home page
 │   │   │   ├── api/              # API routes (REST/GraphQL)
@@ -36,7 +38,7 @@ moneyworks/
 │   │   └── schema.prisma         # Database schema
 │   ├── package.json              # Latest versions
 │   └── tsconfig.json
-├── Dockerfile.dev                # Development image (Node 20 Alpine)
+├── Dockerfile.dev                # Development image (Node 26.13.0 Alpine)
 ├── docker-compose.dev.yml        # Dev environment orchestration
 ├── .env                          # Dev environment variables (local only)
 ├── .env.example                  # Template for developers
@@ -50,15 +52,15 @@ moneyworks/
 
 **Dev Environment**: Two containers via `docker-compose.dev.yml`
 
-- **web**: Next.js on port 3000 (Node 20 Alpine)
-- **db**: PostgreSQL 16 on port 5432
+- **web**: Next.js on localhost port 3000 (Node 26.13.0 Alpine, npm 12.2.1)
+- **db**: PostgreSQL 18.6 on container port 5432, host localhost port 5433
 
 **Key Points**:
 
 - Node modules in Docker volumes (not on host)
 - Hot reload enabled for Next.js
 - Database credentials from `.env` (never committed)
-- Postgres persists data in `postgres_data/` volume
+- Postgres persists data in the `postgres18_data` volume at `/var/lib/postgresql`; the old PostgreSQL 16 volume is not reused or deleted
 
 **Commands**:
 
@@ -74,7 +76,7 @@ docker compose -f docker-compose.dev.yml exec web npx prisma migrate dev
 docker compose -f docker-compose.dev.yml exec web npx prisma studio
 
 # Access PostgreSQL from host
-psql -h localhost -p 5432 -U postgres -d moneyworks
+psql -h localhost -p 5433 -U postgres -d moneyworks
 
 # Stop containers
 docker compose -f docker-compose.dev.yml down
@@ -86,7 +88,7 @@ docker compose -f docker-compose.dev.yml down
 
 ### Frontend
 
-- **Framework**: Next.js 15 with App Router
+- **Framework**: Next.js 16 with App Router
 - **Language**: TypeScript (strict mode)
 - **Styling**: Tailwind CSS
 - **State Management**: React Context or Zustand (TBD)
@@ -95,10 +97,10 @@ docker compose -f docker-compose.dev.yml down
 ### Backend
 
 - **API Layer**: Next.js API Routes (Route Handlers in `app/api/`)
-- **Database**: PostgreSQL 16 (self-hosted via Docker)
+- **Database**: PostgreSQL 18.6 (self-hosted via Docker)
 - **ORM**: Prisma (type-safe queries, migrations)
 - **Authentication**: Auth.js (future phase)
-- **GraphQL**: Optional (@apollo/server, currently installed but not in use)
+- **GraphQL**: Future option only; no GraphQL packages or endpoints are implemented
 
 ### Development Workflow
 
@@ -228,10 +230,10 @@ NEXTAUTH_URL=`<https://moneyworks.com>`
 
 ## Key Constraints & Decisions
 
-1. **No local Node.js**: Everything runs in Docker (node:20-alpine)
+1. **No local Node.js**: Everything runs in Docker (node:26.13.0-alpine)
 2. **PostgreSQL self-hosted**: Via Docker, not managed service (DBA experience)
 3. **MIT License**: Open-source, requires attribution, allows commercial use
-4. **Latest versions**: Dependencies use `latest` tags to stay current
+4. **Current compatible stable versions**: Pin exact package versions and commit the lockfile; review grouped Dependabot updates rather than using floating `latest` tags or forced peer overrides
 5. **Monorepo-ready**: Structure allows future services (API, mobile) without refactor
 6. **Mobile-first design**: Tailwind responsive classes, future React Native support via shared types
 

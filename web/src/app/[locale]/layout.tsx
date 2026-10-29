@@ -7,7 +7,7 @@ import enMessages from '../../../messages/en.json';
 import svMessages from '../../../messages/sv.json';
 import '../globals.css';
 
-const messages: Record<string, any> = {
+const messages = {
   en: enMessages,
   sv: svMessages,
 };
@@ -35,7 +35,7 @@ export default async function LocaleLayout({
   // Enable static rendering
   setRequestLocale(locale);
 
-  const localeMessages = messages[locale] || messages.en;
+  const localeMessages = messages[locale];
 
   return (
     <html lang={locale}>

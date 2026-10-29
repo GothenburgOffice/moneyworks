@@ -1,6 +1,7 @@
-FROM node:20-alpine
-RUN apk add --no-cache git
-WORKDIR /app
+FROM node:26.13.0-alpine
+RUN apk add --no-cache git openssl \
+    && npm install --global npm@12.2.1
+WORKDIR /workspace/web
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
