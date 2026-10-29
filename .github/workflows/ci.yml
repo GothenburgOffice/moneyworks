@@ -45,8 +45,8 @@ jobs:
         run: docker compose -f docker-compose.dev.yml up --build --detach --wait --wait-timeout 180
       - name: Smoke test English and Swedish pages and database access
         run: |
-          curl --fail --retry 30 --retry-connrefused --retry-delay 2 http://localhost:3000/en
-          curl --fail http://localhost:3000/sv
+          curl --fail --retry 60 --retry-all-errors --retry-delay 2 --connect-timeout 2 --max-time 15 http://localhost:3000/en
+          curl --fail --retry 5 --retry-all-errors --retry-delay 2 --max-time 15 http://localhost:3000/sv
           docker compose -f docker-compose.dev.yml exec -T web npm run db:validate
           docker compose -f docker-compose.dev.yml exec -T web sh -c 'printf "SELECT 1;" | npx prisma db execute --stdin'
       - name: Container logs
