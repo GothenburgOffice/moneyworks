@@ -1,4 +1,17 @@
-* text=auto
+* text=auto eol=lf
+
+# Keep Actions tracked and runnable, but omit workflows from source archives.
+.github/workflows export-ignore
+
+# Linux container inputs must stay LF even with Windows core.autocrlf=true.
+*.sh text eol=lf
+Dockerfile* text eol=lf
+.dockerignore text eol=lf
+.env* text eol=lf
+*.sql text eol=lf
+*.prisma text eol=lf
+*.toml text eol=lf
+*.mjs text eol=lf
 *.ts text eol=lf
 *.js text eol=lf
 *.json text eol=lf

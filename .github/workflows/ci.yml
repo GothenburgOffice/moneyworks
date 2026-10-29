@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -15,9 +16,11 @@ permissions:
 jobs:
   checks:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     defaults:
       run:
         working-directory: web
+        shell: bash
     env:
       NEXT_TELEMETRY_DISABLED: "1"
       DATABASE_URL: postgresql://postgres:password@localhost:5432/moneyworks
@@ -30,6 +33,7 @@ jobs:
           cache-dependency-path: web/package-lock.json
       - run: npm install --global npm@12.2.1
       - run: npm ci
+      - run: npm run test:line-endings
       - run: npm run lint
       - run: npm run typecheck
       - run: npm run db:validate
@@ -38,8 +42,16 @@ jobs:
 
   containers:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: bash
+    env:
+      COMPOSE_PROJECT_NAME: moneyworks-ci
     steps:
       - uses: actions/checkout@v7.0.1
+      - name: Exercise Windows-style Git checkout settings
+        run: git -c core.autocrlf=true checkout-index --force --all
       - uses: docker/setup-buildx-action@v4.4.1
       - name: Validate Compose and devcontainer configuration
         run: |
@@ -70,6 +82,12 @@ jobs:
       - name: Container logs
         if: failure()
         run: docker compose -f docker-compose.dev.yml logs
-      - name: Stop test stack
+      - name: Remove disposable test containers, volumes, network and app image
         if: always()
-        run: docker compose -f docker-compose.dev.yml down --volumes
+        run: |
+          if test -f docker-compose.dev.yml; then
+            docker compose --env-file .env.example -f docker-compose.dev.yml down --volumes --remove-orphans --rmi local
+            test -z "$(docker ps --all --quiet --filter "label=com.docker.compose.project=$COMPOSE_PROJECT_NAME")"
+            test -z "$(docker volume ls --quiet --filter "label=com.docker.compose.project=$COMPOSE_PROJECT_NAME")"
+            test -z "$(docker network ls --quiet --filter "label=com.docker.compose.project=$COMPOSE_PROJECT_NAME")"
+          fi

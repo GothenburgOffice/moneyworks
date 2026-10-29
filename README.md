@@ -88,7 +88,13 @@ Since this repository is still a hello-world scaffold, no application-data migra
 
 ## Maintenance and validation
 
-GitHub Actions runs lint, type checking, Prisma schema validation, a production build and a high-severity dependency audit. A separate job starts the container stack, verifies both database-backed language pages, changes a database row and confirms the rendered page changes, then stops PostgreSQL and checks that both the page and health endpoint report failure before testing recovery.
+GitHub Actions runs on pushes to `main`, pull requests and manual **Run workflow** requests. It checks line endings, lint, types, Prisma schema validation, a production build and a high-severity dependency audit.
+
+The container job exercises a Windows-style Git checkout, builds the app image, starts a disposable app/database stack, verifies both database-backed language pages, changes a database row and confirms the rendered page changes, then stops PostgreSQL and checks that both the page and health endpoint report failure before testing recovery. A cleanup step runs even after a test failure to remove the CI stack's containers, volumes, network and locally built app image, then checks that no project containers, volumes or networks remain. These are GitHub runner resources, not your hosted containers or data.
+
+`.gitattributes` enforces LF for text files, with explicit rules for shell scripts and other Linux container inputs; `.editorconfig` asks editors to preserve LF too. A regression test simulates `core.autocrlf=true` and checks that container inputs remain LF. The startup commands currently live inline in Compose, so there is no shell entrypoint file to fail with a stray `\r`.
+
+The `.github/workflows export-ignore` attribute excludes workflows from Git source archives, not from the repository. Workflows remain tracked so GitHub Actions can run them; they are not added to `.gitignore`. After pulling these rules into an existing Windows checkout, rebuild the devcontainer; if old tracked files still have CRLF, refresh only those files from Git after saving any local edits.
 
 Dependabot checks npm packages, Docker images, Compose images and GitHub Actions weekly. Next/ESLint config, React/types, Prisma and Tailwind packages are grouped to keep related upgrades together; compatibility still needs review. TypeScript and ESLint major upgrades are held until their lint-plugin peers support them; remove those holds in `.github/dependabot.yml` when upgrading.
 
