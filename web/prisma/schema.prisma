@@ -12,3 +12,8 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+model Greeting {
+  locale  String @id
+  message String
+}

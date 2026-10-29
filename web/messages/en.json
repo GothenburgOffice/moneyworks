@@ -1,6 +1,8 @@
 {
   "HomePage": {
-    "title": "Hello world!",
-    "description": "This is an English page powered by next-intl."
+    "databaseConnected": "Database connection: OK. This greeting was read from PostgreSQL.",
+    "databaseUnavailable": "Database unavailable",
+    "databaseError": "The greeting could not be read from PostgreSQL. Check the database service and your .env configuration.",
+    "lastChecked": "Last checked"
   }
 }

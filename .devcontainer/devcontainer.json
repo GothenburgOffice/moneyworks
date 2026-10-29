@@ -8,7 +8,7 @@
     "workspaceFolder": "/workspace",
     "shutdownAction": "stopCompose",
     "forwardPorts": [3000],
-    "postCreateCommand": "cd /workspace/web && npm ci",
+    "postCreateCommand": "cd /workspace/web && npm ci && npm run db:setup",
     "customizations": {
         "vscode": {
             "extensions": [

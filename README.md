@@ -1,6 +1,6 @@
 # Moneyworks
 
-An early-stage personal-finance web application. Currently this is an English/Swedish hello-world page plus a Docker-first development environment; calculators, authentication, accounts and community features are not implemented.
+An early-stage personal-finance web application hosted and maintained by its owner. Currently this is an English/Swedish database-backed hello-world page plus a Docker-first development environment; calculators, authentication, accounts and community features are not implemented.
 
 ## Development stack
 
@@ -23,24 +23,37 @@ This uses the newest stable versions compatible with the existing stack, not pre
 
 Release references: [Node.js 26.13.0](https://nodejs.org/en/blog/release/v26.13.0), [PostgreSQL version policy](https://www.postgresql.org/support/versioning/), and [PostgreSQL Docker image](https://hub.docker.com/_/postgres). For JavaScript packages, `npm view <package> version`, `npm view <package> peerDependencies` and `npm view <package> dist-tags` are the version/compatibility checks.
 
-## Quick start
+## Owner's environment
+
+Maintain the gitignored root `.env` manually, starting from `.env.example`. There is no credential generator or deployment-onboarding system; the example values are only development defaults, and you should choose your own fixed password before hosting.
+
+Keep `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` and `DATABASE_URL` consistent. URL-encode special characters in the password inside `DATABASE_URL`; do not URL-encode `POSTGRES_PASSWORD`. Never prefix database secrets with `NEXT_PUBLIC_` or commit `.env`.
+
+PostgreSQL uses these variables when it first initializes an empty database volume. Editing `.env` later does not change an existing database user's password: change it in PostgreSQL too, then update the URL and recreate the web container. Keep any existing manually maintained `.env` when pulling changes.
+
+## Run locally
 
 The host needs Docker with the Compose plugin, not a host installation of Node.js, npm or PostgreSQL.
 
 ```bash
 git clone https://github.com/hkarn/moneyworks.git
 cd moneyworks
+# First setup only; do not overwrite an existing .env.
 cp .env.example .env
 docker compose -f docker-compose.dev.yml up --build
 ```
 
 In PowerShell, use `Copy-Item .env.example .env` instead of `cp`. Open [the English page](http://localhost:3000/en) or [the Swedish page](http://localhost:3000/sv); both exposed ports bind to localhost only.
 
-The web service waits for PostgreSQL to become healthy, installs the locked dependencies and starts the development server. Source files are mounted at `/workspace`, while `node_modules` and `.next` stay in Docker volumes instead of the host filesystem.
+The web service waits for PostgreSQL to become healthy, installs locked dependencies, generates the Prisma client, applies committed migrations and starts the development server. Source files are mounted at `/workspace`, while `node_modules` and `.next` stay in Docker volumes instead of the host filesystem.
+
+The initial migration creates a `Greeting` table containing English and Swedish messages. Every page request reads its greeting from this table and shows the check time; changing the row changes the page without rebuilding. A failed query shows an explicit database-unavailable message, never a fake success.
+
+The read-only `/api/health/db` endpoint performs the same database read, returning HTTP 200 with `status: "ok"` or HTTP 503 when the database/table/row cannot be read. Responses are not cached, and database credentials or raw connection errors are never included.
 
 ## VS Code devcontainer
 
-Copy `.env.example` to `.env`, then choose **Dev Containers: Reopen in Container**. The devcontainer uses the same services and volume paths as normal Compose, installs dependencies in `/workspace/web`, and leaves starting the web server to your terminal.
+On first setup, copy `.env.example` to `.env`, then choose **Dev Containers: Reopen in Container**. The devcontainer uses the same services and volume paths as normal Compose, installs dependencies and applies migrations in `/workspace/web`, and leaves starting the web server to your terminal.
 
 ```bash
 cd /workspace/web
@@ -63,7 +76,7 @@ docker compose -f docker-compose.dev.yml exec web npm audit
 
 To add a package, run `docker compose -f docker-compose.dev.yml exec web npm install --save-exact <package>` and commit both package files. Dependencies are reinstalled with `npm ci` at web-service startup so a stale dependency volume cannot silently retain an older lockfile.
 
-Prisma is configured for PostgreSQL, but the schema deliberately contains no application models yet. After adding models, run `npm run db:generate` and `npm run db:migrate` inside the container; Prisma 7 keeps the connection URL in `web/prisma.config.ts`, not in the schema.
+Prisma contains only the small `Greeting` connection-test model so far. After adding models, run `npm run db:migrate` inside the container and commit the resulting migration; `npm run db:setup` regenerates the client and applies already committed migrations without prompting or resetting data. Prisma 7 keeps the connection URL in `web/prisma.config.ts`, not in the schema.
 
 For a host-side database client, connect to `localhost:5433` using the development credentials in `.env`. Containers connect to `db:5432`; never commit real credentials.
 
@@ -75,7 +88,7 @@ Since this repository is still a hello-world scaffold, no application-data migra
 
 ## Maintenance and validation
 
-GitHub Actions runs lint, type checking, Prisma schema validation, a production build and a high-severity dependency audit. A separate job builds the development image, starts both services, checks both locale pages and executes a database query through Prisma.
+GitHub Actions runs lint, type checking, Prisma schema validation, a production build and a high-severity dependency audit. A separate job starts the container stack, verifies both database-backed language pages, changes a database row and confirms the rendered page changes, then stops PostgreSQL and checks that both the page and health endpoint report failure before testing recovery.
 
 Dependabot checks npm packages, Docker images, Compose images and GitHub Actions weekly. Next/ESLint config, React/types, Prisma and Tailwind packages are grouped to keep related upgrades together; compatibility still needs review. TypeScript and ESLint major upgrades are held until their lint-plugin peers support them; remove those holds in `.github/dependabot.yml` when upgrading.
 

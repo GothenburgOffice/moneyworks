@@ -8,17 +8,22 @@
   },
   "packageManager": "npm@12.2.1",
   "scripts": {
+    "predev": "prisma generate",
     "dev": "next dev",
+    "prebuild": "prisma generate",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "typecheck": "next typegen && tsc --noEmit",
+    "typecheck": "prisma generate && next typegen && tsc --noEmit",
     "db:validate": "prisma validate",
     "db:generate": "prisma generate",
+    "db:deploy": "prisma migrate deploy",
+    "db:setup": "prisma generate && prisma migrate deploy",
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio"
   },
   "dependencies": {
+    "@prisma/adapter-pg": "7.10.1",
     "@prisma/client": "7.10.1",
     "next": "16.4.3",
     "next-intl": "4.14.9",
@@ -38,10 +43,10 @@
     "typescript": "6.0.3"
   },
   "allowScripts": {
-    "@parcel/watcher@2.5.6": true,
-    "unrs-resolver@1.11.1": true,
     "prisma@7.10.1": true,
     "@swc/core@1.16.20": true,
-    "@prisma/engines@7.10.1": true
+    "@prisma/engines@7.10.1": true,
+    "@parcel/watcher": true,
+    "unrs-resolver": true
   }
 }

@@ -5,7 +5,7 @@ services:
       dockerfile: ../Dockerfile.dev
     container_name: moneyworks-next-dev
     working_dir: /workspace/web
-    command: sh -c "npm ci && npm run dev -- --hostname 0.0.0.0"
+    command: sh -c "npm ci && npm run db:setup && npm run dev -- --hostname 0.0.0.0"
     ports:
       - "127.0.0.1:3000:3000"
     environment:

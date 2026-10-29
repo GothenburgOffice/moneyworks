@@ -5,7 +5,7 @@
 **Deployment**: Docker Compose (dev) + VPS (production)  
 **License**: MIT (open-source, attribution required)
 
-**Implementation status**: Localized hello-world page and development infrastructure only. The feature/API/component directories and roadmap below are future plans, not completed functionality; see the root README for current commands and compatibility exceptions.
+**Implementation status**: Localized database-backed hello-world page, a read-only `/api/health/db` check and development infrastructure only. Prisma has a small `Greeting` test model; the feature/API/component directories and roadmap below are future plans, not completed functionality. This is owner-hosted: maintain a gitignored root `.env` manually from `.env.example`, with no credential generator or general deployment wizard. See the root README for current commands and compatibility exceptions.
 
 ---
 

@@ -50,10 +50,23 @@ jobs:
         run: docker compose -f docker-compose.dev.yml up --build --detach --wait --wait-timeout 180
       - name: Smoke test English and Swedish pages and database access
         run: |
-          curl --fail --retry 60 --retry-all-errors --retry-delay 2 --connect-timeout 2 --max-time 15 http://localhost:3000/en
-          curl --fail --retry 5 --retry-all-errors --retry-delay 2 --max-time 15 http://localhost:3000/sv
+          curl --fail --silent --show-error --retry 60 --retry-all-errors --retry-delay 2 --connect-timeout 2 --max-time 15 http://localhost:3000/api/health/db | grep -F '"status":"ok"'
+          curl --fail --silent --show-error http://localhost:3000/en | grep -F 'Hello world from PostgreSQL!'
+          curl --fail --silent --show-error http://localhost:3000/sv | grep -F 'Hej världen från PostgreSQL!'
           docker compose -f docker-compose.dev.yml exec -T web npm run db:validate
           docker compose -f docker-compose.dev.yml exec -T web sh -c 'printf "SELECT 1;" | npx prisma db execute --stdin'
+      - name: Verify the greeting really comes from the database
+        run: |
+          docker compose -f docker-compose.dev.yml exec -T db psql -U postgres -d moneyworks -c "UPDATE \"Greeting\" SET message = 'CI database greeting changed' WHERE locale = 'en';"
+          curl --fail --silent --show-error http://localhost:3000/en | grep -F 'CI database greeting changed'
+      - name: Verify database failures are visible and not cached
+        run: |
+          docker compose -f docker-compose.dev.yml stop db
+          test "$(curl --silent --show-error --max-time 20 --output /tmp/db-health.json --write-out '%{http_code}' http://localhost:3000/api/health/db)" = 503
+          grep -F '"status":"error"' /tmp/db-health.json
+          curl --fail --silent --show-error --max-time 20 http://localhost:3000/en | grep -F '>Database unavailable</h1>'
+          docker compose -f docker-compose.dev.yml start db
+          curl --fail --silent --show-error --retry 20 --retry-all-errors --retry-delay 2 --max-time 15 http://localhost:3000/api/health/db | grep -F '"status":"ok"'
       - name: Container logs
         if: failure()
         run: docker compose -f docker-compose.dev.yml logs
