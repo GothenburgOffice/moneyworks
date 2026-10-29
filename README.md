@@ -77,7 +77,7 @@ Since this repository is still a hello-world scaffold, no application-data migra
 
 GitHub Actions runs lint, type checking, Prisma schema validation, a production build and a high-severity dependency audit. A separate job builds the development image, starts both services, checks both locale pages and executes a database query through Prisma.
 
-Dependabot checks npm packages, Docker images, Compose images and GitHub Actions weekly. Next/ESLint config, React/types, Prisma and Tailwind packages are grouped to keep related upgrades together; compatibility still needs review.
+Dependabot checks npm packages, Docker images, Compose images and GitHub Actions weekly. Next/ESLint config, React/types, Prisma and Tailwind packages are grouped to keep related upgrades together; compatibility still needs review. TypeScript and ESLint major upgrades are held until their lint-plugin peers support them; remove those holds in `.github/dependabot.yml` when upgrading.
 
 ## Layout
 
