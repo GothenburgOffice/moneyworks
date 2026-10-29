@@ -52,19 +52,19 @@ moneyworks/
     │   ├── i18n/                 # Routing, navigation and translation loading
     │   ├── lib/db.ts             # Shared lazy Prisma client and greeting query
     │   └── proxy.ts              # Next.js locale routing proxy
-    └── tests/line-endings.test.mjs
+    └── tests/                    # LF regression and live-server smoke tests
 ```
 
 There are no implemented calculator, account, forum, GraphQL or authentication subsystems. Do not describe proposed component folders, production infrastructure or future libraries as already present.
 
 ## Runtime behavior
 
-- **Real database reads:** The localized home page reads the `Greeting` row for its locale on every request. It displays the stored greeting, connection status and check timestamp; changing the row changes the next page response without rebuilding.
-- **No fake success:** Keep the page dynamic and uncached. If the database, table or greeting row cannot be read, render the explicit unavailable state, not a hardcoded successful greeting.
+- **Minimal page:** Render only "Hello world!" / "Hej världen!" followed by the translated database connection status. The heading comes from translation messages and remains visible even if the database is down; do not add a timestamp, database-sourced heading or explanatory text.
+- **Real database reads:** The localized home page reads the `Greeting` row for its locale on every request to determine the connection status. Keep the page dynamic and uncached, and show an unavailable status if the database, table or row cannot be read.
 - **Health endpoint:** `/api/health/db` performs a real greeting read. It returns HTTP 200 with `status: "ok"` on success or HTTP 503 with `status: "error"` on failure, with `Cache-Control: no-store`.
 - **Connection handling:** Reuse the Prisma connection pool across hot reloads. Keep client initialization lazy so a production build does not need a live database, and retain finite connection/query timeouts.
 - **Secrets:** Never expose connection strings, credentials or raw database errors in rendered pages or health responses. Never put database credentials in `NEXT_PUBLIC_` variables.
-- **Localization:** Keep English and Swedish interface messages consistent. New localized pages belong under `src/app/[locale]/`, not in an invented unlocalized feature structure.
+- **Localization:** English is the default even when browser language or an old locale cookie is Swedish; keep automatic locale detection disabled. Explicit `/en` and `/sv` routes select the language. Keep translations consistent and put localized pages under `src/app/[locale]/`.
 
 ## Containers and credentials
 
@@ -97,6 +97,7 @@ docker compose -f docker-compose.dev.yml exec web npm install --save-exact <pack
 
 # Local checks using the container's toolchain.
 docker compose -f docker-compose.dev.yml exec web npm run test:line-endings
+docker compose -f docker-compose.dev.yml exec web npm run test:smoke
 docker compose -f docker-compose.dev.yml exec web npm run lint
 docker compose -f docker-compose.dev.yml exec web npm run typecheck
 docker compose -f docker-compose.dev.yml exec web npm run db:validate
@@ -123,7 +124,7 @@ Never recommend `down -v`, `down --volumes`, `prisma migrate reset`, deleting da
 
 - **Triggers:** `.github/workflows/ci.yml` runs on pushes to `main`, pull requests and manual `workflow_dispatch` requests.
 - **Checks job:** Runs line-ending regression tests, ESLint, generated-client/type checking, Prisma schema validation, production build and high-severity dependency audit.
-- **Container job:** Exercises `core.autocrlf=true`, builds the app and starts disposable app/PostgreSQL containers. It tests both languages, health, a direct query, a changed database greeting, visible database failure and recovery.
+- **Container job:** Exercises `core.autocrlf=true`, builds the app and starts disposable app/PostgreSQL containers. `npm run test:smoke` verifies both minimal language pages, English-by-default routing and database health. CI also tests a direct query, a changed database row through the health endpoint, visible failure in both languages and recovery.
 - **CI isolation:** `COMPOSE_PROJECT_NAME=moneyworks-ci` identifies the runner's test stack. CI uses example credentials and temporary data, never the owner's hosted environment or credentials.
 - **Cleanup:** Keep the `if: always()` cleanup step. It removes CI containers, volumes, network and the locally built app image and verifies no project containers, volumes or networks remain. Do not copy this destructive cleanup into normal owner startup/rebuild commands.
 - **Failures:** Preserve diagnostic container logs on failures, finite startup retries, job timeouts and Bash pipeline failure handling. Confirm the actual run result before reporting CI success.

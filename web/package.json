@@ -15,6 +15,7 @@
     "start": "next start",
     "lint": "eslint .",
     "test:line-endings": "node --test tests/line-endings.test.mjs",
+    "test:smoke": "node --test tests/smoke.test.mjs",
     "typecheck": "prisma generate && next typegen && tsc --noEmit",
     "db:validate": "prisma validate",
     "db:generate": "prisma generate",

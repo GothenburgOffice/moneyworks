@@ -47,7 +47,9 @@ In PowerShell, use `Copy-Item .env.example .env` instead of `cp`. Open [the Engl
 
 The web service waits for PostgreSQL to become healthy, installs locked dependencies, generates the Prisma client, applies committed migrations and starts the development server. Source files are mounted at `/workspace`, while `node_modules` and `.next` stay in Docker volumes instead of the host filesystem.
 
-The initial migration creates a `Greeting` table containing English and Swedish messages. Every page request reads its greeting from this table and shows the check time; changing the row changes the page without rebuilding. A failed query shows an explicit database-unavailable message, never a fake success.
+The page contains only a localized "Hello world!" heading followed by the live database connection status. English is the default at `/`, regardless of browser language or an old locale cookie; Swedish is available at `/sv` and English at `/en`. There is no timestamp or additional explanatory text on the page.
+
+The initial migration creates a `Greeting` table containing English and Swedish test rows. Every page request reads the relevant row to verify database access; only the connection status depends on that result, not the heading. A failed query shows an unavailable status while retaining the localized hello-world heading.
 
 The read-only `/api/health/db` endpoint performs the same database read, returning HTTP 200 with `status: "ok"` or HTTP 503 when the database/table/row cannot be read. Responses are not cached, and database credentials or raw connection errors are never included.
 
@@ -90,7 +92,7 @@ Since this repository is still a hello-world scaffold, no application-data migra
 
 GitHub Actions runs on pushes to `main`, pull requests and manual **Run workflow** requests. It checks line endings, lint, types, Prisma schema validation, a production build and a high-severity dependency audit.
 
-The container job exercises a Windows-style Git checkout, builds the app image, starts a disposable app/database stack, verifies both database-backed language pages, changes a database row and confirms the rendered page changes, then stops PostgreSQL and checks that both the page and health endpoint report failure before testing recovery. A cleanup step runs even after a test failure to remove the CI stack's containers, volumes, network and locally built app image, then checks that no project containers, volumes or networks remain. These are GitHub runner resources, not your hosted containers or data.
+The container job exercises a Windows-style Git checkout, builds the app image and starts a disposable app/database stack. `npm run test:smoke` verifies the minimal English/Swedish page content, English-by-default routing and live health response. CI changes a test row and confirms the health endpoint reads the new value without changing the fixed page heading, then stops PostgreSQL and checks failure and recovery. A cleanup step runs even after a test failure to remove the CI stack's containers, volumes, network and locally built app image, then checks that no project containers, volumes or networks remain. These are GitHub runner resources, not your hosted containers or data.
 
 `.gitattributes` enforces LF for text files, with explicit rules for shell scripts and other Linux container inputs; `.editorconfig` asks editors to preserve LF too. A regression test simulates `core.autocrlf=true` and checks that container inputs remain LF. The startup commands currently live inline in Compose, so there is no shell entrypoint file to fail with a stray `\r`.
 

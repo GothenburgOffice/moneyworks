@@ -16,26 +16,20 @@ export default async function HomePage({ params }: Props) {
   setRequestLocale(locale);
 
   const t = await getTranslations('HomePage');
-  let greeting;
+  let connected = false;
   try {
-    greeting = await getDatabaseGreeting(locale);
+    await getDatabaseGreeting(locale);
+    connected = true;
   } catch {
     console.error('Could not read the greeting from PostgreSQL.');
   }
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-4 p-6 text-center">
-      <h1 className="text-4xl font-bold">
-        {greeting ? greeting.message : t('databaseUnavailable')}
-      </h1>
+      <h1 className="text-4xl font-bold">{t('title')}</h1>
       <p className="text-lg text-gray-600">
-        {greeting ? t('databaseConnected') : t('databaseError')}
+        {connected ? t('databaseConnected') : t('databaseUnavailable')}
       </p>
-      {greeting && (
-        <p className="text-sm text-gray-500">
-          {t('lastChecked')}: <time dateTime={greeting.checkedAt}>{greeting.checkedAt}</time>
-        </p>
-      )}
     </main>
   );
 }

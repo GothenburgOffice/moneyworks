@@ -1,8 +1,7 @@
 {
   "HomePage": {
-    "databaseConnected": "Databasanslutning: OK. Den här hälsningen lästes från PostgreSQL.",
-    "databaseUnavailable": "Databasen är inte tillgänglig",
-    "databaseError": "Hälsningen kunde inte läsas från PostgreSQL. Kontrollera databastjänsten och din .env-konfiguration.",
-    "lastChecked": "Senast kontrollerad"
+    "title": "Hej världen!",
+    "databaseConnected": "Databasanslutning: OK",
+    "databaseUnavailable": "Databasanslutning: inte tillgänglig"
   }
 }

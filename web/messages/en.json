@@ -1,8 +1,7 @@
 {
   "HomePage": {
-    "databaseConnected": "Database connection: OK. This greeting was read from PostgreSQL.",
-    "databaseUnavailable": "Database unavailable",
-    "databaseError": "The greeting could not be read from PostgreSQL. Check the database service and your .env configuration.",
-    "lastChecked": "Last checked"
+    "title": "Hello world!",
+    "databaseConnected": "Database connection: OK",
+    "databaseUnavailable": "Database connection: unavailable"
   }
 }
