@@ -6,7 +6,7 @@
   },
   "Metadata": {
     "title": "MoneyWorks | A clearer view of your money",
-    "description": "A new home for personal finance tools and useful information. Explore the plans for our FIRE and crypto-trading tax calculators."
+    "description": "Plan financial independence with pension age ranges and planned portfolio drawdown. A country-neutral FIRE calculator in English and Swedish."
   },
   "Site": {
     "skip": "Skip to content",
@@ -17,7 +17,7 @@
       "titleLead": "A clearer view",
       "titleEnd": "of your money.",
       "description": "A little understanding can change the way you see your finances. We're building the tools to help you find it.",
-      "action": "Explore what's coming",
+      "action": "Explore the tools",
       "asideTitle": "Different questions. One place to start.",
       "future": "Your future",
       "futureLink": "More perspective.",
@@ -26,17 +26,19 @@
     },
     "tools": {
       "title": "Tools with a purpose.",
-      "description": "Two questions we're turning into practical tools.",
+      "description": "Start planning your future. More tools are on the way.",
       "planned": "Planned",
-      "details": "See what's planned",
+      "available": "Available",
+      "open": "Open calculator",
+      "details": "See details",
       "fire": {
         "category": "Planning ahead",
         "title": "FIRE calculator",
         "description": "Put your financial independence plans into perspective, one scenario at a time.",
         "context": "For the life you want to build.",
-        "detailTitle": "What we're planning",
-        "items": ["A place for your savings, spending and contributions.", "Scenarios you can compare and revisit.", "Clear assumptions, rather than promises about the future."],
-        "note": "Not available yet. The calculator and its assumptions will be developed next."
+        "detailTitle": "What you can model",
+        "items": ["Portfolio needed or the first funded retirement age.", "Government and employer pensions with custom payout ages.", "Planned drawdown or preserving capital at the plan end."],
+        "note": "Runs in this page with explicit assumptions. No account needed, no saved plans and no promise about future returns."
       },
       "crypto": {
         "category": "Understanding your trades",
@@ -53,7 +55,7 @@
       "description": "Good tools should make things easier to understand, not give you another set of numbers to decipher.",
       "items": [
         { "question": "What is MoneyWorks?", "answer": "A growing home for personal finance tools and straightforward information. We're starting with financial independence planning and crypto-trading tax calculations, with room for more useful tools over time." },
-        { "question": "Can I use the calculators yet?", "answer": "Not yet. Both calculators are planned. Right now, you can explore what we're building and how the site will be organised. The tool panels will make it clear when something is ready to use." },
+        { "question": "Can I use the calculators yet?", "answer": "The FIRE calculator is available below the tool panels. It needs JavaScript for local calculations; its explanation is pre-rendered. The crypto tax calculator is still planned. FIRE inputs are not sent to a server or saved." },
         { "question": "Is the site for a particular country?", "answer": "MoneyWorks is country-neutral and available in English and Swedish. When a tool needs country-specific rules, supported countries and assumptions will be stated explicitly." }
       ]
     },
@@ -67,7 +69,7 @@
       "note": "A work in progress, with a clear direction.",
       "statusLabel": "Site connection",
       "copyright": "MoneyWorks",
-      "top": "Back to top"
+      "home": "MoneyWorks home"
     }
   }
 }

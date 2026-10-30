@@ -6,4 +6,5 @@ export const routing = defineRouting({
   localePrefix: "always",
   // Unprefixed visits always use English, regardless of browser language/cookies.
   localeDetection: false,
+  localeCookie: false,
 });

@@ -1,12 +1,13 @@
 # MoneyWorks Copilot Instructions
 
-MoneyWorks is an owner-hosted, country-neutral personal-finance project. The current local preview implements a single-page tool hub in English and Swedish, an original brand mark, reusable site components, a real database health endpoint and Docker/VS Code infrastructure. The FIRE and crypto-trading tax calculators are planned, not implemented.
+MoneyWorks is an owner-hosted, country-neutral personal-finance project. It implements a single-page bilingual hub, a pension-aware FIRE calculator, reusable site/account/privacy components, a real database health endpoint and an email/password account foundation. Crypto tax calculations remain planned. Repository source does not imply that public hosting or registration has been configured.
 
 ## Maintain these instructions
 
 - **Keep guidance current:** Update this file alongside meaningful changes to application behavior, dependencies, containers, credentials, migrations, tests or CI. Update the root README when its user-facing commands or behavior change.
 - **Separate fact from plans:** Describe existing files and implemented behavior accurately. Future ideas below are not completed functionality or authority to build a feature without a request.
 - **Use executable sources:** Treat `web/package.json`, `web/package-lock.json`, Docker/Compose configuration, Prisma schema/migrations and `.github/workflows/ci.yml` as the authorities for current versions and commands. Do not preserve stale prose when those files change.
+- **Dependency restraint:** Frameworks are acceptable; qualify every additional package. Prefer native HTML, Node APIs and small maintained code for ordinary UI/utilities. Established security/protocol implementations may justify a dependency; document the reason and transitive cost, pin versions and audit. Do not install an npm for every small feature.
 - **Preserve entry points:** Keep this singularly named file as the detailed reference. `.github/copilot-instructions.md` is the standard Copilot discovery entry point and directs agents here; avoid maintaining two divergent full copies.
 - **Keep changes scoped:** Preserve unrelated work, inspect the current Git diff and report which checks actually ran. Do not claim local checks, CI or deployment succeeded without confirming the corresponding result.
 - **Preview-first iteration:** Review development changes in an unpublished Perplexity preview before pushing when the owner requests preview work. Keep those edits local and do not publish publicly, commit or push to GitHub until the owner approves that step.
@@ -16,7 +17,7 @@ MoneyWorks is an owner-hosted, country-neutral personal-finance project. The cur
 - **Repository:** `hkarn/moneyworks`, MIT licensed.
 - **Hosting:** Maintained and hosted by its owner. Do not add deployment wizards, credential generators or general third-party onboarding unless requested.
 - **Application:** Next.js App Router, React, strict TypeScript, Tailwind CSS and `next-intl`, with `en` and `sv` locales.
-- **Database:** Self-hosted PostgreSQL using Prisma and `@prisma/adapter-pg`. Only the small `Greeting` connection-test model exists.
+- **Database:** Self-hosted PostgreSQL using Prisma and `@prisma/adapter-pg`. The schema contains `Greeting` plus `User`, `Account`, `Session`, `Verification` and `RateLimit`; the additive account migration preserves the greeting data.
 - **Toolchain:** Node.js and npm run inside the development container. The CI checks job also installs its own matching toolchain on the disposable GitHub runner; do not require a host-side Node installation for the owner's normal workflow.
 - **Dependency policy:** Use compatible stable releases, exact direct dependency versions and the committed npm lockfile. Do not force incompatible peer dependencies or adopt prereleases just because a registry `latest` tag points to one.
 - **Compatibility holds:** TypeScript and ESLint major updates are currently held in Dependabot because of lint-plugin peer compatibility. Recheck those peers before changing the holds; the README records the currently selected versions.
@@ -44,25 +45,45 @@ moneyworks/
     ├── prisma.config.ts          # Prisma connection URL and migration configuration
     ├── src/
     │   ├── app/
-    │   │   ├── [locale]/         # Localized layout and database-backed page
+    │   │   ├── [locale]/         # Static public hub and separate dynamic account route
+    │   │   ├── api/account/      # Native form POST/redirect adapters
+    │   │   ├── api/auth/         # Allowlisted auth HTTP endpoints
     │   │   ├── api/health/db/     # Read-only database health route
     │   │   ├── globals.css
     │   │   ├── layout.tsx
     │   │   └── page.tsx
     │   ├── generated/prisma/     # Generated locally; gitignored
-    │   ├── components/           # Server-rendered logo, navigation, sections and footer
-    │   ├── content/site.ts       # Typed English/Swedish site copy
+    │   ├── components/           # Site presentation, account/ and privacy/ components
+    │   ├── content/              # Separate typed site, account and privacy copy
+    │   ├── features/             # Pure account query model and typed tool catalogue
     │   ├── i18n/                 # Routing, navigation and translation loading
-    │   ├── lib/db.ts             # Shared lazy Prisma client and greeting query
+    │   ├── lib/                  # Server-only DB/auth/HTTP/mail; auth configuration
+    │   ├── styles/               # Account, privacy and cookie feature styles
     │   └── proxy.ts              # Next.js locale routing proxy
-    └── tests/                    # LF regression and live-server smoke tests
+    └── tests/                    # Architecture, units, LF, smoke and account integration
 ```
 
-There are no implemented calculator, account, forum, GraphQL or authentication subsystems. Do not describe proposed component folders, production infrastructure or future libraries as already present.
+Email/password authentication, an empty private workspace and the FIRE calculator are implemented locally. There are no saved financial plans, crypto tax calculations, forum or GraphQL subsystems. Production infrastructure and future integrations must not be described as already deployed.
+
+## Component boundaries
+
+- **Route orchestration:** Resolve request/query state, auth configuration and sessions in server routes. Pass only the required user fields or public controller/contact details, never full sessions/configuration, into presentation.
+- **Presentation:** Reuse `components/account/` for entry, form, tabs and workspace, and `components/privacy/` for privacy rendering. Keep privacy copy in `content/privacy.ts`, independent of account messages.
+- **Pure features:** `features/account/view.ts` parses allowlisted view/feedback queries; `features/tools/catalog.ts` defines approved stable tool IDs/status and a neutral card-content contract. Add approved tools through the catalogue and both translations, not duplicated card calls or a FIRE-specific prop type. No additional tools are approved by this abstraction.
+- **Server boundary:** DB/auth/HTTP/mail modules are server-only. ESLint and `test:architecture` reject persistence/auth imports or environment reads from presentation/content/pure-feature modules. Resolve those dependencies at the route boundary instead.
+- **Styles and tests:** Keep shared tokens/site rules in `app/globals.css`; feature CSS lives in `styles/`. Preserve native/no-JS behavior, both locales/themes and responsive layouts when extracting components. Run architecture tests alongside lint, types and existing flow checks.
+- **Shared navigation:** Keep the sticky header's reserved slot independent of its compact bar height to prevent scroll/layout oscillation. Preserve hash/skip/result clearance, 44px controls, both mobile-menu modes and the full-size no-JS fallback. No redundant footer back-to-top control; the header logo remains available.
+- **FIRE separation:** `features/fire/model.ts` is the dependency-free, independently tested engine. Static `components/fire/` render fields, pensions, results scaffold and method; copy lives in `content/fire.ts`. `enhancements/fire-calculator.js` handles only the DOM. `scripts/build-fire.mjs` combines it with the tested engine into one gitignored classic script during prebuild/predev. Do not duplicate the model or add a runtime compiler/chart/form library.
+- **FIRE truth and privacy:** Preserve both questions/strategies, monthly non-borrowing checks, pension age boundaries and real-money conventions in `FIRE.md`. No guaranteed returns, mortality label, financial input persistence/URLs/telemetry or account saving. Without JavaScript, explanatory HTML remains readable and calculation controls honestly unavailable.
+- **Payout editing:** No fixed payout-count ceiling. Save validates only that row using the shared model validator, accepts it in page memory and collapses it into an Edit/Remove summary. Cancel restores accepted values or discards a new draft. Disable collapsed inputs; calculate from accepted records and require open edits to be saved/cancelled. Enter saves a payout input or calculates elsewhere. Never turn this into browser/account persistence without approval.
+- **Number entry:** Optional zero-based amounts (portfolio, contributions, end reserve and payout amount) start empty with a `0` placeholder; blank means zero, not missing required spending or ages. Reset and reopened zero payouts keep this convention. Normalize redundant integer-leading zeros on blur only, preserving in-progress decimals, signs/exponents and fresh Enter results.
+- **Result phases:** Preserve the Savings plan / Retirement plan toggle. Savings rows come from the same pure engine as projected savings, with month-end contributions and no separate working pension income. Chart actual entered savings against a distinct minimum-capital target; never invent a funded join to portfolio-needed retirement. Monthly saving to target is a total, not a top-up or preservation guarantee. Handle retirement now/unsupported targets, preserve phase on recalculation and reset it on Clear.
 
 ## Runtime behavior
 
-- **Single-page tool hub:** Keep one content page per locale, composed from separate header/navigation, logo, intro, tools, information, about and footer components. Links navigate sections rather than inventing unimplemented tool routes. Both tool panels must remain explicitly planned until their real functionality exists.
+- **Single-page tool hub:** Keep one content page per locale, composed from separate header/navigation, logo, intro, tools, information, about and footer components. Links navigate sections rather than inventing unimplemented tool routes. FIRE is functional locally; crypto tax must remain explicitly planned until its real functionality exists.
+- **Focused tool views:** A clean homepage shows only the hub. Available tools open a reusable pre-rendered ToolView shell by native hash, with their own banner/workspace and the shared header/footer; unrelated hub content is hidden. Keep native no-JS entry, Back/Forward, homepage-section exits and context-preserving theme/locale controls. Financial inputs never enter the URL.
+- **Preview checks:** Use focused changed-component/interaction checks for routine preview edits. Run full suites only when the owner explicitly requests them or requests a specifically authorized GitHub push; that request still needs the existing write confirmation.
 - **Separate design explorations:** The standalone MoneyWorks design board is not production functionality. Its eight directions, ten-tool expansion study, article topics and possible YouTube layouts are hypothetical. Only FIRE and crypto tax are selected tool plans; do not implement the other eight example tools or invent a channel, published articles, financial results or new production routes from those mockups without approval. Keep the actual bilingual Next.js preview separate, with pre-rendered main content and small interactive enhancements.
 - **Static content:** Pre-render `/en` and `/sv` as HTML with localized SEO metadata at build time. Content must be readable without JavaScript; do not turn the whole page into a client-rendered application or fetch the page body after load.
 - **Small enhancements:** `public/db-status.js` updates the footer status from the uncached health endpoint; `public/site-ui.js` closes the mobile menu after navigation/with Escape and provides localized theme switching. Dark C is the static default; light/dark are the only accepted URL preference values. Carry the choice through locale links, guard history updates for opaque previews, and do not use browser-storage APIs forbidden by the preview host. Hide the theme control without JavaScript rather than exposing a dead button. Initial database status says "checking", never a cached success. Failures change the status, not the site content; no database is needed to build the pages.
@@ -82,7 +103,17 @@ There are no implemented calculator, account, forum, GraphQL or authentication s
 - **Manual configuration:** The owner copies `.env.example` to root `.env` once and maintains it manually. Preserve existing `.env` files; never overwrite them as part of an update or commit real credentials.
 - **Consistent values:** Keep `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` and `DATABASE_URL` consistent. URL-encode password characters only in the URL. Example credentials are disposable development defaults, not recommended hosted credentials.
 - **Password changes:** Editing `.env` does not rotate an existing PostgreSQL role's password. Change that password in PostgreSQL as well and recreate the web service with the updated configuration.
-- **No speculative production setup:** Only development Docker configuration is implemented. Production images, reverse proxies, TLS, backups and future authentication secrets must be designed when requested, not described as deployed or required today.
+- **Hosting boundary:** Only development Docker configuration is implemented. Account secrets/mail/privacy configuration are documented in `AUTH.md`; production images, reverse proxies, public TLS and backups are not deployed or verified by this work. Do not present launch prerequisites as completed infrastructure.
+
+## Accounts and privacy
+
+- **Static boundary:** Account pages and APIs may be dynamic, but public locale pages stay SSG. Never read sessions in the shared locale layout/header to personalize the public homepage.
+- **Real identity:** Stable User IDs own future data; credential and provider accounts are separate. Email/password is implemented first, with public registration after configuration. Google is planned, not enabled. Linking must require explicit authenticated action; never silently merge by email or trust an unverified provider.
+- **Security:** Use the established auth implementation for hashing, verification, sessions, recovery, origin checks and durable rate limits. Keep auth/mail code server-only. Never log credentials/token URLs, disable origin checks or rely only on cookie presence for authorization. Preserve the body limit, guarded IP-header boundary and conservative fallback limiter.
+- **Configuration:** Maintain root `.env` manually from the example. Missing core/mail settings disable accounts; missing public privacy identity/contact disables registration. Do not invent operator details, claim live email delivery from capture tests or enable public registration with fixture values.
+- **Necessary-only storage:** No analytics/advertising or locale cookies are enabled. Keep the discreet native cookie/privacy notice; do not add an unnecessary accept-all banner or a consent cookie. Non-essential storage or tracking needs a fresh consent/privacy review before it loads.
+- **Future measurement/advertising:** Google tags, Analytics and possibly publisher ads are future interests, not installed integrations. Consent/CMP selection and implementation need a separate scoped request; do not load optional tags in anticipation.
+- **Preview and evidence:** Embedded account review forms are explicitly disabled; real flows are tested on the first-party Next app with a disposable database and loopback capture mailbox. Do not weaken cookie/iframe protections to fake sign-in in the preview. `AUTH.md` records setup, safeguards and verification commands.
 
 ## Safe development commands
 
@@ -154,7 +185,7 @@ Retain these as development ideas, not a binding implementation sequence or assu
 
 - **Calculators:** FIRE projections from spending, withdrawal rate and savings; compound-interest tools; tax helpers such as average purchase-price calculations.
 - **Persistence:** A future user/scenario data model, saved calculations and account-specific views.
-- **Authentication:** Registration/login, with Auth.js previously suggested but not implemented.
+- **Authentication providers:** Email/password registration, verification and recovery exist; future providers require explicit linking and operator-owned configuration, as described in `AUTH.md`.
 - **Community:** Blog/forum posts, comments, likes and moderation.
 - **Optional technology:** Context or Zustand, shadcn/ui, GraphQL, additional services/mobile clients and shared types are possible future choices, not dependencies to add preemptively.
 - **Hosting work:** A production image, reverse proxy, HTTPS and backups need a separate owner-directed implementation. Prior provider suggestions do not establish a selected provider.

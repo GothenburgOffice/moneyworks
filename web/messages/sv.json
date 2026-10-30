@@ -6,7 +6,7 @@
   },
   "Metadata": {
     "title": "MoneyWorks | En tydligare bild av din ekonomi",
-    "description": "En ny plats för privatekonomiska verktyg och tydlig information. Utforska planerna för våra FIRE- och kryptoskattekalkylatorer."
+    "description": "Planera ekonomiskt oberoende med pensionsutbetalningar och planerad kapitalförbrukning. En landsneutral FIRE-kalkylator på svenska och engelska."
   },
   "Site": {
     "skip": "Hoppa till innehållet",
@@ -17,7 +17,7 @@
       "titleLead": "En tydligare bild",
       "titleEnd": "av din ekonomi.",
       "description": "Lite mer förståelse kan förändra hur du ser på din ekonomi. Vi bygger verktygen som hjälper dig att hitta den.",
-      "action": "Utforska det som kommer",
+      "action": "Utforska verktygen",
       "asideTitle": "Olika frågor. En plats att börja.",
       "future": "Din framtid",
       "futureLink": "Mer perspektiv.",
@@ -26,17 +26,19 @@
     },
     "tools": {
       "title": "Verktyg med ett syfte.",
-      "description": "Två frågor som vi vill göra till praktiska verktyg.",
+      "description": "Börja planera din framtid. Fler verktyg är på väg.",
       "planned": "Planeras",
-      "details": "Se vad som planeras",
+      "available": "Tillgänglig",
+      "open": "Öppna kalkylatorn",
+      "details": "Se detaljer",
       "fire": {
         "category": "Planera framåt",
         "title": "FIRE-kalkylator",
         "description": "Sätt dina planer på ekonomiskt oberoende i perspektiv, ett scenario i taget.",
         "context": "För livet du vill bygga.",
-        "detailTitle": "Det här planerar vi",
-        "items": ["En plats för ditt sparande, dina utgifter och insättningar.", "Scenarier som du kan jämföra och återkomma till.", "Tydliga antaganden, inte löften om framtiden."],
-        "note": "Inte tillgänglig ännu. Kalkylatorn och dess antaganden är nästa steg."
+        "detailTitle": "Det här kan du modellera",
+        "items": ["Kapital som behövs eller den första finansierade pensionsåldern.", "Allmän pension och tjänstepension med egna åldersintervall.", "Planerad förbrukning eller bevarat kapital vid planens slut."],
+        "note": "Körs på sidan med tydliga antaganden. Inget konto behövs, inga planer sparas och ingen framtida avkastning utlovas."
       },
       "crypto": {
         "category": "Förstå dina affärer",
@@ -53,7 +55,7 @@
       "description": "Bra verktyg ska göra saker lättare att förstå, inte ge dig ännu fler siffror att tolka.",
       "items": [
         { "question": "Vad är MoneyWorks?", "answer": "En växande plats för privatekonomiska verktyg och tydlig information. Vi börjar med planering för ekonomiskt oberoende och skatt på kryptohandel, med utrymme för fler användbara verktyg framöver." },
-        { "question": "Kan jag använda kalkylatorerna ännu?", "answer": "Inte ännu. Båda kalkylatorerna planeras. Just nu kan du utforska vad vi tänker bygga och hur sidan ska organiseras. Verktygen kommer tydligt att visa när de är redo att användas." },
+        { "question": "Kan jag använda kalkylatorerna ännu?", "answer": "FIRE-kalkylatorn finns under verktygspanelerna. JavaScript behövs för lokala beräkningar; förklaringen är förrenderad. Kryptoskattekalkylatorn planeras fortfarande. FIRE-uppgifter skickas inte till en server och sparas inte." },
         { "question": "Är sidan avsedd för ett visst land?", "answer": "MoneyWorks är landsneutralt och finns på engelska och svenska. När ett verktyg behöver landsspecifika regler kommer stödda länder och antaganden att anges tydligt." }
       ]
     },
@@ -67,7 +69,7 @@
       "note": "Under utveckling, med en tydlig riktning.",
       "statusLabel": "Sidans anslutning",
       "copyright": "MoneyWorks",
-      "top": "Till toppen"
+      "home": "MoneyWorks startsida"
     }
   }
 }

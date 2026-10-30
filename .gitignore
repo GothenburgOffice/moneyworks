@@ -12,3 +12,6 @@ postgres_data/
 .impeccable/review/
 .impeccable/mocks/
 .impeccable/live/
+
+# Generated progressive enhancement; built from the tested FIRE model.
+web/public/fire-calculator.js

@@ -77,7 +77,7 @@ The introductory title scales to 80px with 800 weight, stepping through 46–57p
 
 ## Layout
 
-The centred frame is 1160px, growing to 1220px only on larger screens. Gutters step from 32px to 20px and then 16px. The desktop hero pairs oversized type with the M/W illustration and two anchored question labels. At narrow widths, artwork and content stack naturally without carousels. Two planned tool panels follow.
+The centred frame is 1160px, growing to 1220px only on larger screens. Gutters step from 32px to 20px and then 16px. The desktop hero pairs oversized type with the M/W illustration and two anchored question labels. At narrow widths, artwork and content stack naturally without carousels. Two contrasting tool panels follow, with status labels reflecting actual functionality.
 
 The header and footer are full-width surfaces aligned to the same inner grid. Desktop navigation becomes a native mobile menu at 740px. The page remains one content surface per locale.
 
@@ -113,7 +113,47 @@ The about section explains the country-neutral intent. The footer reuses the ori
 
 ### Inputs
 
-There are no financial-input controls in this iteration. Define their validation, units, assumptions and result presentation when a real calculator is implemented.
+The FIRE calculator uses native labelled fields, radio choices and editable pension
+ranges, with a separate result region, forecast SVG and accessible yearly table.
+Reuse the C tokens, Manrope and sharp controls; keep figures tabular and forecasts
+explicit. No fake portfolio records are supplied. Details and assumptions live in
+`FIRE.md`; crypto calculation remains planned.
+
+## Account and cookie extension
+
+The shared header is sticky on public and account pages. It starts at 92px
+(78px mobile) and becomes 64px (60px mobile) after its original height has
+scrolled past. A constant-height slot avoids shifting page content; anchor
+clearance follows the actual bar size. Control heights stay at least 44px.
+Without JavaScript the expanded header remains sticky. Footer back-to-top links
+are removed; the persistent header logo provides that action instead.
+
+Account entry, form, tabs and workspace are separate Server Components. Privacy
+presentation and copy are independent of account messages. Keep the account page
+as request/session orchestration, with no client auth SDK or homepage session reads.
+Account, privacy and cookie CSS live under `web/src/styles/`; shared site tokens
+and rules stay in `globals.css`. This is an internal separation, not a redesign.
+
+The tool section maps the approved typed catalogue through the neutral `ToolCard`
+content contract. FIRE is locally available and links to the in-page calculator;
+crypto remains planned. The catalogue does not authorize extra mockup tools.
+
+The owner requested actual email/password accounts with public registration after
+configuration; these forms are not decorative email collection. Reuse C in a
+two-column entry layout that stacks on mobile, with one native form panel and
+localized links. Use 16px inputs, password-manager/paste support, 15–128 character
+guidance and generic security-safe feedback. No client auth, form or consent UI
+library is required.
+
+The private area uses real identity and an honest empty state, not sample balances
+or pretend saved portfolios. Google linking is planned, not an inactive provider
+button. Privacy information is available without signing in.
+
+The necessary-only cookie notice is a persistent footer sentence with native
+details, not a covering banner, accept-all control or consent-dismissal cookie.
+Keep it available without JavaScript. Account pages use origin-only referrer
+information and anti-framing headers. Embedded review copies are explicitly
+inert/read-only, never a credential collection surface.
 
 ## Motion and Accessibility
 

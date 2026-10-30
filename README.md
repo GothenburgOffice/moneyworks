@@ -1,14 +1,22 @@
 # MoneyWorks
 
-An early-stage, owner-hosted personal-finance site. The local development preview is a single-page tool hub with an original MoneyWorks logo, reusable navigation/section components, English and Swedish content, and a real database health check. The first planned tools are a FIRE calculator and a crypto-trading tax calculator; neither calculator is implemented yet.
+An early-stage, owner-hosted personal-finance site. It is a single-page tool hub with an original MoneyWorks logo, reusable navigation/section components, English and Swedish content, and a real database health check. The pension-aware FIRE calculator is implemented; the crypto-trading tax tool remains planned.
 
 ## Direction C starter
 
 The owner-selected Bright works direction uses charcoal and lime, bold two-line headings, an oversized M/W illustration and contrasting planned-tool panels. Dark is the default; a localized theme toggle provides the light counterpart and carries the preference through locale navigation. Theme state uses a validated URL query rather than browser storage; history updates are guarded for restricted previews. English remains default, with Swedish available.
 
-The main content and metadata are pre-rendered by Next.js. Header/navigation, theme toggle, illustration, tools, information, about and footer remain separate Server Components; content does not depend on a client application bundle to be readable. Only menu/theme behaviour and real database status use small enhancement scripts. `PRODUCT.md`, `DESIGN.md` and `FLOWS.md` record scope, visual decisions and verification flows.
+The main content and metadata are pre-rendered by Next.js. Header/navigation, theme toggle, illustration, tools, information, about and footer remain separate Server Components; content does not depend on a client application bundle to be readable. Menu/theme behaviour, focused tool navigation, FIRE calculations and real database status use small enhancement scripts. `PRODUCT.md`, `DESIGN.md` and `FLOWS.md` record scope, visual decisions and verification flows.
 
 The separate public mockup board is a review aid, not this application. Its additional eight tools, blog and video examples have not become implemented features.
+
+## Accounts and cookies
+
+The local account foundation supports public email/password registration after operator configuration, email verification, login/logout and recovery. Account identities are separate from stable user records so Google can be added later with explicit linking. The private area is deliberately empty: saved portfolios and tax workspaces are not implemented.
+
+The homepage remains pre-rendered. A discreet footer notice and native privacy disclosure explain necessary sign-in cookies; no analytics, advertising, locale cookies or unnecessary accept-all banner were added. Real mail and privacy identity/contact settings must be configured before registration becomes available. The embedded review does not collect credentials.
+
+Read `AUTH.md` for configuration, dependency decisions, security boundaries, retention and tests. Only Better Auth and Nodemailer were added as direct runtime dependencies; forms and cookie UI use native HTML. This feature revision has not been pushed or publicly deployed.
 
 ## Development stack
 
@@ -55,7 +63,7 @@ In PowerShell, use `Copy-Item .env.example .env` instead of `cp`. Open [the Engl
 
 The web service waits for PostgreSQL to become healthy, installs locked dependencies, generates the Prisma client, applies committed migrations and starts the development server. Source files are mounted at `/workspace`, while `node_modules` and `.next` stay in Docker volumes instead of the host filesystem.
 
-The site has one content page per language: navigation, an introduction, two planned-tool panels, expandable information, an about section and a footer. English is the default at `/`, regardless of browser language or an old locale cookie; Swedish is available at `/sv` and English at `/en`. The site is country-neutral and does not assume a currency or tax jurisdiction.
+The site has one content page per language: navigation, an introduction, a working FIRE card, a planned crypto-tax card, expandable information, an about section and a footer. FIRE opens a focused, pre-rendered tool view at `#fire-calculator`, with its own banner and the shared header/footer. English is the default at `/`, regardless of browser language or an old locale cookie; Swedish is available at `/sv` and English at `/en`. The site is country-neutral and does not assume a currency or tax jurisdiction.
 
 Next.js pre-renders both pages as HTML with localized metadata. Content, section links, language switching and native expandable details work without JavaScript. Small standalone scripts enhance mobile-menu closing and the footer's database status; the entire site is not client-rendered.
 
@@ -63,9 +71,22 @@ The initial migration creates a `Greeting` table containing English and Swedish 
 
 ## Site development
 
-The page composes Server Components from `web/src/components/`: the brand mark, language switcher, site header, introduction, tool panels, information, about and footer. Translated site copy lives in `web/messages/` and is accessed through the typed `web/src/content/site.ts` helper. Shared design tokens and responsive rules live in `web/src/app/globals.css`; Manrope is self-hosted with its license under `web/public/fonts/`.
+The page composes Server Components from `web/src/components/`: the brand mark, language switcher, site header, introduction, tool panels, information, about and footer. Translated site copy lives in `web/messages/` and is accessed through the typed `web/src/content/site.ts` helper. Shared design tokens and site rules live in `web/src/app/globals.css`; account, privacy and cookie styles are separate under `web/src/styles/`. Manrope is self-hosted with its license under `web/public/fonts/`.
+
+The dynamic account page handles query state and validated session reads, then composes `components/account/` and `components/privacy/`. Those components receive minimal presentation data, not secret-bearing auth configuration or full sessions. Account and privacy copy are separate typed modules. Pure feature models under `features/` handle allowlisted account queries and the approved tool catalogue; the reusable tool card has a neutral content contract rather than a FIRE-specific translation type.
+
+`npm run test:architecture` checks server/import boundaries, query handling, catalogue translations and privacy separation. ESLint rejects auth/database imports from presentation and pure features; the database module is explicitly server-only. These checks complement, rather than replace, browser and account lifecycle tests.
 
 `PRODUCT.md` records the confirmed scope, and `DESIGN.md` records the current preview design. Keep these and the Copilot instructions aligned when the site evolves. Tool details must remain explicitly planned until calculation behaviour is implemented and tested; do not add fake outputs or unusable "Calculate" buttons to this layout.
+
+The pension-aware FIRE calculator is now implemented locally within the one-page
+hub; crypto tax remains planned. `FIRE.md` documents both calculation questions,
+planned drawdown/preservation, pension ranges, assumptions and the component
+walkthrough for adding another tool. `npm run test:fire` builds and syntax-checks
+the exact enhancement and runs independent model tests. Prebuild/predev uses the
+existing TypeScript compiler to generate one small browser script from the tested
+model; no runtime dependency or client-rendered application is introduced.
+Financial inputs stay in the page, without saving or network submission.
 
 Current development is preview-first. Changes stay local and unpublished until the owner approves a GitHub commit/push or public publication.
 
@@ -96,7 +117,7 @@ docker compose -f docker-compose.dev.yml exec web npm audit
 
 To add a package, run `docker compose -f docker-compose.dev.yml exec web npm install --save-exact <package>` and commit both package files. Dependencies are reinstalled with `npm ci` at web-service startup so a stale dependency volume cannot silently retain an older lockfile.
 
-Prisma contains only the small `Greeting` connection-test model so far. After adding models, run `npm run db:migrate` inside the container and commit the resulting migration; `npm run db:setup` regenerates the client and applies already committed migrations without prompting or resetting data. Prisma 7 keeps the connection URL in `web/prisma.config.ts`, not in the schema.
+Prisma contains the `Greeting` connection-test model and the account foundation's `User`, `Account`, `Session`, `Verification` and `RateLimit` models. The account migration is additive and preserves `Greeting`. After adding models, run `npm run db:migrate` inside the container and review the resulting migration before any separately authorized commit; `npm run db:setup` regenerates the client and applies available migrations without prompting or resetting data. Prisma 7 keeps the connection URL in `web/prisma.config.ts`, not in the schema.
 
 For a host-side database client, connect to `localhost:5433` using the development credentials in `.env`. Containers connect to `db:5432`; never commit real credentials.
 

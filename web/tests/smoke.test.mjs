@@ -23,8 +23,12 @@ for (const [locale, title, fire, crypto, planned] of [
     assert.ok(main.includes(fire));
     assert.ok(main.includes(crypto));
     assert.ok(main.includes(planned));
-    assert.equal((main.match(/<h1\b/g) ?? []).length, 1);
-    for (const id of ['tools', 'fire', 'crypto', 'learn', 'about']) {
+    // Both views are pre-rendered; native hash/CSS selection exposes one at a time.
+    assert.equal((main.match(/<h1\b/g) ?? []).length, 2);
+    assert.ok(main.includes('data-home-view'));
+    assert.ok(main.includes('data-tool-panel="fire"'));
+    assert.ok(main.includes('id="fire-page-title"'));
+    for (const id of ['tools', 'fire', 'fire-calculator', 'crypto', 'learn', 'about']) {
       assert.ok(main.includes(`id="${id}"`), `Missing ${id} section`);
     }
     assert.ok(html.includes('data-db-status'));
@@ -35,6 +39,9 @@ for (const [locale, title, fire, crypto, planned] of [
     assert.ok(html.includes('name="description"'));
     assert.ok(html.includes('src="/db-status.js"'));
     assert.ok(html.includes('src="/site-ui.js"'));
+    assert.ok(html.includes('src="/fire-calculator.js"'));
+    assert.ok(main.includes('data-fire-form'));
+    assert.ok(main.includes('data-pension-template'));
   });
 }
 

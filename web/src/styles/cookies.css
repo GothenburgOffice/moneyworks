@@ -1,0 +1,18 @@
+.cookie-information {
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  padding-block: 12px 16px;
+  font-size: 12px;
+}
+.cookie-information > p { margin-bottom: 2px; }
+.cookie-notice { font-size: 12px; color: var(--muted); }
+.cookie-notice summary {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  gap: 12px;
+}
+.cookie-notice summary::after { content: "+"; }
+.cookie-notice[open] summary::after { content: "−"; }
+.cookie-notice > div { max-width: 78ch; padding-bottom: 20px; }
+.cookie-notice p { line-height: 1.7; }

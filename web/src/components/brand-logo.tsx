@@ -1,4 +1,4 @@
-type Props = { label: string; compact?: boolean };
+type Props = { label: string; compact?: boolean; href?: string };
 
 export function BrandMark() {
   return (
@@ -9,9 +9,9 @@ export function BrandMark() {
   );
 }
 
-export function BrandLogo({ label, compact = false }: Props) {
+export function BrandLogo({ label, compact = false, href = '#top' }: Props) {
   return (
-    <a className={`brand${compact ? ' brand--footer' : ''}`} href="#top" aria-label={label}>
+    <a className={`brand${compact ? ' brand--footer' : ''}`} href={href} aria-label={label}>
       <BrandMark />
       <span>MoneyWorks<span className="brand-period">.</span></span>
     </a>

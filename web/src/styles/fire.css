@@ -1,0 +1,92 @@
+.fire-calculator { border-top: 1px solid var(--line); padding-block: 44px 56px; }
+.fire-heading { max-width: 72ch; margin-bottom: 30px; }
+.fire-heading h2 { font-size: clamp(25px, 3vw, 34px); line-height: 1.2; letter-spacing: -.045em; font-weight: 800; }
+.fire-heading p { color: var(--muted); margin-top: 14px; }
+.fire-workspace { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 44px; align-items: start; }
+.fire-form, .fire-results { min-width: 0; }
+.fire-choice, .fire-fieldset, .fire-pension-row { border: 0; padding: 0; margin: 0; min-width: 0; }
+.fire-choice { display: flex; flex-wrap: wrap; gap: 4px 22px; padding-bottom: 18px; }
+.fire-choice legend { font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+.fire-choice label { display: inline-flex; align-items: center; min-height: 44px; gap: 9px; font-size: 14px; }
+.fire-choice input, .fire-checkbox input { width: 18px; height: 18px; accent-color: var(--accent); flex-shrink: 0; }
+.fire-help { color: var(--muted); font-size: 13px; line-height: 1.65; margin-top: 10px; }
+.fire-fieldset { border-top: 1px solid var(--line); margin-top: 28px; padding-top: 18px; }
+.fire-fieldset > legend { float: left; width: 100%; font-size: 16px; font-weight: 700; margin-bottom: 16px; }
+.fire-fieldset > legend + * { clear: both; }
+.fire-fields { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }
+.fire-field { display: block; min-width: 0; font-size: 13px; font-weight: 600; }
+.fire-field > span { display: block; margin-bottom: 7px; }
+.fire-field input, .fire-field select { display: block; width: 100%; min-height: 44px; min-width: 0; padding: 9px 10px; border: 1px solid var(--line); border-radius: var(--radius-control); background: var(--surface); color: var(--ink); font: inherit; font-size: 16px; font-variant-numeric: tabular-nums; }
+.fire-field input::placeholder { color: var(--muted); opacity: 1; font-size: 13px; font-weight: 400; }
+.fire-field input:focus-visible, .fire-field select:focus-visible, .fire-checkbox input:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.fire-pension-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.fire-pension-actions button, .fire-pension-row-actions button, .fire-pension-summary-actions button, .fire-actions > button:not(.button-primary) { background: transparent; color: var(--ink); min-height: 44px; padding: 9px 12px; border: 1px solid var(--line); border-radius: var(--radius-control); font-size: 13px; }
+.fire-pension-row { margin-top: 20px; padding: 18px; background: var(--surface); border: 1px solid var(--line); }
+.fire-pension-row > legend { padding-inline: 6px; font-size: 13px; font-weight: 700; }
+.fire-pension-row-actions { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 14px; }
+.fire-pension-item { min-width: 0; }
+.fire-pension-summary:not([hidden]) { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding-block: 16px; border-bottom: 1px solid var(--line); }
+.fire-pension-description { display: flex; flex: 1 1 260px; flex-wrap: wrap; gap: 4px 14px; min-width: 0; font-size: 13px; color: var(--muted); }
+.fire-pension-description strong { flex-basis: 100%; color: var(--ink); overflow-wrap: anywhere; }
+.fire-pension-summary-actions, .fire-pension-editor-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+.fire-pension-row-actions [data-save-pension] { background: var(--ink); color: var(--ground); border-color: var(--ink); font-weight: 700; }
+.fire-pension-row [data-pension-error]:empty { display: none; }
+.fire-checkbox { display: inline-flex; align-items: center; min-height: 44px; gap: 8px; font-size: 13px; }
+.fire-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
+.fire-actions .button-primary { margin: 0; border: 0; }
+.fire-form button:disabled { cursor: not-allowed; color: var(--muted); background: var(--raised); }
+.fire-results { padding: 26px; background: var(--surface); border: 1px solid var(--line); }
+.fire-results h3 { font-size: 16px; font-weight: 700; }
+.fire-status { color: var(--muted); margin-top: 18px; font-size: 14px; }
+.fire-status:empty { display: none; }
+.fire-answer { margin-top: 26px; }
+.fire-answer > p { color: var(--muted); font-size: 13px; }
+.fire-answer strong { display: block; margin-block: 8px; font-size: clamp(25px, 2.7vw, 34px); line-height: 1.25; letter-spacing: -.04em; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.fire-metrics { padding: 0; margin-block: 24px; font-size: 13px; font-variant-numeric: tabular-nums; }
+.fire-metrics > div { display: flex; justify-content: space-between; gap: 16px; padding-block: 11px; border-top: 1px solid var(--line); }
+.fire-metrics dt { color: var(--muted); }
+.fire-metrics dd { text-align: right; margin: 0; overflow-wrap: anywhere; }
+.fire-chart { margin: 24px 0 18px; }
+.fire-chart figcaption { font-size: 14px; font-weight: 600; margin-bottom: 10px; }
+.fire-chart svg { width: 100%; height: auto; overflow: visible; }
+.fire-chart-grid { stroke: var(--line); stroke-width: 1; }
+.fire-chart-label { fill: var(--muted); font-family: var(--font-sans); font-size: 12px; }
+.fire-chart-line { stroke: var(--accent); }
+.fire-chart-target { stroke: var(--muted); stroke-width: 1.5; stroke-dasharray: 3 4; }
+.fire-chart-point { fill: var(--accent); }
+.fire-phase-toggle { display: flex; gap: 4px; padding: 4px; border: 1px solid var(--line); margin-top: 20px; border-radius: var(--radius-control); }
+.fire-phase-toggle button { flex: 1; min-width: 0; min-height: 44px; padding: 8px 10px; border: 1px solid transparent; border-radius: var(--radius-control); color: var(--muted); background: transparent; font-size: 13px; font-weight: 600; }
+.fire-phase-toggle button[aria-pressed="true"] { color: var(--ink); background: var(--accent-soft); border-color: var(--accent); }
+.fire-phase-toggle button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.fire-warning { color: var(--negative); font-size: 13px; margin-top: 12px; }
+.fire-caution { font-size: 13px; color: var(--muted); margin-top: 22px; padding-top: 20px; border-top: 1px solid var(--line); }
+.fire-yearly { border-top: 1px solid var(--line); margin-top: 22px; }
+.fire-yearly summary, .fire-method summary { display: flex; align-items: center; justify-content: space-between; min-height: 48px; gap: 16px; font-size: 14px; font-weight: 600; }
+.fire-yearly summary::after, .fire-method summary::after { content: "+"; }
+.fire-yearly[open] summary::after, .fire-method[open] summary::after { content: "−"; }
+.fire-table-scroll { overflow-x: auto; max-height: 420px; }
+.fire-yearly table { width: 100%; border-collapse: collapse; font-size: 12px; font-variant-numeric: tabular-nums; }
+.fire-yearly caption { text-align: left; color: var(--muted); margin-block: 10px; }
+.fire-yearly th { color: var(--muted); font-weight: 500; }
+.fire-yearly td, .fire-yearly th { padding: 10px 8px; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--line); }
+.fire-yearly td:first-child, .fire-yearly th:first-child { text-align: left; }
+.fire-method { margin-top: 28px; padding-top: 12px; border-top: 1px solid var(--line); max-width: 80ch; }
+.fire-method p { color: var(--muted); font-size: 14px; margin-block: 14px; }
+.tool-open { display: inline-flex; align-items: center; min-height: 44px; color: var(--accent); margin-top: 14px; font-size: 14px; font-weight: 700; }
+@media (max-width: 1000px) {
+  .fire-workspace { gap: 24px; }
+  .fire-results { padding: 20px; }
+}
+@media (max-width: 740px) {
+  .fire-calculator { padding-block: 34px 40px; }
+  .fire-workspace { grid-template-columns: 1fr; }
+  .fire-fields { gap: 14px; }
+  .fire-choice { gap: 0 16px; }
+  .fire-choice label { font-size: 13px; }
+  .fire-results { padding: 20px 16px; }
+  .fire-answer strong { font-size: 28px; }
+  .fire-chart svg { min-height: 180px; }
+}
+@media (max-width: 380px) {
+  .fire-fields { grid-template-columns: 1fr; }
+}

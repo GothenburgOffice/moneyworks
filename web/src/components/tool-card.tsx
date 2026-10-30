@@ -1,23 +1,25 @@
-import type { SiteCopy } from '@/content/site';
+import type { ToolContent } from '@/features/tools/catalog';
 import { PlusIcon } from './ui-icons';
 
 type Props = {
   id: string;
-  tool: SiteCopy['tools']['fire'];
-  planned: string;
+  tool: ToolContent;
+  statusLabel: string;
   details: string;
+  action?: { href: string; label: string };
 };
 
-export function ToolCard({ id, tool, planned, details }: Props) {
+export function ToolCard({ id, tool, statusLabel, details, action }: Props) {
   return (
     <article className={`tool-card tool-card--${id}`} id={id} aria-labelledby={`${id}-title`}>
       <div className="tool-card-top">
         <span className="tool-category">{tool.category}</span>
-        <span className="planned-label"><span aria-hidden="true" />{planned}</span>
+        <span className="planned-label"><span aria-hidden="true" />{statusLabel}</span>
       </div>
       <h3 id={`${id}-title`}>{tool.title}</h3>
       <p className="tool-description">{tool.description}</p>
       <p className="tool-context">{tool.context}</p>
+      {action && <a className="tool-open" href={action.href}>{action.label} →</a>}
       <details className="tool-details">
         <summary>{details}<PlusIcon /></summary>
         <div className="tool-detail-body">
