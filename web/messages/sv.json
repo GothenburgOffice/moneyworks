@@ -1,7 +1,73 @@
 {
-  "HomePage": {
-    "title": "Hej världen!",
+  "ConnectionStatus": {
     "databaseConnected": "Databasanslutning: OK",
+    "databaseChecking": "Databasanslutning: kontrollerar…",
     "databaseUnavailable": "Databasanslutning: inte tillgänglig"
+  },
+  "Metadata": {
+    "title": "MoneyWorks | En tydligare bild av din ekonomi",
+    "description": "En ny plats för privatekonomiska verktyg och tydlig information. Utforska planerna för våra FIRE- och kryptoskattekalkylatorer."
+  },
+  "Site": {
+    "skip": "Hoppa till innehållet",
+    "home": "MoneyWorks, tillbaka till toppen",
+    "nav": { "label": "Huvudnavigation", "tools": "Verktyg", "learn": "Bra att veta", "about": "Om sidan", "menu": "Meny", "language": "Välj språk", "themeLight": "Byt till ljust tema", "themeDark": "Byt till mörkt tema" },
+    "intro": {
+      "title": "En tydligare bild av din ekonomi.",
+      "titleLead": "En tydligare bild",
+      "titleEnd": "av din ekonomi.",
+      "description": "Lite mer förståelse kan förändra hur du ser på din ekonomi. Vi bygger verktygen som hjälper dig att hitta den.",
+      "action": "Utforska det som kommer",
+      "asideTitle": "Olika frågor. En plats att börja.",
+      "future": "Din framtid",
+      "futureLink": "Mer perspektiv.",
+      "trades": "Dina affärer",
+      "tradesLink": "En tydligare bild."
+    },
+    "tools": {
+      "title": "Verktyg med ett syfte.",
+      "description": "Två frågor som vi vill göra till praktiska verktyg.",
+      "planned": "Planeras",
+      "details": "Se vad som planeras",
+      "fire": {
+        "category": "Planera framåt",
+        "title": "FIRE-kalkylator",
+        "description": "Sätt dina planer på ekonomiskt oberoende i perspektiv, ett scenario i taget.",
+        "context": "För livet du vill bygga.",
+        "detailTitle": "Det här planerar vi",
+        "items": ["En plats för ditt sparande, dina utgifter och insättningar.", "Scenarier som du kan jämföra och återkomma till.", "Tydliga antaganden, inte löften om framtiden."],
+        "note": "Inte tillgänglig ännu. Kalkylatorn och dess antaganden är nästa steg."
+      },
+      "crypto": {
+        "category": "Förstå dina affärer",
+        "title": "Kryptoskattekalkylator",
+        "description": "Få bättre ordning på din handelshistorik och frågorna som följer med den.",
+        "context": "För detaljerna som behöver en tydligare bild.",
+        "detailTitle": "Det här planerar vi",
+        "items": ["En samlad bild av din handel med kryptovalutor.", "Beräkningar där de valda reglerna förklaras tydligt.", "Uttryckligt stöd för länder, utan att gissa var du deklarerar."],
+        "note": "Inte tillgänglig ännu. Länder och beräkningsmetoder har inte valts."
+      }
+    },
+    "learn": {
+      "title": "Lite sammanhang gör stor skillnad.",
+      "description": "Bra verktyg ska göra saker lättare att förstå, inte ge dig ännu fler siffror att tolka.",
+      "items": [
+        { "question": "Vad är MoneyWorks?", "answer": "En växande plats för privatekonomiska verktyg och tydlig information. Vi börjar med planering för ekonomiskt oberoende och skatt på kryptohandel, med utrymme för fler användbara verktyg framöver." },
+        { "question": "Kan jag använda kalkylatorerna ännu?", "answer": "Inte ännu. Båda kalkylatorerna planeras. Just nu kan du utforska vad vi tänker bygga och hur sidan ska organiseras. Verktygen kommer tydligt att visa när de är redo att användas." },
+        { "question": "Är sidan avsedd för ett visst land?", "answer": "MoneyWorks är landsneutralt och finns på engelska och svenska. När ett verktyg behöver landsspecifika regler kommer stödda länder och antaganden att anges tydligt." }
+      ]
+    },
+    "about": {
+      "title": "Mer perspektiv. Mindre brus.",
+      "description": "Privatekonomi är personlig. MoneyWorks byggs kring tydliga förklaringar, användbara verktyg och utrymme att tänka, utan att anta din valuta, ditt land eller ditt nästa steg.",
+      "link": "Tillbaka till verktygen"
+    },
+    "footer": {
+      "description": "En användbar plats att tänka på din ekonomi.",
+      "note": "Under utveckling, med en tydlig riktning.",
+      "statusLabel": "Sidans anslutning",
+      "copyright": "MoneyWorks",
+      "top": "Till toppen"
+    }
   }
 }

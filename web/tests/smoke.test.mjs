@@ -3,11 +3,11 @@ import { test } from 'node:test';
 
 const base = process.env.TEST_BASE_URL ?? 'http://127.0.0.1:3000';
 
-for (const [locale, title, status] of [
-  ['en', 'Hello world!', 'Database connection: OK'],
-  ['sv', 'Hej världen!', 'Databasanslutning: OK'],
+for (const [locale, title, fire, crypto, planned] of [
+  ['en', 'A clearer view of your money.', 'FIRE calculator', 'Crypto tax calculator', 'Planned'],
+  ['sv', 'En tydligare bild av din ekonomi.', 'FIRE-kalkylator', 'Kryptoskattekalkylator', 'Planeras'],
 ]) {
-  test(`${locale}: only a localized hello world and a live database status`, async () => {
+  test(`${locale}: the complete one-page tool hub is pre-rendered without JavaScript`, async () => {
     const response = await fetch(`${base}/${locale}`);
     assert.equal(response.status, 200);
     const html = await response.text();
@@ -15,13 +15,26 @@ for (const [locale, title, status] of [
     // Inspect rendered main content, not translation strings in Next.js payloads.
     const main = html.match(/<main\b[^>]*>([\s\S]*?)<\/main>/)?.[1];
     assert.ok(main, 'Missing main element');
-    assert.ok(main.includes(`>${title}</h1>`));
-    assert.ok(main.includes(`>${status}</p>`));
+    const heading = main.match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/)?.[1].replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+    assert.equal(heading, title);
+    assert.ok(html.includes('data-theme="dark"'));
+    assert.ok(html.includes('data-theme-toggle'));
+    assert.ok(main.includes('intro-art'));
+    assert.ok(main.includes(fire));
+    assert.ok(main.includes(crypto));
+    assert.ok(main.includes(planned));
     assert.equal((main.match(/<h1\b/g) ?? []).length, 1);
-    assert.equal((main.match(/<p\b/g) ?? []).length, 1);
+    for (const id of ['tools', 'fire', 'crypto', 'learn', 'about']) {
+      assert.ok(main.includes(`id="${id}"`), `Missing ${id} section`);
+    }
+    assert.ok(html.includes('data-db-status'));
+    assert.ok(html.includes('aria-label="') && html.includes('href="/sv"'));
     assert.ok(!main.includes('<time'));
     assert.ok(!main.includes('from PostgreSQL'));
     assert.ok(!main.includes('från PostgreSQL'));
+    assert.ok(html.includes('name="description"'));
+    assert.ok(html.includes('src="/db-status.js"'));
+    assert.ok(html.includes('src="/site-ui.js"'));
   });
 }
 

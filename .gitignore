@@ -6,3 +6,9 @@
 
 # Ignore database data
 postgres_data/
+
+# Local design inspection output; durable guidance lives in DESIGN.md.
+.taste-skill/
+.impeccable/review/
+.impeccable/mocks/
+.impeccable/live/

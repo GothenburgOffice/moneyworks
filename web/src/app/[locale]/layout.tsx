@@ -1,16 +1,8 @@
-import { NextIntlClientProvider } from 'next-intl';
 import { setRequestLocale } from 'next-intl/server';
 import { hasLocale } from 'next-intl';
 import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
-import enMessages from '../../../messages/en.json';
-import svMessages from '../../../messages/sv.json';
 import '../globals.css';
-
-const messages = {
-  en: enMessages,
-  sv: svMessages,
-};
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
@@ -35,15 +27,9 @@ export default async function LocaleLayout({
   // Enable static rendering
   setRequestLocale(locale);
 
-  const localeMessages = messages[locale];
-
   return (
-    <html lang={locale}>
-      <body>
-        <NextIntlClientProvider messages={localeMessages} locale={locale}>
-          {children}
-        </NextIntlClientProvider>
-      </body>
+    <html lang={locale} data-theme="dark" suppressHydrationWarning>
+      <body>{children}</body>
     </html>
   );
 }

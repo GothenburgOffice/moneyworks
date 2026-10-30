@@ -1,6 +1,6 @@
-# Moneyworks Copilot Instructions
+# MoneyWorks Copilot Instructions
 
-Moneyworks is an owner-hosted personal-finance project in its initial development stage. It currently implements a database-backed English/Swedish hello-world page, a database health endpoint and Docker/VS Code development infrastructure, not a finished financial application.
+MoneyWorks is an owner-hosted, country-neutral personal-finance project. The current local preview implements a single-page tool hub in English and Swedish, an original brand mark, reusable site components, a real database health endpoint and Docker/VS Code infrastructure. The FIRE and crypto-trading tax calculators are planned, not implemented.
 
 ## Maintain these instructions
 
@@ -9,6 +9,7 @@ Moneyworks is an owner-hosted personal-finance project in its initial developmen
 - **Use executable sources:** Treat `web/package.json`, `web/package-lock.json`, Docker/Compose configuration, Prisma schema/migrations and `.github/workflows/ci.yml` as the authorities for current versions and commands. Do not preserve stale prose when those files change.
 - **Preserve entry points:** Keep this singularly named file as the detailed reference. `.github/copilot-instructions.md` is the standard Copilot discovery entry point and directs agents here; avoid maintaining two divergent full copies.
 - **Keep changes scoped:** Preserve unrelated work, inspect the current Git diff and report which checks actually ran. Do not claim local checks, CI or deployment succeeded without confirming the corresponding result.
+- **Preview-first iteration:** Review development changes in an unpublished Perplexity preview before pushing when the owner requests preview work. Keep those edits local and do not publish publicly, commit or push to GitHub until the owner approves that step.
 
 ## Project scope and stack
 
@@ -49,6 +50,8 @@ moneyworks/
     │   │   ├── layout.tsx
     │   │   └── page.tsx
     │   ├── generated/prisma/     # Generated locally; gitignored
+    │   ├── components/           # Server-rendered logo, navigation, sections and footer
+    │   ├── content/site.ts       # Typed English/Swedish site copy
     │   ├── i18n/                 # Routing, navigation and translation loading
     │   ├── lib/db.ts             # Shared lazy Prisma client and greeting query
     │   └── proxy.ts              # Next.js locale routing proxy
@@ -59,8 +62,12 @@ There are no implemented calculator, account, forum, GraphQL or authentication s
 
 ## Runtime behavior
 
-- **Minimal page:** Render only "Hello world!" / "Hej världen!" followed by the translated database connection status. The heading comes from translation messages and remains visible even if the database is down; do not add a timestamp, database-sourced heading or explanatory text.
-- **Real database reads:** The localized home page reads the `Greeting` row for its locale on every request to determine the connection status. Keep the page dynamic and uncached, and show an unavailable status if the database, table or row cannot be read.
+- **Single-page tool hub:** Keep one content page per locale, composed from separate header/navigation, logo, intro, tools, information, about and footer components. Links navigate sections rather than inventing unimplemented tool routes. Both tool panels must remain explicitly planned until their real functionality exists.
+- **Separate design explorations:** The standalone MoneyWorks design board is not production functionality. Its eight directions, ten-tool expansion study, article topics and possible YouTube layouts are hypothetical. Only FIRE and crypto tax are selected tool plans; do not implement the other eight example tools or invent a channel, published articles, financial results or new production routes from those mockups without approval. Keep the actual bilingual Next.js preview separate, with pre-rendered main content and small interactive enhancements.
+- **Static content:** Pre-render `/en` and `/sv` as HTML with localized SEO metadata at build time. Content must be readable without JavaScript; do not turn the whole page into a client-rendered application or fetch the page body after load.
+- **Small enhancements:** `public/db-status.js` updates the footer status from the uncached health endpoint; `public/site-ui.js` closes the mobile menu after navigation/with Escape and provides localized theme switching. Dark C is the static default; light/dark are the only accepted URL preference values. Carry the choice through locale links, guard history updates for opaque previews, and do not use browser-storage APIs forbidden by the preview host. Hide the theme control without JavaScript rather than exposing a dead button. Initial database status says "checking", never a cached success. Failures change the status, not the site content; no database is needed to build the pages.
+- **Brand and content:** Direction C (Bright works) is the owner-selected starter. Preserve its charcoal/lime identity, bold headings, contrasting planned-tool panels, original M/W logo, self-hosted Manrope, CSS tokens and responsive component patterns recorded in `DESIGN.md`. This selection does not approve the mockup board's expanded feature inventory. `PRODUCT.md` records scope. Translated copy lives under `Site` and `ConnectionStatus` in the message files, accessed through the typed content helper.
+- **Country-neutral:** Do not assume SEK, a tax jurisdiction, a trading method or financial outputs. Tax methods and supported countries are deliberately undecided until calculator development.
 - **Health endpoint:** `/api/health/db` performs a real greeting read. It returns HTTP 200 with `status: "ok"` on success or HTTP 503 with `status: "error"` on failure, with `Cache-Control: no-store`.
 - **Connection handling:** Reuse the Prisma connection pool across hot reloads. Keep client initialization lazy so a production build does not need a live database, and retain finite connection/query timeouts.
 - **Secrets:** Never expose connection strings, credentials or raw database errors in rendered pages or health responses. Never put database credentials in `NEXT_PUBLIC_` variables.
@@ -124,7 +131,7 @@ Never recommend `down -v`, `down --volumes`, `prisma migrate reset`, deleting da
 
 - **Triggers:** `.github/workflows/ci.yml` runs on pushes to `main`, pull requests and manual `workflow_dispatch` requests.
 - **Checks job:** Runs line-ending regression tests, ESLint, generated-client/type checking, Prisma schema validation, production build and high-severity dependency audit.
-- **Container job:** Exercises `core.autocrlf=true`, builds the app and starts disposable app/PostgreSQL containers. `npm run test:smoke` verifies both minimal language pages, English-by-default routing and database health. CI also tests a direct query, a changed database row through the health endpoint, visible failure in both languages and recovery.
+- **Container job:** Exercises `core.autocrlf=true`, builds the app and starts disposable app/PostgreSQL containers. `npm run test:smoke` checks pre-rendered HTML/metadata, default routing, the health API and the actual enhancement script. During outages, `npm run test:db-status` expects unavailable in both languages while the static heading stays accessible, followed by recovery.
 - **CI isolation:** `COMPOSE_PROJECT_NAME=moneyworks-ci` identifies the runner's test stack. CI uses example credentials and temporary data, never the owner's hosted environment or credentials.
 - **Cleanup:** Keep the `if: always()` cleanup step. It removes CI containers, volumes, network and the locally built app image and verifies no project containers, volumes or networks remain. Do not copy this destructive cleanup into normal owner startup/rebuild commands.
 - **Failures:** Preserve diagnostic container logs on failures, finite startup retries, job timeouts and Bash pipeline failure handling. Confirm the actual run result before reporting CI success.
@@ -138,7 +145,7 @@ Never recommend `down -v`, `down --volumes`, `prisma migrate reset`, deleting da
 - **TypeScript:** Preserve strict checking and use explicit, useful types at interfaces and API boundaries. Do not add `any` to bypass a compiler error.
 - **React:** Prefer Server Components; add client components only for browser interaction or state. Keep components focused.
 - **Routes:** Use App Router handlers under `src/app/api/` for requested API features. Validate inputs and return appropriate status codes without exposing internal errors.
-- **Styling:** Follow the current Tailwind-based presentation and responsive behavior. Optional UI/state libraries are not installed requirements.
+- **Styling:** Follow the CSS tokens and component classes in `globals.css` and `DESIGN.md`, retaining Tailwind where useful. Optional UI/state libraries are not installed requirements.
 - **Changes:** Extend the existing localized structure and shared database helper rather than introducing duplicate infrastructure without a concrete need.
 
 ## Future direction, not implemented

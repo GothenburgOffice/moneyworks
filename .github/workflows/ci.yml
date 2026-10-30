@@ -35,6 +35,7 @@ jobs:
       - run: npm ci
       - run: npm run test:line-endings
       - run: npm run lint
+      - run: npm run test:ui
       - run: npm run typecheck
       - run: npm run db:validate
       - run: npm run build
@@ -76,8 +77,9 @@ jobs:
           docker compose -f docker-compose.dev.yml stop db
           test "$(curl --silent --show-error --max-time 20 --output /tmp/db-health.json --write-out '%{http_code}' http://localhost:3000/api/health/db)" = 503
           grep -F '"status":"error"' /tmp/db-health.json
-          curl --fail --silent --show-error --max-time 20 http://localhost:3000/en | grep -F '>Database connection: unavailable</p>'
-          curl --fail --silent --show-error --max-time 20 http://localhost:3000/sv | grep -F '>Databasanslutning: inte tillgänglig</p>'
+          curl --fail --silent --show-error --max-time 20 http://localhost:3000/en | grep -F '>A clearer view</span>'
+          curl --fail --silent --show-error --max-time 20 http://localhost:3000/sv | grep -F '>En tydligare bild</span>'
+          docker compose -f docker-compose.dev.yml exec -T -e EXPECTED_DB_STATUS=unavailable web npm run test:db-status
           docker compose -f docker-compose.dev.yml start db
           curl --fail --silent --show-error --retry 20 --retry-all-errors --retry-delay 2 --max-time 15 http://localhost:3000/api/health/db | grep -F '"status":"ok"'
           docker compose -f docker-compose.dev.yml exec -T web npm run test:smoke

@@ -1,7 +1,73 @@
 {
-  "HomePage": {
-    "title": "Hello world!",
+  "ConnectionStatus": {
     "databaseConnected": "Database connection: OK",
+    "databaseChecking": "Database connection: checking…",
     "databaseUnavailable": "Database connection: unavailable"
+  },
+  "Metadata": {
+    "title": "MoneyWorks | A clearer view of your money",
+    "description": "A new home for personal finance tools and useful information. Explore the plans for our FIRE and crypto-trading tax calculators."
+  },
+  "Site": {
+    "skip": "Skip to content",
+    "home": "MoneyWorks, back to the top",
+    "nav": { "label": "Main navigation", "tools": "Tools", "learn": "Good to know", "about": "About", "menu": "Menu", "language": "Choose language", "themeLight": "Switch to light theme", "themeDark": "Switch to dark theme" },
+    "intro": {
+      "title": "A clearer view of your money.",
+      "titleLead": "A clearer view",
+      "titleEnd": "of your money.",
+      "description": "A little understanding can change the way you see your finances. We're building the tools to help you find it.",
+      "action": "Explore what's coming",
+      "asideTitle": "Different questions. One place to start.",
+      "future": "Your future",
+      "futureLink": "More perspective.",
+      "trades": "Your trades",
+      "tradesLink": "A clearer picture."
+    },
+    "tools": {
+      "title": "Tools with a purpose.",
+      "description": "Two questions we're turning into practical tools.",
+      "planned": "Planned",
+      "details": "See what's planned",
+      "fire": {
+        "category": "Planning ahead",
+        "title": "FIRE calculator",
+        "description": "Put your financial independence plans into perspective, one scenario at a time.",
+        "context": "For the life you want to build.",
+        "detailTitle": "What we're planning",
+        "items": ["A place for your savings, spending and contributions.", "Scenarios you can compare and revisit.", "Clear assumptions, rather than promises about the future."],
+        "note": "Not available yet. The calculator and its assumptions will be developed next."
+      },
+      "crypto": {
+        "category": "Understanding your trades",
+        "title": "Crypto tax calculator",
+        "description": "Bring some order to your trading history and the questions that come with it.",
+        "context": "For the details that need a clearer picture.",
+        "detailTitle": "What we're planning",
+        "items": ["An organised view of your crypto-trading activity.", "Calculations with the chosen rules clearly explained.", "Explicit country support, without guessing where you file."],
+        "note": "Not available yet. Supported countries and tax methods have not been selected."
+      }
+    },
+    "learn": {
+      "title": "A little context goes a long way.",
+      "description": "Good tools should make things easier to understand, not give you another set of numbers to decipher.",
+      "items": [
+        { "question": "What is MoneyWorks?", "answer": "A growing home for personal finance tools and straightforward information. We're starting with financial independence planning and crypto-trading tax calculations, with room for more useful tools over time." },
+        { "question": "Can I use the calculators yet?", "answer": "Not yet. Both calculators are planned. Right now, you can explore what we're building and how the site will be organised. The tool panels will make it clear when something is ready to use." },
+        { "question": "Is the site for a particular country?", "answer": "MoneyWorks is country-neutral and available in English and Swedish. When a tool needs country-specific rules, supported countries and assumptions will be stated explicitly." }
+      ]
+    },
+    "about": {
+      "title": "More perspective. Less noise.",
+      "description": "Personal finance is personal. MoneyWorks is being built around clear explanations, useful tools and space to think, without assuming your currency, country or next move.",
+      "link": "Back to the tools"
+    },
+    "footer": {
+      "description": "A useful place to think about your money.",
+      "note": "A work in progress, with a clear direction.",
+      "statusLabel": "Site connection",
+      "copyright": "MoneyWorks",
+      "top": "Back to top"
+    }
   }
 }
