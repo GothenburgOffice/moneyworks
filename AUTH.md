@@ -1,8 +1,8 @@
 # Accounts and privacy foundation
 
-This local revision adds public email/password registration, email verification,
-login/logout, recovery and a private empty account area. Google is explicitly
-planned next; it is not enabled or represented by a non-working button.
+The account foundation provides public email/password registration, email verification,
+login/logout, recovery and a private empty account area. Google is planned next
+(#13); it is not enabled or represented by a non-working button.
 No saved portfolios or tax records have been implemented. The separate FIRE
 calculator is client-local and does not save inputs to an account.
 
@@ -55,9 +55,8 @@ split from global tokens/site styles without changing the C design.
 
 ## Operator configuration
 
-Maintain root `.env` manually from `.env.example`; no generator was added and no
-existing private file was overwritten. Compose passes account settings only to web.
-The development preview uses its separate disposable configuration.
+Maintain root `.env` manually from `.env.example`; there is no generator.
+Compose passes account settings only to web. Launch prerequisites are tracked in #12.
 
 Required before registration is available:
 
@@ -129,7 +128,7 @@ an operator-owned schedule and backup retention; no automation was created here.
 Account-erasure requests currently go to the configured contact, not a made-up
 self-service deletion screen.
 
-## Testing and preview
+## Testing
 
 - `npm run test:auth-config`: fail-closed configuration, HTTPS, SMTP and actual
   library cookie attributes.
@@ -139,15 +138,12 @@ self-service deletion screen.
   `AUTH_TEST_DATABASE_URL` pointing to a migrated disposable database.
   It starts a loopback Next instance and capture-only SMTP service, creates its
   own test user, verifies/reset/logs in/out and removes its own fixtures.
-  Never target a production database. No browser test dependency was added.
+  Never target a production database. Browser tests are tracked in #14.
 - Existing lint, typecheck, Prisma, SSG, status, line-ending and audit checks remain.
 
-The Perplexity embedded review is intentionally read-only for credentials. Its
-account screens are clearly labelled and disabled, while the actual first-party
-Next application is tested against PostgreSQL and a capture mailbox. Do not weaken
-cookie/origin or anti-framing protections to force login into an opaque iframe.
-Real public signup requires operator mail/privacy configuration and owner hosting.
-Committing this foundation does not configure public hosting or authorize publication.
+Account pages send anti-framing headers. Do not weaken cookie/origin or framing
+protections to make sign-in work inside an iframe or preview tool. Real public
+signup requires operator mail/privacy configuration and hosting (#11, #12).
 
 Before storing financial records, add per-user authorization on every read/write
 using `User.id`, and review recovery, MFA, encryption, retention and backup risks.

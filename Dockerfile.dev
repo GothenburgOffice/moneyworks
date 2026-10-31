@@ -1,5 +1,7 @@
-FROM node:26.13.0-alpine
-RUN apk add --no-cache git openssl \
+FROM node:26.13.0-trixie-slim
+RUN apt-get update \
+    && apt-get install --yes --no-install-recommends ca-certificates git openssl \
+    && rm -rf /var/lib/apt/lists/* \
     && npm install --global npm@12.2.1
 WORKDIR /workspace/web
 COPY package.json package-lock.json ./
