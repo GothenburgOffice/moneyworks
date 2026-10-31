@@ -2,3 +2,11 @@ services:
   web:
     # VS Code owns the terminal; start the app with `npm run dev` in web/.
     command: sleep infinity
+    environment:
+      # Keep Claude Code's login and settings in one directory that survives rebuilds.
+      - CLAUDE_CONFIG_DIR=/root/.claude
+    volumes:
+      - claude_config:/root/.claude
+
+volumes:
+  claude_config:

@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 
 const workspace = JSON.parse(readFileSync(new URL('../../moneyworks.code-workspace', import.meta.url), 'utf8'));
+const devcontainer = JSON.parse(readFileSync(new URL('../../.devcontainer/devcontainer.json', import.meta.url), 'utf8'));
 
 test('VS Code opens the repository root and scopes tooling to web', () => {
   assert.deepEqual(workspace.folders, [{ path: '.' }]);
@@ -20,4 +21,12 @@ test('workspace recommends the requested extensions and existing-stack tooling',
   ]) assert.ok(ids.includes(id), `Missing ${id}`);
   assert.equal(workspace.tasks, undefined);
   assert.equal(workspace.launch, undefined);
+});
+
+test('devcontainer installs the in-container tooling without a formatter', () => {
+  const ids = devcontainer.customizations.vscode.extensions;
+  for (const id of ['anthropic.claude-code', 'dbaeumer.vscode-eslint', 'Prisma.prisma']) {
+    assert.ok(ids.includes(id), `Missing ${id}`);
+  }
+  assert.ok(!ids.includes('esbenp.prettier-vscode'), 'The project has no Prettier configuration');
 });

@@ -1,6 +1,6 @@
 # Pension-aware FIRE planning
 
-The local calculator is part of the existing static English/Swedish homepage.
+The calculator is part of the static English/Swedish homepage.
 It is a deterministic scenario, not a pension entitlement estimate, tax calculation,
 recommended withdrawal rate, probability of success or financial advice.
 No government/employer service, Google integration or market feed is used.
@@ -174,7 +174,7 @@ Main content remains SSG, not a client-rendered app. Without JavaScript, labels,
 explanations and method remain HTML; calculation/pension controls are disabled.
 Native account forms remain unaffected.
 
-## Privacy and release
+## Privacy
 
 Financial values have no form field names, avoiding accidental URL submission.
 The enhancement uses a local button/Enter handler, also intercepts submission,
@@ -182,7 +182,3 @@ and makes no network requests. It works without sandbox form permission. Inputs 
 in the current page: no cookies, browser storage, account saving or schema changes.
 Changing language/reloading starts another page. No real pension entitlement is
 invented or retrieved.
-
-GitHub commits/pushes require the owner's specific request and confirmation;
-they do not authorize a public deployment. The mockup board and outstanding
-account/production/privacy launch prerequisites are unchanged.

@@ -12,8 +12,9 @@
     "customizations": {
         "vscode": {
             "extensions": [
+                "anthropic.claude-code",
                 "dbaeumer.vscode-eslint",
-                "esbenp.prettier-vscode"
+                "Prisma.prisma"
             ],
             "settings": {
                 "typescript.tsdk": "/workspace/web/node_modules/typescript/lib",

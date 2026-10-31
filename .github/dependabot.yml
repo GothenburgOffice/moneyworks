@@ -10,6 +10,9 @@ updates:
         update-types: ["version-update:semver-major"]
       - dependency-name: eslint
         update-types: ["version-update:semver-major"]
+      # Types track the oldest supported Node line (22); raise with engines.node.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
     groups:
       next:
         patterns: ["next", "eslint-config-next"]
@@ -23,6 +26,10 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    # The dev image stays on the oldest supported Node line; raise with engines.node.
+    ignore:
+      - dependency-name: node
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: docker-compose
     directory: /
     schedule:
