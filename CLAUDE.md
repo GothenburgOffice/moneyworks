@@ -9,8 +9,10 @@ The shared project reference for coding agents (also read by Copilot):
 - The host has Docker but no Node.js or npm. Run project commands inside the
   devcontainer (`/workspace/web`), or from the host through
   `docker compose -f docker-compose.dev.yml exec web <command>`.
-- The development image is Debian-based (`node:26.13.0-trixie-slim`); install
+- The development image is Debian-based (`node:22.23.4-trixie-slim`); install
   system packages with `apt-get`, not `apk`.
+- Node 22 is the oldest supported line and the dev runtime. Do not use APIs
+  added after Node 22; CI also tests the current LTS.
 - Claude Code's login and settings persist in the devcontainer's
   `claude_config` volume (`CLAUDE_CONFIG_DIR=/root/.claude`).
 - Open decisions are GitHub issues labelled `decision`

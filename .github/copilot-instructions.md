@@ -21,6 +21,7 @@ This file is the shared reference for coding agents (Copilot reads it directly; 
 - **Application:** Next.js App Router, React, strict TypeScript, Tailwind CSS and `next-intl`, with `en` and `sv` locales.
 - **Database:** PostgreSQL 18 via Prisma 7 and `@prisma/adapter-pg`. Models: `Greeting` (connection test) plus `User`, `Account`, `Session`, `Verification` and `RateLimit`.
 - **Toolchain:** Node.js and npm run only inside the Debian-based development container; the host needs Docker, not Node. CI installs its own matching toolchain.
+- **Node support:** `engines.node` is `>=22.12.0` for hosting flexibility. The dev image and `@types/node` track Node 22 so newer-only APIs fail locally; CI runs the checks job on Node 22 and the current LTS. Raise the floor in `package.json`, `Dockerfile.dev`, `@types/node`, the CI matrix and the Dependabot holds together.
 - **Dependency policy:** Compatible stable releases, exact direct versions, committed lockfile. No forced peer overrides or prereleases. TypeScript and ESLint majors are held in Dependabot until lint-plugin peers support them.
 
 ## Repository layout
@@ -35,7 +36,7 @@ moneyworks/
 ├── .editorconfig / .gitattributes # LF rules
 ├── .env.example                  # Template for the gitignored root .env
 ├── CLAUDE.md                     # Claude Code entry point; imports this file
-├── Dockerfile.dev                # Debian (trixie-slim) development image
+├── Dockerfile.dev                # Debian (trixie-slim) Node 22 development image
 ├── docker-compose.dev.yml        # web and db services
 ├── moneyworks.code-workspace     # VS Code workspace and extension recommendations
 └── web/
