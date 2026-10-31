@@ -21,7 +21,7 @@ This file is the shared reference for coding agents (Copilot reads it directly; 
 - **Application:** Next.js App Router, React, strict TypeScript, Tailwind CSS and `next-intl`, with `en` and `sv` locales.
 - **Database:** PostgreSQL 18 via Prisma 7 and `@prisma/adapter-pg`. Models: `Greeting` (connection test) plus `User`, `Account`, `Session`, `Verification` and `RateLimit`.
 - **Toolchain:** Node.js and npm run only inside the Debian-based development container; the host needs Docker, not Node. CI installs its own matching toolchain.
-- **Node support:** `engines.node` is `>=22.12.0` for hosting flexibility. The dev image and `@types/node` track Node 22 so newer-only APIs fail locally; CI runs the checks job on Node 22 and the current LTS. Raise the floor in `package.json`, `Dockerfile.dev`, `@types/node`, the CI matrix and the Dependabot holds together.
+- **Node support:** `engines.node` is `>=22.12.0` for hosting flexibility. The dev image and `@types/node` track Node 22 so newer-only APIs fail locally; CI runs the unit job on Node 22 and the current LTS. Raise the floor in `package.json`, `Dockerfile.dev`, `@types/node`, the CI matrix and the Dependabot holds together.
 - **Dependency policy:** Compatible stable releases, exact direct versions, committed lockfile. No forced peer overrides or prereleases. TypeScript and ESLint majors are held in Dependabot until lint-plugin peers support them.
 
 ## Repository layout
@@ -144,7 +144,8 @@ Rebuild the devcontainer after infrastructure changes. Never run `down -v`, `dow
 ## Tests, CI and line endings
 
 - **Triggers:** CI runs on pushes to `main`, pull requests and manual dispatch.
-- **Checks job:** Line endings, ESLint, UI/architecture/FIRE/auth-config tests, type checking, Prisma validation, production build, migrations and account lifecycle against a disposable database, and a high-severity audit.
+- **Branch protection:** `main` requires a pull request (0 approvals), resolved conversations, and the `unit` and `containers` checks passing on a branch up to date with `main`; force pushes and deletion are blocked, admins included. `unit` is a gate job over the Node matrix so the required name never changes; keep it when editing the matrix.
+- **Unit job:** Line endings, ESLint, UI/architecture/FIRE/auth-config tests, type checking, Prisma validation, production build, migrations and account lifecycle against a disposable database, and a high-severity audit.
 - **Container job:** Exercises `core.autocrlf=true`, builds the app and starts disposable app/PostgreSQL containers, runs smoke tests, verifies live database reads, and checks that outages change only the status before recovery.
 - **Isolation and cleanup:** `COMPOSE_PROJECT_NAME=moneyworks-ci` with example credentials. Keep the `if: always()` cleanup and its verification; never copy that destructive cleanup into normal commands. Preserve failure logs, finite retries and job timeouts.
 - **LF rules:** Preserve `.gitattributes` and `.editorconfig`, especially for shell scripts, Dockerfiles, YAML, SQL and Prisma files. If a shell entrypoint is added, test both LF and CRLF inputs.
