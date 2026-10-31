@@ -45,8 +45,8 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
       POSTGRES_DB: ${POSTGRES_DB:-moneyworks}
-    ports:
-      - "127.0.0.1:${MONEYWORKS_DB_PORT:-5410}:5432"
+    # No host port: the app, migrations and Prisma reach it at db:5432 on the
+    # Compose network. Use `docker compose exec db psql` for manual queries.
     volumes:
       - postgres18_data:/var/lib/postgresql
     healthcheck:

@@ -71,10 +71,11 @@ Rebuild Container**.
 docker compose -f docker-compose.dev.yml up --build
 ```
 
-Then open <http://localhost:3410/en> or <http://localhost:3410/sv>. Both ports
-bind to localhost only and are deliberately uncommon so the stack runs beside
-other projects. PostgreSQL is reachable from host tools at `localhost:5410`, and
-from containers at `db:5432`.
+Then open <http://localhost:3410/en> or <http://localhost:3410/sv>. The port
+binds to localhost only and is deliberately uncommon so the stack runs beside
+other projects. PostgreSQL has no host port: containers reach it at `db:5432`,
+and `docker compose -f docker-compose.dev.yml exec db psql -U postgres -d moneyworks`
+opens a SQL prompt.
 
 ## Commands
 
@@ -104,8 +105,8 @@ test on every pull request.
 copy `.env.example` to the gitignored root `.env` and uncomment only what you
 change.
 
-- `MONEYWORKS_WEB_PORT` (default 3410) and `MONEYWORKS_DB_PORT` (default 5410)
-  set the host ports. `AUTH_BASE_URL` follows the web port unless set.
+- `MONEYWORKS_WEB_PORT` (default 3410) sets the app's host port.
+  `AUTH_BASE_URL` follows it unless set.
 - `DATABASE_URL` is built from `POSTGRES_USER`, `POSTGRES_PASSWORD` and
   `POSTGRES_DB`. Set it yourself only if the password needs URL-encoding.
 - PostgreSQL reads these values only when it first creates the volume. To change
