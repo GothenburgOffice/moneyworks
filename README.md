@@ -44,8 +44,9 @@ PostgreSQL run in containers.
 ```bash
 git clone https://github.com/GothenburgOffice/moneyworks.git
 cd moneyworks
-cp .env.example .env    # first time only; PowerShell: Copy-Item .env.example .env
 ```
+
+No `.env` is needed for local runs; see [Configuration](#configuration).
 
 ### Option A: VS Code devcontainer (recommended)
 
@@ -70,9 +71,10 @@ Rebuild Container**.
 docker compose -f docker-compose.dev.yml up --build
 ```
 
-Then open <http://localhost:3000/en> or <http://localhost:3000/sv>. Both ports
-bind to localhost only. PostgreSQL is reachable from host tools at
-`localhost:5433`, and from containers at `db:5432`.
+Then open <http://localhost:3410/en> or <http://localhost:3410/sv>. Both ports
+bind to localhost only and are deliberately uncommon so the stack runs beside
+other projects. PostgreSQL is reachable from host tools at `localhost:5410`, and
+from containers at `db:5432`.
 
 ## Commands
 
@@ -97,12 +99,15 @@ test on every pull request.
 
 ## Configuration
 
-Maintain the gitignored root `.env` by hand, starting from `.env.example`. The
-example values are development defaults only.
+`docker-compose.dev.yml` has development defaults, so local runs need no
+`.env`. To override something (ports, database password, account settings),
+copy `.env.example` to the gitignored root `.env` and uncomment only what you
+change.
 
-- Keep `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` and `DATABASE_URL`
-  consistent. URL-encode special characters in the password inside
-  `DATABASE_URL` only.
+- `MONEYWORKS_WEB_PORT` (default 3410) and `MONEYWORKS_DB_PORT` (default 5410)
+  set the host ports. `AUTH_BASE_URL` follows the web port unless set.
+- `DATABASE_URL` is built from `POSTGRES_USER`, `POSTGRES_PASSWORD` and
+  `POSTGRES_DB`. Set it yourself only if the password needs URL-encoding.
 - PostgreSQL reads these values only when it first creates the volume. To change
   the password later, change it in PostgreSQL too, then recreate the web
   container.

@@ -98,9 +98,9 @@ moneyworks/
 
 - **Paths:** The repository is mounted at `/workspace`; the app works in `/workspace/web`. `node_modules` and `.next` stay in Docker volumes.
 - **Startup:** Normal Compose waits for database health, runs `npm ci` and `npm run db:setup`, then starts the dev server. The devcontainer runs install/setup on creation and leaves starting the server to the terminal. It installs Claude Code, ESLint and Prisma extensions in the container (no formatter) and keeps Claude Code's configuration in the `claude_config` volume.
-- **Network:** The app binds to host `localhost:3000`. PostgreSQL is `db:5432` from containers and `localhost:5433` from the host.
+- **Network:** Inside Docker the app listens on 3000 and PostgreSQL on `db:5432`. Host ports are deliberately uncommon so the stack runs beside other projects: `localhost:3410` (app) and `localhost:5410` (PostgreSQL), overridable with `MONEYWORKS_WEB_PORT`/`MONEYWORKS_DB_PORT`.
 - **Persistence:** PostgreSQL 18 uses the `postgres18_data` volume at `/var/lib/postgresql`. Preserve it and any retained PostgreSQL 16 volume.
-- **Configuration:** Root `.env` is copied once from `.env.example` and maintained manually; never overwrite it or commit real credentials. Keep `POSTGRES_*` and `DATABASE_URL` consistent (URL-encode the password only in the URL). Editing `.env` does not rotate an existing role's password.
+- **Configuration:** Compose has development defaults, so local runs need no `.env`. The optional root `.env` (from the all-commented `.env.example`) holds owner overrides; never overwrite it or commit real credentials. `DATABASE_URL` is derived from `POSTGRES_*` unless set (set it only when the password needs URL-encoding). Editing `.env` does not rotate an existing role's password.
 - **Hosting:** Only development Docker configuration exists. Production image, reverse proxy, TLS and backups are tracked in GitHub issues; do not describe them as done.
 
 ## Accounts and privacy
