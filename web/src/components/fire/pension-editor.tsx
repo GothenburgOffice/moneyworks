@@ -1,4 +1,5 @@
 import type { FireCopy } from '@/content/fire';
+import { PencilIcon, TrashIcon } from '@/components/ui-icons';
 
 export function PensionEditor({ copy }: { copy: FireCopy }) {
   return (
@@ -25,8 +26,8 @@ export function PensionEditor({ copy }: { copy: FireCopy }) {
               <span data-pension-summary-indexing />
             </div>
             <div className="fire-pension-summary-actions">
-              <button type="button" data-edit-pension>{copy.editPension}</button>
-              <button type="button" data-remove-pension>{copy.remove}</button>
+              <button type="button" data-edit-pension aria-label={copy.editPension} title={copy.editPension} aria-expanded="false"><PencilIcon /></button>
+              <button type="button" data-remove-pension aria-label={copy.remove} title={copy.remove}><TrashIcon /></button>
             </div>
           </div>
         <fieldset className="fire-pension-row" data-pension-editor>
@@ -50,11 +51,11 @@ export function PensionEditor({ copy }: { copy: FireCopy }) {
             </label>
             <label className="fire-field">
               <span>{copy.startAge}</span>
-              <input type="number" data-pension-field="startAge" min={0} max={119} step={1} required />
+              <input type="number" data-pension-field="startAge" min={0} step={1} required />
             </label>
             <label className="fire-field">
               <span>{copy.stopAge}</span>
-              <input type="number" data-pension-field="endAge" min={1} max={120} step={1} defaultValue={95} required />
+              <input type="number" data-pension-field="endAge" min={1} step={1} defaultValue={95} required />
             </label>
           </div>
           <div className="fire-pension-row-actions">

@@ -5,12 +5,12 @@
     "databaseUnavailable": "Databasanslutning: inte tillgänglig"
   },
   "Metadata": {
-    "title": "MoneyWorks | En tydligare bild av din ekonomi",
+    "title": "Pengar jobbar | En tydligare bild av din ekonomi",
     "description": "Planera ekonomiskt oberoende med pensionsutbetalningar och planerad kapitalförbrukning. En landsneutral FIRE-kalkylator på svenska och engelska."
   },
   "Site": {
     "skip": "Hoppa till innehållet",
-    "home": "MoneyWorks, tillbaka till toppen",
+    "home": "Pengar jobbar, tillbaka till toppen",
     "nav": { "label": "Huvudnavigation", "tools": "Verktyg", "learn": "Bra att veta", "about": "Om sidan", "menu": "Meny", "language": "Välj språk", "themeLight": "Byt till ljust tema", "themeDark": "Byt till mörkt tema" },
     "intro": {
       "title": "En tydligare bild av din ekonomi.",
@@ -54,22 +54,22 @@
       "title": "Lite sammanhang gör stor skillnad.",
       "description": "Bra verktyg ska göra saker lättare att förstå, inte ge dig ännu fler siffror att tolka.",
       "items": [
-        { "question": "Vad är MoneyWorks?", "answer": "En växande plats för privatekonomiska verktyg och tydlig information. Vi börjar med planering för ekonomiskt oberoende och skatt på kryptohandel, med utrymme för fler användbara verktyg framöver." },
+        { "question": "Vad är Pengar jobbar?", "answer": "En växande plats för privatekonomiska verktyg och tydlig information. Vi börjar med planering för ekonomiskt oberoende och skatt på kryptohandel, med utrymme för fler användbara verktyg framöver." },
         { "question": "Kan jag använda kalkylatorerna ännu?", "answer": "FIRE-kalkylatorn finns under verktygspanelerna. JavaScript behövs för lokala beräkningar; förklaringen är förrenderad. Kryptoskattekalkylatorn planeras fortfarande. FIRE-uppgifter skickas inte till en server och sparas inte." },
-        { "question": "Är sidan avsedd för ett visst land?", "answer": "MoneyWorks är landsneutralt och finns på engelska och svenska. När ett verktyg behöver landsspecifika regler kommer stödda länder och antaganden att anges tydligt." }
+        { "question": "Är sidan avsedd för ett visst land?", "answer": "Pengar jobbar är landsneutralt och finns på engelska och svenska. När ett verktyg behöver landsspecifika regler kommer stödda länder och antaganden att anges tydligt." }
       ]
     },
     "about": {
       "title": "Mer perspektiv. Mindre brus.",
-      "description": "Privatekonomi är personlig. MoneyWorks byggs kring tydliga förklaringar, användbara verktyg och utrymme att tänka, utan att anta din valuta, ditt land eller ditt nästa steg.",
+      "description": "Privatekonomi är personlig. Pengar jobbar byggs kring tydliga förklaringar, användbara verktyg och utrymme att tänka, utan att anta din valuta, ditt land eller ditt nästa steg.",
       "link": "Tillbaka till verktygen"
     },
     "footer": {
       "description": "En användbar plats att tänka på din ekonomi.",
       "note": "Under utveckling, med en tydlig riktning.",
       "statusLabel": "Sidans anslutning",
-      "copyright": "MoneyWorks",
-      "home": "MoneyWorks startsida"
+      "copyright": "Pengar jobbar",
+      "home": "Pengar jobbar startsida"
     }
   }
 }

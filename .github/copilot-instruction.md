@@ -4,6 +4,17 @@ MoneyWorks is an owner-hosted, country-neutral personal-finance project. It impl
 
 ## Maintain these instructions
 
+FIRE includes a self-hosted, native HTML video walkthrough with local English and
+Swedish subtitles and a readable text version. Keep it clearly discoverable near
+the calculator heading. No autoplay, third-party player or analytics; pause on
+closing the demo or leaving the tool. HyperFrames production sources and runtime
+stay outside the application dependencies.
+The current walkthrough uses English narration and short headings, with captions
+optional and off by default. Avoid restoring the superseded dense silent format.
+Display currency as whole units in results, accepted payouts, charts and yearly
+tables, regardless of the chosen currency label. Keep fractional inputs, rates
+and internal calculations precise. Round minimum required monthly saving up.
+
 - **Keep guidance current:** Update this file alongside meaningful changes to application behavior, dependencies, containers, credentials, migrations, tests or CI. Update the root README when its user-facing commands or behavior change.
 - **Separate fact from plans:** Describe existing files and implemented behavior accurately. Future ideas below are not completed functionality or authority to build a feature without a request.
 - **Use executable sources:** Treat `web/package.json`, `web/package-lock.json`, Docker/Compose configuration, Prisma schema/migrations and `.github/workflows/ci.yml` as the authorities for current versions and commands. Do not preserve stale prose when those files change.
@@ -14,7 +25,7 @@ MoneyWorks is an owner-hosted, country-neutral personal-finance project. It impl
 
 ## Project scope and stack
 
-- **Repository:** `hkarn/moneyworks`, MIT licensed.
+- **Repository:** `GothenburgOffice/moneyworks`, MIT licensed. The owner transferred the existing repository; use this organization path for current clone and push targets.
 - **Hosting:** Maintained and hosted by its owner. Do not add deployment wizards, credential generators or general third-party onboarding unless requested.
 - **Application:** Next.js App Router, React, strict TypeScript, Tailwind CSS and `next-intl`, with `en` and `sv` locales.
 - **Database:** Self-hosted PostgreSQL using Prisma and `@prisma/adapter-pg`. The schema contains `Greeting` plus `User`, `Account`, `Session`, `Verification` and `RateLimit`; the additive account migration preserves the greeting data.
@@ -23,6 +34,13 @@ MoneyWorks is an owner-hosted, country-neutral personal-finance project. It impl
 - **Compatibility holds:** TypeScript and ESLint major updates are currently held in Dependabot because of lint-plugin peer compatibility. Recheck those peers before changing the holds; the README records the currently selected versions.
 
 ## Existing repository layout
+
+`moneyworks.code-workspace` opens the repository root, scopes ESLint to `web/`,
+and uses the container-installed `web/node_modules/typescript/lib` SDK. It
+recommends the owner's Claude Code, Docker and GitHub Actions extensions plus
+Dev Containers, ESLint and Prisma. Keep this a small workspace definition,
+not a replacement for the existing Compose/devcontainer configuration; do not
+add host package requirements or automatically install extensions.
 
 ```text
 moneyworks/
@@ -67,6 +85,13 @@ Email/password authentication, an empty private workspace and the FIRE calculato
 
 ## Component boundaries
 
+- **Localized identity:** `content/brand.ts` selects MoneyWorks/M-W for English
+  and Pengar jobbar/PJ for Swedish. Pass the explicit locale to shared brand,
+  intro and about components; keep names, SVG marks and favicons server-rendered.
+  Swedish account/privacy copy and metadata follow the same language. Language
+  links stay on the current host; domain defaults and analytics remain separate
+  unimplemented deployment decisions. Keep the existing approved video unchanged.
+
 - **Route orchestration:** Resolve request/query state, auth configuration and sessions in server routes. Pass only the required user fields or public controller/contact details, never full sessions/configuration, into presentation.
 - **Presentation:** Reuse `components/account/` for entry, form, tabs and workspace, and `components/privacy/` for privacy rendering. Keep privacy copy in `content/privacy.ts`, independent of account messages.
 - **Pure features:** `features/account/view.ts` parses allowlisted view/feedback queries; `features/tools/catalog.ts` defines approved stable tool IDs/status and a neutral card-content contract. Add approved tools through the catalogue and both translations, not duplicated card calls or a FIRE-specific prop type. No additional tools are approved by this abstraction.
@@ -75,6 +100,8 @@ Email/password authentication, an empty private workspace and the FIRE calculato
 - **Shared navigation:** Keep the sticky header's reserved slot independent of its compact bar height to prevent scroll/layout oscillation. Preserve hash/skip/result clearance, 44px controls, both mobile-menu modes and the full-size no-JS fallback. No redundant footer back-to-top control; the header logo remains available.
 - **FIRE separation:** `features/fire/model.ts` is the dependency-free, independently tested engine. Static `components/fire/` render fields, pensions, results scaffold and method; copy lives in `content/fire.ts`. `enhancements/fire-calculator.js` handles only the DOM. `scripts/build-fire.mjs` combines it with the tested engine into one gitignored classic script during prebuild/predev. Do not duplicate the model or add a runtime compiler/chart/form library.
 - **FIRE truth and privacy:** Preserve both questions/strategies, monthly non-borrowing checks, pension age boundaries and real-money conventions in `FIRE.md`. No guaranteed returns, mortality label, financial input persistence/URLs/telemetry or account saving. Without JavaScript, explanatory HTML remains readable and calculation controls honestly unavailable.
+- **Age freedom:** Do not impose fixed lifespan bounds or duplicate obvious age constraints in helper text. Use only numeric representability, whole/non-negative ages and chronological ordering; keep long horizons practical without silently truncating their calculations or rejecting large finite results.
+- **Icon-only actions:** Prefer shared local SVG icons over another dependency for simple controls. Keep native buttons, localized/contextual accessible names, decorative SVGs hidden from assistive technology, visible keyboard focus and at least 44px click/touch targets.
 - **Payout editing:** No fixed payout-count ceiling. Save validates only that row using the shared model validator, accepts it in page memory and collapses it into an Edit/Remove summary. Cancel restores accepted values or discards a new draft. Disable collapsed inputs; calculate from accepted records and require open edits to be saved/cancelled. Enter saves a payout input or calculates elsewhere. Never turn this into browser/account persistence without approval.
 - **Number entry:** Optional zero-based amounts (portfolio, contributions, end reserve and payout amount) start empty with a `0` placeholder; blank means zero, not missing required spending or ages. Reset and reopened zero payouts keep this convention. Normalize redundant integer-leading zeros on blur only, preserving in-progress decimals, signs/exponents and fresh Enter results.
 - **Result phases:** Preserve the Savings plan / Retirement plan toggle. Savings rows come from the same pure engine as projected savings, with month-end contributions and no separate working pension income. Chart actual entered savings against a distinct minimum-capital target; never invent a funded join to portfolio-needed retirement. Monthly saving to target is a total, not a top-up or preservation guarantee. Handle retirement now/unsupported targets, preserve phase on recalculation and reset it on Clear.

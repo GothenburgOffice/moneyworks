@@ -29,6 +29,9 @@
 .fire-pension-description { display: flex; flex: 1 1 260px; flex-wrap: wrap; gap: 4px 14px; min-width: 0; font-size: 13px; color: var(--muted); }
 .fire-pension-description strong { flex-basis: 100%; color: var(--ink); overflow-wrap: anywhere; }
 .fire-pension-summary-actions, .fire-pension-editor-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+.fire-pension-summary-actions { flex-wrap: nowrap; flex-shrink: 0; }
+.fire-pension-summary-actions button { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; padding: 0; }
+.fire-pension-summary-actions button:hover { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
 .fire-pension-row-actions [data-save-pension] { background: var(--ink); color: var(--ground); border-color: var(--ink); font-weight: 700; }
 .fire-pension-row [data-pension-error]:empty { display: none; }
 .fire-checkbox { display: inline-flex; align-items: center; min-height: 44px; gap: 8px; font-size: 13px; }

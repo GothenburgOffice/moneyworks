@@ -1,6 +1,7 @@
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import type { Metadata } from 'next';
 import { getSiteCopy } from '@/content/site';
+import { getBrand } from '@/content/brand';
 import { SiteHeader } from '@/components/site-header';
 import { IntroSection } from '@/components/intro-section';
 import { ToolsSection } from '@/components/tools-section';
@@ -21,7 +22,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: t('title'),
     description: t('description'),
-    icons: { icon: '/moneyworks-mark.svg' },
+    icons: { icon: getBrand(locale === 'sv' ? 'sv' : 'en').icon },
   };
 }
 
@@ -39,10 +40,10 @@ export default async function HomePage({ params }: Props) {
       <SiteHeader copy={copy} locale={language} />
       <main id="main-content">
         <div data-home-view>
-          <IntroSection copy={copy.intro} />
+          <IntroSection copy={copy.intro} locale={language} />
           <ToolsSection copy={copy.tools} />
           <LearnSection copy={copy.learn} />
-          <AboutSection copy={copy.about} />
+          <AboutSection copy={copy.about} locale={language} />
         </div>
         <ToolView id="fire" anchor="fire-calculator" label={fire.bannerLabel}
           back={fire.backToTools} titleLead={fire.bannerLead} titleEnd={fire.bannerEnd}

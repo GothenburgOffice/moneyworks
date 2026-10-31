@@ -21,6 +21,7 @@ function setup({ query = '', blockedHistory = false } = {}) {
   let preferenceURL = '';
   runInNewContext(source, {
     document: {
+      addEventListener() {},
       documentElement: root, querySelector: selector => selector === '[data-theme-toggle]' ? button : null,
       querySelectorAll: selector => selector === '[data-locale-link]' ? links : [],
     },
@@ -49,6 +50,7 @@ test('native tool view keeps locale and skip controls in context without persist
   const skip = { href: '#main-content', setAttribute(name, value) { this[name] = value; } };
   runInNewContext(source, {
     document: {
+      addEventListener() {},
       readyState: 'complete', documentElement: root,
       querySelector: selector => selector === '.skip-link' ? skip : null,
       querySelectorAll: selector => selector === '[data-tool-panel]' ? [panel] : selector === '[data-locale-link]' ? links : [],
@@ -111,6 +113,7 @@ test('sticky header uses a stable threshold and coalesces passive scroll work', 
   };
   runInNewContext(source, {
     document: {
+      addEventListener() {},
       documentElement: root,
       querySelector: selector => selector === '[data-sticky-header]' ? slot : null,
       querySelectorAll: () => [],
@@ -135,4 +138,55 @@ test('sticky header uses a stable threshold and coalesces passive scroll work', 
   window.scrollY = 0;
   listeners.pageshow(); frames.shift()();
   assert.equal(slot.dataset.compact, 'false');
+});
+
+test('native demo pauses on close, hidden document and tool exit without autoplay', () => {
+  let pauses = 0;
+  const video = { pause: () => pauses++, play: () => assert.fail('Enhancement must never autoplay') };
+  const demoEvents = {}, windowEvents = {}, documentEvents = {}, frames = [];
+  const demo = {
+    open: true,
+    addEventListener(event, listener) { demoEvents[event] = listener; },
+    querySelector: () => video,
+  };
+  const panel = {
+    id: 'fire-calculator', dataset: { toolPanel: 'fire' },
+    contains: candidate => candidate === video,
+  };
+  const location = { hash: '#fire-calculator' };
+  const document = {
+    readyState: 'complete', hidden: false, documentElement: { dataset: {} },
+    addEventListener(event, listener) { documentEvents[event] = listener; },
+    querySelector: () => null,
+    querySelectorAll: selector => ({
+      '[data-tool-panel]': [panel],
+      '[data-tool-demo]': [demo],
+      '[data-tool-demo] video': [video],
+    }[selector] ?? []),
+  };
+  runInNewContext(source, {
+    document, location, Event,
+    requestAnimationFrame: callback => frames.push(callback),
+    window: {
+      addEventListener(event, listener) { windowEvents[event] = listener; },
+      dispatchEvent() {},
+    },
+  });
+  while (frames.length) frames.shift()();
+  demoEvents.toggle();
+  assert.equal(pauses, 0);
+  demo.open = false;
+  demoEvents.toggle();
+  assert.equal(pauses, 1);
+  documentEvents.visibilitychange();
+  assert.equal(pauses, 1);
+  document.hidden = true;
+  documentEvents.visibilitychange();
+  assert.equal(pauses, 2);
+  location.hash = '#tools';
+  windowEvents.hashchange();
+  assert.equal(pauses, 3);
+  location.hash = '#fire-calculator';
+  windowEvents.hashchange();
+  assert.equal(pauses, 3);
 });

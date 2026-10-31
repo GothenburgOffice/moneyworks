@@ -32,6 +32,10 @@ The owner hosts and maintains the application. Development is reviewed in an unp
 
 ## Brand Commitments
 
+The owner requested Pengar jobbar branding for the Swedish preview. English
+remains MoneyWorks. This is locale-specific presentation in the existing shared
+app, not authorization to configure domains, analytics or public hosting.
+
 The owner selected direction C, Bright works, as the real application's basic visual starter. Its charcoal/lime palette, bold headings, original M/W mark, sharp corners and contrasting tool panels are the selected starting direction, not a mandate to implement the hypothetical expansion study. The owner explicitly requested Taste Skill and Impeccable for the design work.
 
 ## Evidence on Hand

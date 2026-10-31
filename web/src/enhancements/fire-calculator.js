@@ -11,7 +11,11 @@ function initializeFire() {
     const status = root.querySelector('[data-fire-status]');
     const field = key => form.querySelector(`[data-field="${key}"]`);
     const text = (selector, value) => { root.querySelector(selector).textContent = value; };
-    const number = value => new Intl.NumberFormat(locale, { maximumFractionDigits: 2 }).format(Math.abs(value) < .005 ? 0 : value);
+    const rateNumber = new Intl.NumberFormat(locale, { maximumFractionDigits: 2 });
+    const regularNumber = new Intl.NumberFormat(locale, { maximumFractionDigits: 0 });
+    const largeNumber = new Intl.NumberFormat(locale, { notation: 'scientific', maximumFractionDigits: 0 });
+    const compactNumber = new Intl.NumberFormat(locale, { notation: 'compact', maximumFractionDigits: 0 });
+    const number = value => (Math.abs(value) >= 1e15 ? largeNumber : regularNumber).format(Math.abs(value) < .5 ? 0 : value);
     const currency = () => field('currency').value.trim() || copy.units;
     const money = value => `${number(value)} ${currency()}`;
     let nextId = 0;
@@ -50,11 +54,19 @@ function initializeFire() {
       put('amount', `${money(pension.monthly)} ${copy.perMonth}`);
       put('ages', `${copy.age}: ${pension.startAge}–${pension.endAge}`);
       put('indexing', pension.indexed ? copy.indexed : copy.fixedPayout);
-      row.querySelector('[data-edit-pension]').setAttribute('aria-label', `${copy.editPension} ${row.dataset.pensionNumber}: ${title}`);
-      row.querySelector('[data-remove-pension]').setAttribute('aria-label', `${copy.remove} ${row.dataset.pensionNumber}: ${title}`);
+      for (const [selector, action] of [['[data-edit-pension]', copy.editPension], ['[data-remove-pension]', copy.remove]]) {
+        const button = row.querySelector(selector);
+        const label = `${action} ${row.dataset.pensionNumber}: ${title}`;
+        button.setAttribute('aria-label', label);
+        button.title = label;
+      }
     }
     function setEditing(row, editing) {
       const editor = row.querySelector('[data-pension-editor]');
+      editor.id = `${row.dataset.pensionId}-editor`;
+      const editButton = row.querySelector('[data-edit-pension]');
+      editButton.setAttribute('aria-controls', editor.id);
+      editButton.setAttribute('aria-expanded', String(editing));
       const amount = editor.querySelector('[data-pension-field="monthly"]');
       if (editing && amount.value !== '' && Number(amount.value) === 0) amount.value = '';
       row.dataset.editing = String(editing);
@@ -164,7 +176,8 @@ function initializeFire() {
       make('title', {}, title);
       make('desc', {}, `${hint} ${copy.age}: ${startAge}–${endAge}.`);
       const values = [rows[0]?.opening ?? initial, ...rows.map(row => row.closing)];
-      const maximum = Math.max(1, ...values, target ?? 0) * 1.1;
+      const peak = values.reduce((maximum, value) => Math.max(maximum, value), Math.max(1, target ?? 0));
+      const maximum = peak <= Number.MAX_VALUE / 1.1 ? peak * 1.1 : peak;
       const duration = endAge - startAge;
       const x = age => duration === 0 ? (left + right) / 2 : left + (age - startAge) / duration * (right - left);
       const y = value => 220 - Math.max(0, value) / maximum * 190;
@@ -172,9 +185,10 @@ function initializeFire() {
         const value = maximum * i / 4;
         make('line', { x1: left, x2: right, y1: y(value), y2: y(value), class: 'fire-chart-grid' });
         make('text', { x: left - 10, y: y(value) + 4, 'text-anchor': 'end', class: 'fire-chart-label' },
-          new Intl.NumberFormat(locale, { notation: 'compact', maximumFractionDigits: 1 }).format(value));
+          (value >= 1e15 ? largeNumber : compactNumber).format(value));
       }
-      const steps = Math.min(4, duration);
+      const labelWidth = Math.max(number(startAge).length, number(endAge).length) * 7 + 18;
+      const steps = Math.min(4, duration, Math.max(1, Math.floor((right - left) / labelWidth)));
       for (let i = 0; i <= steps; i++) {
         const age = steps === 0 ? startAge : Math.round(startAge + duration * i / steps);
         make('text', { x: x(age), y: 245, 'text-anchor': duration === 0 ? 'middle' : i === 0 ? 'start' : i === steps ? 'end' : 'middle', class: 'fire-chart-label' }, number(age));
@@ -211,7 +225,7 @@ function initializeFire() {
       root.querySelector('[data-result-saving-unavailable]').hidden = !savings || rows.length === 0 || result.monthlySavingNeeded !== null;
       root.querySelector('[data-result-outside]').hidden = savings || !result.outsidePensions;
       text('[data-result-contribution]', money(plan.contribution));
-      text('[data-result-saving-needed]', result.monthlySavingNeeded === null ? copy.notAvailable : money(result.monthlySavingNeeded));
+      text('[data-result-saving-needed]', result.monthlySavingNeeded === null ? copy.notAvailable : money(Math.ceil(result.monthlySavingNeeded)));
       text('[data-result-saving-gap]', money(Math.max(0, result.required - result.projectedSavings)));
       text('[data-result-age]', savings
         ? `${copy.startAge} ${plan.currentAge} · ${copy.stopAge} ${result.retirementAge}`
@@ -235,24 +249,28 @@ function initializeFire() {
       root.querySelector('.fire-table-scroll').setAttribute('aria-label', yearly);
       const tbody = root.querySelector('[data-fire-table]');
       tbody.replaceChildren();
+      const tableRows = document.createDocumentFragment();
       for (const row of rows) {
         const tr = document.createElement('tr');
-        const rounded = value => Math.round(value * 100) / 100;
+        const rounded = value => Math.sign(value) * Math.round(Math.abs(value));
         const opening = rounded(row.opening), closing = rounded(row.closing);
         const income = rounded(savings ? row.contribution : row.pension);
         const spending = savings ? 0 : rounded(row.spending);
-        // Reconcile displayed cents while retaining unrounded model arithmetic.
-        const growth = rounded(closing - opening - income + spending);
+        // Reconcile whole-unit rows without changing the model. For extreme
+        // amounts, retain finite model growth instead of unsafe integer sums.
+        const growth = [opening, closing, income, spending].every(Number.isSafeInteger)
+          ? rounded(closing - opening - income + spending) : rounded(row.growth);
         const values = savings ? [row.age, opening, income, growth, closing]
           : [row.age, opening, income, spending, growth, closing];
         for (const [index, value] of values.entries()) {
           const cell = document.createElement('td');
           cell.textContent = index === 0 ? String(value)
-            : new Intl.NumberFormat(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Math.abs(value) < .005 ? 0 : value);
+            : number(value);
           tr.append(cell);
         }
-        tbody.append(tr);
+        tableRows.append(tr);
       }
+      tbody.append(tableRows);
       chartData = [rows, savings ? plan.currentAge : result.retirementAge,
         savings ? result.retirementAge : plan.endAge, title, hint,
         savings ? plan.portfolio : result.rows[0].opening, savings ? result.required : null];
@@ -284,7 +302,7 @@ function initializeFire() {
       root.querySelector('[data-required-metric]').hidden = plan.goal === 'portfolio';
       text('[data-result-savings]', money(result.projectedSavings));
       text('[data-result-end]', money(result.endPortfolio));
-      text('[data-result-return]', `${number(result.realReturn)}%`);
+      text('[data-result-return]', `${rateNumber.format(Math.abs(result.realReturn) < .005 ? 0 : result.realReturn)}%`);
       resultPanel.hidden = false;
       lastCalculation = { result, plan };
       renderPhase();

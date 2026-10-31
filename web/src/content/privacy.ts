@@ -22,7 +22,7 @@ const sv: PrivacyCopy = {
   privacy: 'Kakor och integritet',
   privacyTitle: 'Ditt konto. Dina uppgifter.',
   cookieShort: 'Bara nödvändiga inloggningskakor. Ingen analys eller reklam.',
-  cookieDetail: 'MoneyWorks använder inte analys-, reklam- eller spårningskakor. Inloggning använder nödvändiga autentiserings- och säkerhetskakor. Det finns inget ”godkänn alla”-steg och du behöver inget konto för att läsa sidan.',
+  cookieDetail: 'Pengar jobbar använder inte analys-, reklam- eller spårningskakor. Inloggning använder nödvändiga autentiserings- och säkerhetskakor. Det finns inget ”godkänn alla”-steg och du behöver inget konto för att läsa sidan.',
   cookieLifetime: 'Inloggningskakor är normalt sessionskakor. Serverns session löper ut efter 24 timmar om den inte förnyas vid aktivitet. Utloggning återkallar sessionen. Säkra installationer använder __Host-moneyworks.session_token och __Host-moneyworks.dont_remember; lokal utveckling använder motsvarigheter med moneyworks-dev.',
   privacyLead: 'Kontot lagrar e-postadress, bekräftelsestatus, lösenordshash, inloggningsidentiteter samt sessions- och säkerhetsuppgifter som IP-adress och webbläsarinformation. Lösenord lagras inte i läsbar klartext.',
   privacyPurpose: 'Uppgifterna används för kontoåtkomst, säkerhet och bekräftelse- och återställningsmejl via den konfigurerade mejltjänsten. Portföljer och skattearbetsytor är inte implementerade. Dessa formulär samlar inte in ekonomiska underlag.',

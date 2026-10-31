@@ -9,7 +9,7 @@ export function SiteFooter({ copy, status, locale }: { copy: SiteCopy; status: S
     <footer className="site-footer">
       <div className="page-width">
         <div className="footer-main">
-          <div><BrandLogo label={copy.footer.home} href={`/${locale}`} compact /><p>{copy.footer.description}</p></div>
+          <div><BrandLogo locale={locale} label={copy.footer.home} href={`/${locale}`} compact /><p>{copy.footer.description}</p></div>
         </div>
         <div className="footer-bottom">
           <span>{copy.footer.note}</span>

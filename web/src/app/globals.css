@@ -282,6 +282,14 @@ details[open] > summary .plus-icon { transform: rotate(45deg); }
   .header-utilities { gap: 4px; }
   .header-inner { gap: 8px; }
 }
+@media (max-width: 420px) {
+  /* Keep the longer Swedish name legible beside the existing 44px controls. */
+  .header-inner .brand[data-brand="sv"] .brand-name {
+    max-inline-size: 7ch;
+    white-space: normal;
+    line-height: 1.05;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }

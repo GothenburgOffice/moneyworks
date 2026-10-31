@@ -61,8 +61,9 @@ export type FireResult =
   };
 
 const MONEY_LIMIT = 1e12;
-const RESULT_LIMIT = 1e15;
 const tolerance = 0.005;
+// Integer months must be representable exactly; this is not a lifespan limit.
+const validAge = (age: number) => Number.isSafeInteger(age * 12) && age >= 0;
 
 export function isValidPension(pension: Pension): boolean {
   return Boolean(pension && typeof pension.id === 'string'
@@ -71,13 +72,12 @@ export function isValidPension(pension: Pension): boolean {
     && typeof pension.indexed === 'boolean'
     && Number.isFinite(pension.monthly) && pension.monthly >= 0 && pension.monthly <= MONEY_LIMIT
     && Number.isInteger(pension.startAge) && Number.isInteger(pension.endAge)
-    && pension.startAge >= 0 && pension.endAge <= 120 && pension.startAge < pension.endAge);
+    && validAge(pension.startAge) && validAge(pension.endAge) && pension.startAge < pension.endAge);
 }
 
 export function validateFirePlan(plan: FirePlan): FireError | null {
   if (!['portfolio', 'age'].includes(plan.goal) || !['drawdown', 'preserve'].includes(plan.strategy)) return 'range';
-  if (![plan.currentAge, plan.retirementAge, plan.endAge].every(Number.isInteger)
-    || plan.currentAge < 0 || plan.endAge < 75 || plan.endAge > 120
+  if (![plan.currentAge, plan.retirementAge, plan.endAge].every(age => Number.isInteger(age) && validAge(age))
     || plan.currentAge >= plan.endAge
     || (plan.goal === 'portfolio' && (plan.retirementAge < plan.currentAge || plan.retirementAge >= plan.endAge))) return 'ages';
   if (![plan.portfolio, plan.contribution, plan.spending, plan.endBalance]
@@ -144,31 +144,53 @@ export function monthlySavingToTarget(plan: FirePlan, retirementAge: number, tar
   if (coefficient === 0) return null;
   const needed = Math.ceil(gap / coefficient * 100) / 100;
   return Number.isFinite(needed) && needed <= MONEY_LIMIT
-    && existing + coefficient * needed <= RESULT_LIMIT ? needed : null;
+    && Number.isFinite(existing + coefficient * needed) ? needed : null;
 }
 
-// B[t] = a[t] * initial + c[t]. Every monthly non-borrowing constraint
-// supplies a lower bound on initial capital, including the bridge to pensions.
-// Preserving initial capital adds a final inequality, not a "safe" 4% rule.
-export function requiredCapital(plan: FirePlan, retirementAge: number): number | null {
+type FundingBounds = { required: number | null; maximum: number };
+
+// Work backwards once. Unlike forward growth coefficients, discounted cash flow
+// stays stable over long positive-return horizons. Store each birthday so age
+// search does not resimulate the whole remaining plan for every candidate.
+function fundingTimeline(plan: FirePlan, firstAge: number): Map<number, FundingBounds> {
   const factor = realAnnualFactor(plan) ** (1 / 12);
-  let a = 1, c = 0, lower = 0;
-  for (let month = retirementAge * 12; month < plan.endAge * 12; month++) {
-    a *= factor;
-    c = (c + pensionAtMonth(plan, month) - plan.spending) * factor;
-    lower = Math.max(lower, -c / a);
+  const timeline = new Map<number, FundingBounds>();
+  let needed = plan.strategy === 'drawdown' ? plan.endBalance : 0;
+  let discount = 1, cash = 0;
+  for (let month = plan.endAge * 12 - 1; month >= firstAge * 12; month--) {
+    const flow = pensionAtMonth(plan, month) - plan.spending;
+    needed = Math.max(0, needed / factor - flow);
+    if (plan.strategy === 'preserve') {
+      if (factor > 1) {
+        discount /= factor;
+        cash = flow + cash / factor;
+      } else {
+        discount *= factor;
+        cash += flow * discount;
+      }
+    }
+    if (month % 12 !== 0) continue;
+    let lower = needed, maximum = Infinity, feasible = true;
+    if (plan.strategy === 'preserve') {
+      const change = factor > 1 ? 1 - discount : discount - 1;
+      if (change > 1e-10) lower = Math.max(lower, -cash / change);
+      else if (change < -1e-10) {
+        const upper = cash / -change;
+        feasible = lower <= upper + tolerance;
+        maximum = (cash + tolerance) / -change;
+      } else if (cash < -tolerance) feasible = false;
+    }
+    // Preserve large finite values without overflowing merely while rounding.
+    const cents = (lower - 1e-8) * 100;
+    const required = feasible && Number.isFinite(lower)
+      ? Math.max(0, Number.isFinite(cents) ? Math.ceil(cents) / 100 : lower) : null;
+    timeline.set(month / 12, { required, maximum });
   }
-  if (plan.strategy === 'drawdown') lower = Math.max(lower, (plan.endBalance - c) / a);
-  else {
-    const change = a - 1;
-    if (change > 1e-10) lower = Math.max(lower, -c / change);
-    else if (change < -1e-10) {
-      if (lower > c / -change + tolerance) return null;
-    } else if (c < -tolerance) return null;
-  }
-  if (!Number.isFinite(lower) || lower > RESULT_LIMIT) return null;
-  // Round upward only at the result boundary, never inside the simulation.
-  return Math.max(0, Math.ceil((lower - 1e-8) * 100) / 100);
+  return timeline;
+}
+
+export function requiredCapital(plan: FirePlan, retirementAge: number): number | null {
+  return fundingTimeline(plan, retirementAge).get(retirementAge)?.required ?? null;
 }
 
 export function projectRetirement(plan: FirePlan, retirementAge: number, initial: number) {
@@ -198,26 +220,31 @@ export function calculateFire(plan: FirePlan): FireResult {
   if (error) return { ok: false, error };
   const realReturn = (realAnnualFactor(plan) - 1) * 100;
   let retirementAge: number | null = plan.goal === 'portfolio' ? plan.retirementAge : null;
+  const timeline = fundingTimeline(plan, plan.goal === 'age' ? plan.currentAge : plan.retirementAge);
   if (plan.goal === 'age') {
-    // Check each whole age; no monotonicity assumption about pensions or returns.
+    // Still check every whole age: pension timing need not be monotonic.
+    // Funding bounds and working savings both advance in linear time.
+    const factor = realAnnualFactor(plan) ** (1 / 12);
+    let savings = plan.portfolio;
     for (let age = plan.currentAge; age < plan.endAge; age++) {
-      const savings = projectedSavings(plan, age);
-      if (!Number.isFinite(savings) || savings > RESULT_LIMIT) return { ok: false, error: 'range' };
-      const requirement = requiredCapital(plan, age);
+      if (!Number.isFinite(savings)) return { ok: false, error: 'range' };
+      const { required: requirement, maximum } = timeline.get(age)!;
       if (requirement !== null && savings + tolerance >= requirement
+        && savings <= maximum
         && projectRetirement(plan, age, savings).funded) { retirementAge = age; break; }
+      for (let month = 0; month < 12; month++) savings = savings * factor + plan.contribution;
     }
   }
-  const required = retirementAge === null ? null : requiredCapital(plan, retirementAge);
+  const required = retirementAge === null ? null : timeline.get(retirementAge)!.required;
   const savings = retirementAge === null ? 0 : projectedSavings(plan, retirementAge);
-  if (!Number.isFinite(savings) || savings > RESULT_LIMIT) return { ok: false, error: 'range' };
+  if (!Number.isFinite(savings)) return { ok: false, error: 'range' };
   // Portfolio view shows the minimum-capital retirement path, not an invented
   // projection of the user's unfunded savings. Age view uses projected savings.
   const initial = plan.goal === 'age' ? savings : required;
   const projection = retirementAge !== null && initial !== null
     ? projectRetirement(plan, retirementAge, initial) : null;
-  if (projection && (!Number.isFinite(projection.balance) || Math.abs(projection.balance) > RESULT_LIMIT
-    || projection.rows.some(row => Math.abs(row.closing) > RESULT_LIMIT))) return { ok: false, error: 'range' };
+  if (projection && (!Number.isFinite(projection.balance)
+    || projection.rows.some(row => ![row.opening, row.pension, row.spending, row.growth, row.closing].every(Number.isFinite)))) return { ok: false, error: 'range' };
   const actual = retirementAge !== null && required !== null
     ? projectRetirement(plan, retirementAge, savings) : null;
   return {

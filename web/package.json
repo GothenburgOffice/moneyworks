@@ -18,7 +18,7 @@
     "test:smoke": "node --test tests/smoke.test.mjs tests/database-status.test.mjs",
     "test:db-status": "node --test tests/database-status.test.mjs",
     "test:ui": "node --test tests/site-ui.test.mjs",
-    "test:architecture": "node --test tests/architecture.test.mjs tests/features.test.mjs",
+    "test:architecture": "node --test tests/architecture.test.mjs tests/features.test.mjs tests/workspace.test.mjs",
     "test:fire": "node scripts/build-fire.mjs && node --test tests/fire.test.mjs",
     "auth:cleanup": "node scripts/cleanup-auth.mjs",
     "test:auth-config": "node --test tests/auth-config.test.mjs",

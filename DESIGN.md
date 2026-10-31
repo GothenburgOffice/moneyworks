@@ -61,6 +61,13 @@ Use charcoal/lime, bold uppercase two-line headings, a large tilted original M/W
 
 ## Creative North Star
 
+Locale-specific identity keeps this visual world: English uses MoneyWorks and
+the original M/W mark; Swedish uses Pengar jobbar and an original two-stroke PJ
+mark on the same 44-unit grid, with the same weight, rounded joins and lime/
+charcoal treatment. All site marks and favicons follow the locale at render time.
+At widths of 420px and below the Swedish header name uses two readable lines,
+leaving existing navigation controls intact. Do not replace the shared layout.
+
 A useful place to start. Cooperative clarity informs the original mark and common grid, not a literal stationery or office metaphor.
 
 ## Color Palette

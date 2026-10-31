@@ -5,6 +5,25 @@ It is a deterministic scenario, not a pension entitlement estimate, tax calculat
 recommended withdrawal rate, probability of success or financial advice.
 No government/employer service, Google integration or market feed is used.
 
+## Currency display
+
+Currency displays use whole units in results, accepted payouts, chart ticks and
+yearly tables, regardless of currency label. Minimum monthly saving rounds up so
+the displayed requirement is not understated. Other currency amounts round to the
+nearest integer; displayed yearly rows reconcile at that precision. Fractional
+inputs, percentage rates and internal model arithmetic remain unchanged.
+
+## Demonstration
+
+The focused tool has a “Watch a 90-second walkthrough” disclosure above the inputs.
+It follows one example and one pension through focused current-interface captures,
+custom payout ages and retirement/savings views. English narration replaces long
+text overlays. Native, self-hosted video has optional English/Swedish captions
+(off by default) and a readable walkthrough; it does not
+autoplay or add a tracking/player service. Closing it or leaving the tool pauses it.
+The illustrative amounts are arbitrary currency units with zero return, inflation
+and fees, not recommended planning assumptions.
+
 ## Questions and strategies
 
 - **Portfolio needed:** Find minimum capital at the chosen retirement age that
@@ -16,7 +35,7 @@ No government/employer service, Google integration or market feed is used.
   check and the end target. Resolution is whole years, not exact dates; the chart
   uses projected actual savings.
 - **Planned drawdown:** Target at least the entered real end balance, default zero,
-  at an age of 75–120. Zero has no safety buffer and later years are not funded.
+  at the chosen plan end age. Zero has no safety buffer.
   Extra savings or pension surpluses can leave more: no extra spending is invented
   to force an exact zero.
 - **Preserve starting capital:** Require at least the real retirement starting
@@ -102,21 +121,27 @@ The annual real factor is `(1 + return/100) * (1 - fee/100) / (1 + inflation/100
 the monthly factor is its twelfth root. Rates are constant, not sampled.
 The fee convention is an annual percentage reduction applied multiplicatively.
 
-Each monthly balance is affine: `a * initial + c`. Every month supplies a
-non-borrowing lower bound on initial capital. The final condition adds the
-reserve target or starting capital itself. Negative real growth can make
-preservation impossible or impose an upper feasible capital bound; the age search
-does not assume that more initial capital always preserves itself.
+Funding requirements are computed backwards, checking every month's non-borrowing
+constraint and the final reserve. Preservation adds a discounted final-capital
+inequality. Positive-return horizons use present values to avoid overflowing
+forward growth coefficients. Negative real growth can make preservation
+impossible or impose an upper feasible capital bound. Age search reuses one
+backward timeline and advances working savings forwards, rather than repeatedly
+resimulating the whole remaining horizon; it still checks every whole birthday.
 
 Only minimum required capital is rounded upward to cents; internal arithmetic
 is unrounded floating point with half-cent feasibility tolerance. Display tables
 use two decimals and assign rounding residuals to growth so displayed rows
 reconcile. This is a scenario model, not an accounting ledger.
 
-Limits: whole ages 0–120, plan end 75–120 and after current/retirement age; amounts
+There is no fixed minimum lifespan or maximum age. Ages are non-negative whole
+birthdays, representable as integer months, with plan end after current/retirement
+age. Amount inputs remain
 0–1 trillion; return −50% to 30%, inflation −5% to 30%, fees 0% to 10%.
-Supported displayed projections are capped at 1 quadrillion. An unavailable
-solution can reflect strategy or model limits, not real-world impossibility.
+Finite projections are not capped at an arbitrary capital amount; large displayed
+values use scientific notation. Genuine floating-point overflow is reported as
+unrepresentable, not as an age restriction. An unavailable solution can reflect
+strategy or numeric representation, not real-world impossibility.
 
 Not modelled: volatility/sequence risk, stochastic inflation, changing spending
 or contributions, automatic pension rules, allocation, emergencies or withdrawal
@@ -158,6 +183,6 @@ in the current page: no cookies, browser storage, account saving or schema chang
 Changing language/reloading starts another page. No real pension entitlement is
 invented or retrieved.
 
-This remains local/uncommitted until separately approved. No GitHub write or
-public publication is authorized. The mockup board and outstanding account/
-production/privacy launch prerequisites are unchanged.
+GitHub commits/pushes require the owner's specific request and confirmation;
+they do not authorize a public deployment. The mockup board and outstanding
+account/production/privacy launch prerequisites are unchanged.

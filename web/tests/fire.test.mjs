@@ -159,7 +159,7 @@ test('yearly cash-flow rows reconcile and minimum funding stays solvent', () => 
   assert.ok(result.rows.every(row => row.closing >= -.005));
 });
 test('invalid ages, nonfinite/negative amounts, fees and pension ranges are rejected', () => {
-  assert.equal(validateFirePlan({ ...base, endAge: 74 }), 'ages');
+  assert.equal(validateFirePlan({ ...base, endAge: 55 }), 'ages');
   assert.equal(validateFirePlan({ ...base, retirementAge: 85 }), 'ages');
   assert.equal(validateFirePlan({ ...base, currentAge: 50.5 }), 'ages');
   assert.equal(validateFirePlan({ ...base, spending: NaN }), 'amounts');
@@ -168,9 +168,68 @@ test('invalid ages, nonfinite/negative amounts, fees and pension ranges are reje
   assert.equal(validateFirePlan({ ...base, pensions: [pension(65, 65, 1)] }), 'pensions');
   assert.equal(validateFirePlan({ ...base, pensions: [pension(65, 85, 1), pension(65, 85, 1)] }), 'pensions');
 });
-test('extreme values never escape as nonfinite numbers', () => {
+test('large finite projections are not rejected by an arbitrary capital ceiling', () => {
   const result = calculateFire({ ...base, currentAge: 0, retirementAge: 119, endAge: 120, portfolio: 1e12, annualReturn: 30 });
+  assert.equal(result.ok, true);
+  assert.ok(result.projectedSavings > 1e15);
+  assert.ok(Number.isFinite(result.projectedSavings));
+});
+test('genuine numeric overflow never escapes as nonfinite result values', () => {
+  const result = calculateFire({ ...base, currentAge: 0, retirementAge: 10000, endAge: 10001, portfolio: 1e12, annualReturn: 30 });
   assert.deepEqual(result, { ok: false, error: 'range' });
+});
+
+test('shorter plans and ages beyond 120 have no lifespan restriction', () => {
+  assert.equal(validateFirePlan({ ...base, endAge: 60 }), null);
+  assert.equal(validateFirePlan({ ...base, currentAge: 1000, retirementAge: 1005, endAge: 10000 }), null);
+  assert.equal(isValidPension(pension(1000, 10000, 1)), true);
+  near(calculateFire({ ...base, endAge: 60 }).required, 60000);
+});
+test('10,000-year portfolio and preservation plans include the full horizon', () => {
+  const plan = { ...base, currentAge: 0, retirementAge: 0, endAge: 10000, spending: 1 };
+  const result = calculateFire(plan);
+  assert.equal(result.ok, true);
+  near(result.required, 120000);
+  assert.equal(result.rows.length, 10000);
+  near(result.endPortfolio, 0);
+  const covered = calculateFire({ ...plan, strategy: 'preserve', pensions: [pension(0, 10000, 1)] });
+  assert.equal(covered.ok, true);
+  near(covered.required, 0);
+  assert.equal(covered.funded, true);
+});
+test('10,000-year age search checks every birthday without repeated full-horizon simulations', () => {
+  const result = calculateFire({ ...base, goal: 'age', currentAge: 0, endAge: 10000, spending: 1, contribution: 1 });
+  assert.equal(result.ok, true);
+  assert.equal(result.retirementAge, 5000);
+  assert.equal(result.funded, true);
+  near(result.projectedSavings, 60000);
+});
+test('10,000-year positive-return plans stay numerically stable and finite', () => {
+  const result = calculateFire({ ...base, endAge: 10000, annualReturn: 5, inflation: 2, fee: .3 });
+  assert.equal(result.ok, true);
+  assert.ok(result.required > 0);
+  assert.ok(Number.isFinite(result.endPortfolio));
+});
+test('cached age search matches exhaustive candidate checks with pensions and both strategies', () => {
+  for (let scenario = 0; scenario < 24; scenario++) {
+    const plan = {
+      ...base, goal: 'age', strategy: scenario % 2 ? 'preserve' : 'drawdown',
+      portfolio: scenario % 3 ? 10000 : 1e6, contribution: scenario % 4 ? 300 : 0,
+      annualReturn: [-5, 0, 6][scenario % 3],
+      pensions: [pension(65, 75, 300), pension(70, 85, 900, { id: 'p2' })],
+    };
+    let expected = null;
+    for (let age = plan.currentAge; age < plan.endAge; age++) {
+      const required = requiredCapital(plan, age), saved = projectedSavings(plan, age);
+      if (required !== null && saved + .005 >= required && projectRetirement(plan, age, saved).funded) {
+        expected = age;
+        break;
+      }
+    }
+    const actual = calculateFire(plan);
+    assert.equal(actual.ok, true);
+    assert.equal(actual.retirementAge, expected, `scenario ${scenario}`);
+  }
 });
 
 test('finite-horizon preservation can bridge to later income without borrowing', () => {

@@ -28,6 +28,9 @@ function initializeToolViews() {
       link.setAttribute('href', `${url.pathname}${url.search}${url.hash}`);
     });
     if (active !== id) {
+      document.querySelectorAll('[data-tool-demo] video').forEach(video => {
+        if (!panel?.contains(video)) video.pause();
+      });
       active = id;
       // Re-measure any existing result chart when its panel becomes visible.
       requestAnimationFrame(() => window.dispatchEvent(new Event('resize')));
@@ -37,6 +40,17 @@ function initializeToolViews() {
   window.addEventListener('hashchange', updateView);
   window.addEventListener('pageshow', updateView);
 }
+// No player library: native controls work independently of this enhancement.
+document.querySelectorAll('[data-tool-demo]').forEach(demo => {
+  demo.addEventListener('toggle', () => {
+    if (!demo.open) demo.querySelector('video')?.pause();
+  });
+});
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    document.querySelectorAll('[data-tool-demo] video').forEach(video => video.pause());
+  }
+});
 if (document.readyState === 'complete') {
   requestAnimationFrame(() => requestAnimationFrame(initializeToolViews));
 } else {

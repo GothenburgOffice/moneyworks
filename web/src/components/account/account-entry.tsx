@@ -1,6 +1,7 @@
 import type { ComponentProps } from 'react';
 import type { AccountFormView } from '@/features/account/view';
 import { AccountForm } from './account-form';
+import { getBrand } from '@/content/brand';
 
 type Props = Omit<ComponentProps<typeof AccountForm>, 'title'>;
 
@@ -19,7 +20,7 @@ export function AccountEntry(props: Props) {
   return (
     <div className="account-entry">
       <section className="account-intro">
-        <p className="account-kicker">MoneyWorks</p>
+        <p className="account-kicker">{getBrand(locale).name}</p>
         <h1>{titles[view]}</h1>
         <p>{intro}</p>
         <a className="text-link" href={`/${locale}`}>{copy.back} →</a>

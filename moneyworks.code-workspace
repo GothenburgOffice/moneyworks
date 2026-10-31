@@ -1,0 +1,21 @@
+{
+  "folders": [
+    {
+      "path": "."
+    }
+  ],
+  "settings": {
+    "eslint.workingDirectories": ["web"],
+    "typescript.tsdk": "web/node_modules/typescript/lib"
+  },
+  "extensions": {
+    "recommendations": [
+      "anthropic.claude-code",
+      "ms-azuretools.vscode-docker",
+      "github.vscode-github-actions",
+      "ms-vscode-remote.remote-containers",
+      "dbaeumer.vscode-eslint",
+      "Prisma.prisma"
+    ]
+  }
+}

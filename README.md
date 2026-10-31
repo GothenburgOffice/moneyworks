@@ -10,13 +10,45 @@ The main content and metadata are pre-rendered by Next.js. Header/navigation, th
 
 The separate public mockup board is a review aid, not this application. Its additional eight tools, blog and video examples have not become implemented features.
 
+## Localized branding
+
+The Swedish preview uses **Pengar jobbar**, with a matching PJ mark; English
+retains **MoneyWorks** and its original M/W mark. Shared server-rendered branding
+comes from `web/src/content/brand.ts`, including locale-specific favicon paths.
+Header, hero, about and footer marks, page/account titles, accessible names and
+Swedish account/privacy copy follow the selected language. Narrow Swedish
+headers wrap the two-word name without reducing navigation touch targets.
+
+Language links remain on the current domain. Domain defaults, DNS, cross-domain
+canonical/hreflang policy and analytics are not configured by this preview change.
+The existing narrated video and source archives retain their approved production
+branding. GitHub publication and public hosting remain separate approvals.
+
+## FIRE demonstration
+
+All displayed currency amounts use whole units, including pension summaries,
+chart ticks and yearly tables. The minimum required monthly saving rounds up;
+other amounts round to nearest integers. Fractional inputs, percentage rates and
+model precision are retained.
+
+The focused FIRE tool includes a clearly labelled “Watch a 90-second walkthrough”
+disclosure above its inputs. It uses native video controls, a self-hosted MP4 and
+poster, local English/Swedish subtitle tracks, and a readable text walkthrough.
+The narrated walkthrough follows one simple example with large, focused UI crops,
+pension editor, pen controls and retirement/savings results. English narration
+replaces explanatory text panels; English/Swedish captions are optional and off
+by default. Playback is
+user-initiated and pauses when the disclosure closes or the user leaves the tool.
+There is no third-party player or tracking, and no video-production dependency
+was added to the app. Example inputs are illustrative, not recommended assumptions.
+
 ## Accounts and cookies
 
 The local account foundation supports public email/password registration after operator configuration, email verification, login/logout and recovery. Account identities are separate from stable user records so Google can be added later with explicit linking. The private area is deliberately empty: saved portfolios and tax workspaces are not implemented.
 
 The homepage remains pre-rendered. A discreet footer notice and native privacy disclosure explain necessary sign-in cookies; no analytics, advertising, locale cookies or unnecessary accept-all banner were added. Real mail and privacy identity/contact settings must be configured before registration becomes available. The embedded review does not collect credentials.
 
-Read `AUTH.md` for configuration, dependency decisions, security boundaries, retention and tests. Only Better Auth and Nodemailer were added as direct runtime dependencies; forms and cookie UI use native HTML. This feature revision has not been pushed or publicly deployed.
+Read `AUTH.md` for configuration, dependency decisions, security boundaries, retention and tests. Only Better Auth and Nodemailer were added as direct runtime dependencies; forms and cookie UI use native HTML. Repository availability does not mean public hosting or registration has been configured.
 
 ## Development stack
 
@@ -52,7 +84,7 @@ PostgreSQL uses these variables when it first initializes an empty database volu
 The host needs Docker with the Compose plugin, not a host installation of Node.js, npm or PostgreSQL.
 
 ```bash
-git clone https://github.com/hkarn/moneyworks.git
+git clone https://github.com/GothenburgOffice/moneyworks.git
 cd moneyworks
 # First setup only; do not overwrite an existing .env.
 cp .env.example .env
@@ -92,7 +124,21 @@ Current development is preview-first. Changes stay local and unpublished until t
 
 The read-only `/api/health/db` endpoint returns HTTP 200 with `status: "ok"` or HTTP 503 when the database/table/row cannot be read. Responses are not cached, and database credentials or raw connection errors are never included. The API still needs a backend; this is pre-rendered Next.js content with a small live endpoint, not an API-free static export.
 
-## VS Code devcontainer
+## VS Code workspace and devcontainer
+
+Open `moneyworks.code-workspace` from the repository root. It recommends the
+requested Claude Code, Docker and GitHub Actions extensions, plus
+[Dev Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
+for the existing container workflow,
+[ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint)
+for the project's lint rules, and
+[Prisma](https://marketplace.visualstudio.com/items?itemName=Prisma.prisma)
+for schema editing. Recommendations do not install extensions automatically.
+
+The workspace points ESLint and VS Code's built-in TypeScript support at `web/`.
+The TypeScript SDK is available after the container installs the locked
+dependencies; no host Node.js installation or extra React/Next.js extension is
+required. No formatter, application dependency or editor task is added.
 
 On first setup, copy `.env.example` to `.env`, then choose **Dev Containers: Reopen in Container**. The devcontainer uses the same services and volume paths as normal Compose, installs dependencies and applies migrations in `/workspace/web`, and leaves starting the web server to your terminal.
 
@@ -148,6 +194,7 @@ moneyworks/
 ├── .github/                   # CI, dependency updates and architecture notes
 ├── Dockerfile.dev             # Node/npm development image
 ├── docker-compose.dev.yml     # App and PostgreSQL services
+├── moneyworks.code-workspace  # VS Code folder, web tooling and extension recommendations
 └── .env.example               # Local-development configuration template
 ```
 

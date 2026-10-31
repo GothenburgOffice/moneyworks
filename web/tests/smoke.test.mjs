@@ -12,6 +12,13 @@ for (const [locale, title, fire, crypto, planned] of [
     assert.equal(response.status, 200);
     const html = await response.text();
     assert.ok(html.includes(`<html lang="${locale}"`));
+    const brand = locale === 'sv' ? 'Pengar jobbar' : 'MoneyWorks';
+    assert.ok(html.includes(`<title>${brand} |`), 'Missing localized page title');
+    assert.ok(html.includes(`${brand}<span class="brand-period">.</span>`), 'Missing localized wordmark');
+    assert.ok(html.includes(locale === 'sv' ? '/pengar-jobbar-mark.svg' : '/moneyworks-mark.svg'));
+    assert.ok(html.includes(locale === 'sv'
+      ? 'M7 35V9h7a7 7 0 0 1 0 14H7'
+      : 'M5 32V12c0-3 3-4 5-1l12 19 12-19c2-3 5-2 5 1v20'));
     // Inspect rendered main content, not translation strings in Next.js payloads.
     const main = html.match(/<main\b[^>]*>([\s\S]*?)<\/main>/)?.[1];
     assert.ok(main, 'Missing main element');
@@ -42,6 +49,10 @@ for (const [locale, title, fire, crypto, planned] of [
     assert.ok(html.includes('src="/fire-calculator.js"'));
     assert.ok(main.includes('data-fire-form'));
     assert.ok(main.includes('data-pension-template'));
+    assert.ok(main.includes('data-tool-demo'));
+    assert.ok(main.includes('/media/fire-demo.mp4'));
+    assert.ok(main.includes('controls=""') && main.includes('preload="none"'));
+    assert.ok(!main.includes('autoplay=""'));
   });
 }
 

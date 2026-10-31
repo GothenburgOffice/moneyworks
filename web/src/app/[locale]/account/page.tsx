@@ -2,6 +2,7 @@ import { headers } from 'next/headers';
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import type { Metadata } from 'next';
 import { getSiteCopy } from '@/content/site';
+import { getBrand } from '@/content/brand';
 import { getAccountCopy } from '@/content/account';
 import { getPrivacyCopy } from '@/content/privacy';
 import { parseAccountQuery } from '@/features/account/view';
@@ -23,8 +24,10 @@ type Props = {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
+  const language = locale === 'sv' ? 'sv' : 'en';
   return {
-    title: `MoneyWorks | ${getAccountCopy(locale === 'sv' ? 'sv' : 'en').account}`,
+    title: `${getBrand(language).name} | ${getAccountCopy(language).account}`,
+    icons: { icon: getBrand(language).icon },
     robots: { index: false, follow: false },
     referrer: 'strict-origin',
   };

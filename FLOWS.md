@@ -5,6 +5,92 @@
 Small preview changes get focused component/interaction and visual checks only.
 Full suites are reserved for an explicit request or an authorized GitHub push.
 
+## Localized branding acceptance
+
+- Swedish HTML uses Pengar jobbar and the matching PJ mark in header, hero,
+  about and footer; English retains MoneyWorks and the original M/W mark.
+- Localize home/account titles, favicons, logo accessible names, account intro/
+  return links and privacy copy. Keep identity in server-rendered HTML.
+- Switching EN/SV keeps the current domain, theme and focused tool context.
+  Check home, FIRE, account/privacy and narrow headers in both themes.
+- No domain redirect, DNS, canonical/hreflang deployment policy, analytics,
+  authentication provider, database or GitHub changes. Existing narrated video
+  remains the approved MoneyWorks production, not regenerated for this preview.
+
+## Release verification on 2026-10-31
+
+The owner requested the VS Code workspace and synchronization of the reviewed
+preview refinements to `GothenburgOffice/moneyworks`. The workspace recommends
+the three requested extensions plus Dev Containers, ESLint and Prisma.
+
+- Passed line-ending checks (4), UI script tests (8), architecture/features/
+  workspace tests (17), FIRE model tests (32), auth configuration tests (4),
+  lint, type checking, Prisma validation and the Next.js production build.
+- A separate disposable PostgreSQL 18 cluster passed migrations, all 13 account
+  lifecycle checks with capture-only SMTP (zero real emails), and the 7-test
+  smoke suite before/after changing its greeting. Outage checks verified both
+  static pages remain available, status becomes unavailable and recovers.
+  Only that disposable cluster was stopped, restarted and removed; the existing
+  preview database remained healthy with its original greeting.
+- Browser checks passed 16 FIRE locale/theme/viewport cases, 6 whole-currency
+  cases, 2 narrated-player cases and the localized-branding matrix (6 viewport/
+  theme combinations plus 12 account/privacy snapshots). Native no-JavaScript
+  explanation/branding checks also passed.
+- The production-only dependency audit reported zero vulnerabilities. The full
+  audit passed the configured high-severity gate but reported 16 moderate
+  development-tool dependency findings. No forced or breaking dependency
+  upgrade was applied as part of the workspace request.
+- Docker/container execution could not run locally because the sandbox daemon
+  was unavailable; it is separate GitHub Actions verification, not a claimed
+  local pass. Existing Docker-first instructions and CI jobs remain intact.
+- The UI unit fixture now supports document events and tests that native video
+  pauses on close, document hiding and tool exit without autoplay. Workspace
+  tests run with architecture checks; smoke tests cover localized identity and
+  discoverable native demo markup. `git diff --cached --check` passed.
+
+This is engineering verification, not a production launch, legal review or
+financial-model certification. DNS, domain-default routing, analytics, Google/
+YouTube integrations, production configuration and the mockup board are unchanged.
+
+## FIRE demonstration
+
+- The focused FIRE view exposes a clearly labelled, keyboard-operable Watch demo
+  disclosure near the calculator heading; opening it reveals native video controls.
+- The current walkthrough is 90 seconds with English narration and optional
+  EN/SV captions off by default. Show one plan/one pension with short headings,
+  not the superseded text-heavy 40-second silent presentation.
+- Display currency as integers across result metrics, status text, payout
+  summaries, chart ticks and both yearly tables, for any currency label. Required
+  saving rounds up; other amounts round to nearest whole units. Rates/inputs and
+  model precision remain unchanged.
+- The narrated video's actual UI captures must follow the integer display.
+  A separate silent feature-card MP4 is artifact-only, not linked from the site.
+- Self-hosted MP4, poster and English/Swedish subtitles, with a readable text
+  walkthrough. No autoplay, embed service, tracking or video framework dependency.
+- Video uses fresh current-UI captures: focused banner, open age inputs, pension
+  editor, accepted payouts with pen/trash icons, retirement and savings results.
+- Focused checks: desktop/mobile discovery and disclosure, playback/pause/seek,
+  subtitle delivery, collapse pauses video, tool exit pauses playback, calculator
+  entry/exit still works. No full regression suite.
+
+## Payout icon actions
+
+- Saved payout rows use pen/trash icons in 44px native buttons, not visible text.
+- Decorative SVGs are hidden from assistive technology. Buttons have localized,
+  row-specific accessible names and native tooltips; Edit controls its editor.
+- Focused checks only: keyboard edit/save/remove, accessible names/expanded state,
+  and desktop/mobile appearance. No full suite or GitHub write.
+
+## Open-ended ages
+
+- No 75–120 helper, minimum lifespan or maximum age in either language.
+- Current/retirement/end and payout ages accept whole non-negative values beyond
+  120, including a plan through 10,000. Keep chronological ordering.
+- Focused checks cover short and 10,000-year drawdown, preservation and age-search
+  calculations, long payout ranges and one browser calculation. No full app suite.
+- Large finite results remain valid; report genuine numeric overflow, not an
+  arbitrary age or displayed-capital ceiling.
+
 ## Focused tool view
 
 - A clean homepage shows the overview, not an already-open calculator.
@@ -79,7 +165,7 @@ Full suites are reserved for an explicit request or an authorized GitHub push.
 - One static public page per locale, with a functional FIRE section and crypto
   still explicitly planned. No financial inputs sent to a server or persisted.
 - Toggle portfolio needed / retirement age, and planned drawdown / preserving
-  starting capital at plan end. Plan-through age is at least 75.
+  starting capital at plan end. There is no fixed lifespan range.
 - Add/edit/remove government, employer and other pension streams with inclusive
   start and exclusive end ages; overlaps add, fixed payouts lose purchasing power.
 - Verify a delayed pension cannot finance an earlier shortfall. End targets,

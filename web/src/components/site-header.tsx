@@ -15,7 +15,7 @@ export function SiteHeader({ copy, locale, homeHref = '', localeSuffix = '' }: {
     <div className="site-header-slot" data-sticky-header>
     <header className="site-header">
       <div className="page-width header-inner">
-        <BrandLogo label={copy.home} href={`${homeHref}#top`} />
+        <BrandLogo locale={locale} label={copy.home} href={`${homeHref}#top`} />
         <nav className="desktop-nav" aria-label={copy.nav.label}>
           {links.map(([id, text]) => <a href={`${homeHref}#${id}`} key={id}>{text}</a>)}
           <a className="account-nav-link" href={`/${locale}/account`}>{account.account}</a>
