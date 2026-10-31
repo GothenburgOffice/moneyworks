@@ -4,8 +4,8 @@ updates:
     directory: /web
     schedule:
       interval: weekly
-    # Lift these major-version holds once the Next.js lint plugin peers support them.
     ignore:
+      # Lift these major-version holds once the Next.js lint plugin peers support them.
       - dependency-name: typescript
         update-types: ["version-update:semver-major"]
       - dependency-name: eslint
@@ -14,14 +14,25 @@ updates:
       - dependency-name: "@types/node"
         update-types: ["version-update:semver-major"]
     groups:
+      # One weekly PR for everything non-breaking.
+      minor-and-patch:
+        applies-to: version-updates
+        patterns: ["*"]
+        update-types: [minor, patch]
+      # Majors that must move together get one PR per family.
       next:
         patterns: ["next", "eslint-config-next"]
+        update-types: [major]
       react:
         patterns: ["react", "react-dom", "@types/react", "@types/react-dom"]
+        update-types: [major]
       prisma:
         patterns: ["prisma", "@prisma/*"]
+        update-types: [major]
       tailwind:
         patterns: ["tailwindcss", "@tailwindcss/*"]
+        update-types: [major]
+
   - package-ecosystem: docker
     directory: /
     schedule:
@@ -30,10 +41,19 @@ updates:
     ignore:
       - dependency-name: node
         update-types: ["version-update:semver-major"]
+
+  # PostgreSQL is declared in Compose, not in the Dockerfile.
   - package-ecosystem: docker-compose
     directory: /
     schedule:
       interval: weekly
+    allow:
+      - dependency-name: postgres
+    ignore:
+      # A major PostgreSQL upgrade needs pg_upgrade or dump/restore of existing data.
+      - dependency-name: postgres
+        update-types: ["version-update:semver-major"]
+
   - package-ecosystem: github-actions
     directory: /
     schedule:
