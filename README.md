@@ -128,6 +128,12 @@ moneyworks/
 
 `notes/` and `CLAUDE.local.md` are gitignored for private working notes.
 
+## Contributing
+
+Outside pull requests are only reviewed for `help wanted` issues, or issues
+where a maintainer approved the plan in a comment first. See
+[CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## License
 
 MIT

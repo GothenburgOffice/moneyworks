@@ -15,6 +15,9 @@ The shared project reference for coding agents (also read by Copilot):
   added after Node 22; CI also tests the current LTS.
 - Claude Code's login and settings persist in the devcontainer's
   `claude_config` volume (`CLAUDE_CONFIG_DIR=/root/.claude`).
+- Never label issues `good first issue` or `help wanted`; the owner sets those
+  manually. Outside pull requests are only accepted for `help wanted` issues or
+  approved plans (see `CONTRIBUTING.md`).
 - Open decisions are GitHub issues labelled `decision`
   (`gh issue list --label decision`). Check them before starting feature work.
 - Put session logs, verification notes and scratch decisions in the gitignored
