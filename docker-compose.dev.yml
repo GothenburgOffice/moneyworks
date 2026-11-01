@@ -13,8 +13,9 @@ services:
     # Uncommon host ports so this stack runs beside other local projects.
     ports:
       - "127.0.0.1:${MONEYWORKS_WEB_PORT:-3410}:3000"
+    # No NODE_ENV here: `next dev` and `next build` each set their own, and a
+    # container-wide development value breaks `npm run build`.
     environment:
-      - NODE_ENV=development
       - NEXT_TELEMETRY_DISABLED=1
       # Development defaults; .env is optional and only needed to override them.
       - DATABASE_URL=${DATABASE_URL:-postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-moneyworks}}
