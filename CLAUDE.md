@@ -12,7 +12,7 @@ The shared project reference for coding agents (also read by Copilot):
 - The development image is Debian-based (`node:22.23.4-trixie-slim`); install
   system packages with `apt-get`, not `apk`.
 - Node 22 is the oldest supported line and the dev runtime. Do not use APIs
-  added after Node 22; CI also tests the current LTS.
+  added after Node 22; CI and the release image also run on Node 22.
 - Claude Code's login and settings persist in the devcontainer's
   `claude_config` volume (`CLAUDE_CONFIG_DIR=/root/.claude`).
 - Never label issues `good first issue` or `help wanted`; the owner sets those
