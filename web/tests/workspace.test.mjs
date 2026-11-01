@@ -30,3 +30,8 @@ test('devcontainer installs the in-container tooling without a formatter', () =>
   }
   assert.ok(!ids.includes('esbenp.prettier-vscode'), 'The project has no Prettier configuration');
 });
+
+test('the dev stack leaves NODE_ENV to Next so builds work in the container', () => {
+  const compose = readFileSync(new URL('../../docker-compose.dev.yml', import.meta.url), 'utf8');
+  assert.doesNotMatch(compose, /^\s*-?\s*NODE_ENV\s*[=:]/m);
+});
