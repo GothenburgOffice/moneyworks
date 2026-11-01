@@ -139,7 +139,8 @@ Copy `.env.example` to the gitignored root `.env` before starting any stack.
 - Everything else is optional and off by default. Account and mail settings
   are described in [AUTH.md](AUTH.md); registration stays disabled until mail
   and privacy contact details are configured. `ALLOW_REGISTRATION` is always on
-  in development and off by default in the production stacks.
+  in the devcontainer; elsewhere, including plain Compose development, it follows
+  `.env` and is off by default.
 - Development ignores the production `APP_ORIGIN`, `APP_ORIGIN_ALIASES`,
   `AUTH_SECRET` and SMTP values in `.env`. It reads `DEV_`-prefixed versions
   instead (listed at the end of `.env.example`), so one `.env` can hold

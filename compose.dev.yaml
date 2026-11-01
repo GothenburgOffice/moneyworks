@@ -21,7 +21,6 @@ services:
     # come only from DEV_* variables, so dev never sends real mail. Without
     # DEV_AUTH_SECRET and DEV_SMTP_* settings, accounts stay off here.
     environment:
-      ALLOW_REGISTRATION: "true"
       APP_ORIGIN: ${DEV_APP_ORIGIN:-http://localhost:${APP_PORT:-3410}}
       APP_ORIGIN_ALIASES: ${DEV_APP_ORIGIN_ALIASES:-http://127.0.0.1:${APP_PORT:-3410}}
       AUTH_SECRET: ${DEV_AUTH_SECRET:-}
