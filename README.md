@@ -63,6 +63,29 @@ Claude Code's sign-in is kept in a Docker volume, and its project memory in
 so both survive rebuilds. After pulling changes to Docker or devcontainer
 files, run **Dev Containers: Rebuild Container**.
 
+#### Sharing Claude Code memory with the host (optional, Windows)
+
+The container always uses the folder above. Claude Code running directly on
+Windows keeps its own memory under
+`%USERPROFILE%\.claude\projects\<slug>\memory`, where `<slug>` is the repository
+path with every non-alphanumeric character replaced by `-` (check the real
+folder name; the drive letter's case can differ). To make both use one memory,
+replace that folder with a junction once, in PowerShell:
+
+```powershell
+$memory = Join-Path $env:USERPROFILE '.claude-memory\moneyworks'   # or $env:CLAUDE_MEMORY_DIR
+$old = Join-Path $env:USERPROFILE '.claude\projects\<slug>\memory'
+New-Item -ItemType Directory -Force $memory | Out-Null
+if (Test-Path $old) { Copy-Item "$old\*" $memory -Recurse; Rename-Item $old 'memory.bak' }
+New-Item -ItemType Junction -Path $old -Target $memory
+```
+
+Check that the junction lists your files, then delete `memory.bak`. To remove or
+retarget the junction, use `cmd /c rmdir "<path>"`: in Windows PowerShell 5.1,
+`Remove-Item -Recurse` on a junction can delete the files it points to. Do not
+set `autoMemoryDirectory` in `.claude/settings.local.json` instead, because that
+file is mounted into the container too.
+
 ### Option B: plain Compose
 
 ```bash
