@@ -24,7 +24,8 @@ async function handle(request: Request) {
     !recoveryRedirect
   )
     return new Response(null, { status: 405 });
-  const config = await loadAccountConfig();
+  // Sign-ups read the settings fresh, so a registration switch-off applies at once.
+  const config = await loadAccountConfig(path === "sign-up/email");
   if (!config.configured) return Response.json({ error: config.problem }, { status: 503 });
   // Registration is a site setting (with mail and privacy), so Better Auth cannot check it.
   if (path === "sign-up/email" && !config.registrationEnabled)

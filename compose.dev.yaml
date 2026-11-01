@@ -19,8 +19,10 @@ services:
     # Development ignores the production values in .env (as vocabulary-training
     # does for its AI keys): origins stay local, and the account secret and the
     # settings encryption key come only from DEV_* variables. Mail and privacy
-    # settings live in the dev database (edit them at /admin), so dev never uses
-    # production SMTP. ADMIN_EMAIL and ADMIN_PASSWORD are shared with compose.yaml.
+    # settings live in the database the stack opens (edit them at /admin). All stacks
+    # share one volume per project name, so on a machine that also runs a production
+    # stack, set COMPOSE_PROJECT_NAME to keep dev from seeing (and mailing through)
+    # its settings. ADMIN_EMAIL and ADMIN_PASSWORD are shared with compose.yaml.
     environment:
       APP_ORIGIN: ${DEV_APP_ORIGIN:-http://localhost:${APP_PORT:-3410}}
       APP_ORIGIN_ALIASES: ${DEV_APP_ORIGIN_ALIASES:-http://127.0.0.1:${APP_PORT:-3410}}

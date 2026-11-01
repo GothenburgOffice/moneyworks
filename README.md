@@ -146,7 +146,9 @@ Copy `.env.example` to the gitignored root `.env` before starting any stack.
 - Development ignores the production `APP_ORIGIN`, `APP_ORIGIN_ALIASES`,
   `AUTH_SECRET` and `SETTINGS_ENCRYPTION_KEY` in `.env`. It reads `DEV_`-prefixed
   versions instead (listed at the end of `.env.example`). Mail settings live in
-  the dev database, so dev never uses production SMTP.
+  the database the stack opens. Every stack with the same project name shares
+  that database (see below), so on a machine that also runs a production stack,
+  give one of them its own `COMPOSE_PROJECT_NAME` or dev uses its mail settings.
 - Never prefix secrets with `NEXT_PUBLIC_` or commit `.env`.
 
 Database data lives in the `postgres18_data` volume. `docker compose down` keeps

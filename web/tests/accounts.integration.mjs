@@ -243,24 +243,6 @@ try {
   }
   checks.push("anonymous bilingual pages set no cookies");
 
-  const insertScenario = (userId) =>
-    pool.query(
-      `INSERT INTO "Scenario" (id, "userId", "toolId", name, "schemaVersion", data, "updatedAt")
-       VALUES (gen_random_uuid()::text, $1, 'fire', 'Test plan', 1, '{"spending":1}', now())`,
-      [userId],
-    );
-  await assert.rejects(insertScenario("no-such-user"), /foreign key/);
-  const { id: userId } = (await pool.query('SELECT id FROM "User" WHERE email=$1', [email]))
-    .rows[0];
-  await insertScenario(userId);
-  await pool.query('DELETE FROM "User" WHERE id=$1', [userId]);
-  assert.equal(
-    (await pool.query('SELECT count(*)::int AS n FROM "Scenario" WHERE "userId"=$1', [userId]))
-      .rows[0].n,
-    0,
-  );
-  checks.push("scenarios require an existing user and are deleted with the user");
-
   // /admin: native form posts, an admin bootstrapped from ADMIN_EMAIL/ADMIN_PASSWORD.
   jar.clear();
   const adminForm = (action, fields, headers = {}) =>
@@ -287,6 +269,39 @@ try {
       }
       return response;
     });
+  const message = (result) => new URL(result.headers.get("location")).searchParams.get("message");
+  // A member signing in at /admin fails like a wrong password and keeps no session.
+  const memberSessions = async () =>
+    (
+      await pool.query(
+        'SELECT count(*)::int AS n FROM "Session" s JOIN "User" u ON u.id = s."userId" WHERE u.email = $1',
+        [email],
+      )
+    ).rows[0].n;
+  const sessionsBefore = await memberSessions();
+  response = await adminForm("login", { email, password: newPassword });
+  assert.equal(message(response), "failed");
+  assert.equal(await memberSessions(), sessionsBefore);
+  assert.equal(jar.size, 0);
+  checks.push("a member signing in at /admin fails the same way and keeps no session");
+
+  const insertScenario = (userId) =>
+    pool.query(
+      `INSERT INTO "Scenario" (id, "userId", "toolId", name, "schemaVersion", data, "updatedAt")
+       VALUES (gen_random_uuid()::text, $1, 'fire', 'Test plan', 1, '{"spending":1}', now())`,
+      [userId],
+    );
+  await assert.rejects(insertScenario("no-such-user"), /foreign key/);
+  const { id: userId } = (await pool.query('SELECT id FROM "User" WHERE email=$1', [email]))
+    .rows[0];
+  await insertScenario(userId);
+  await pool.query('DELETE FROM "User" WHERE id=$1', [userId]);
+  assert.equal(
+    (await pool.query('SELECT count(*)::int AS n FROM "Scenario" WHERE "userId"=$1', [userId]))
+      .rows[0].n,
+    0,
+  );
+  checks.push("scenarios require an existing user and are deleted with the user");
   const adminEmail = "mw-admin-qa@example.invalid";
   const settingsFields = {
     controllerName: "Automated test controller, not a public operator",
@@ -299,6 +314,17 @@ try {
     (await pool.query('SELECT value FROM "SiteSetting" WHERE key=$1', [key])).rows[0]?.value;
   assert.equal((await adminForm("settings", settingsFields)).status, 404, "settings need an admin");
   assert.ok(!(await (await fetch(`${base}/admin`)).text()).includes("Site settings"));
+  // Someone registered the admin email first but never verified it: the bootstrap
+  // takes that account over instead of keeping its stranger-chosen password.
+  await pool.query(
+    `INSERT INTO "User" (id, name, email, "emailVerified", "updatedAt")
+     VALUES ('squatter-qa', 'Squatter', $1, false, now())`,
+    [adminEmail],
+  );
+  await pool.query(
+    `INSERT INTO "Account" (id, "accountId", "providerId", "userId", password, "updatedAt")
+     VALUES ('squatter-qa-credential', 'squatter-qa', 'credential', 'squatter-qa', 'not-a-hash', now())`,
+  );
   response = await adminForm("login", { email: adminEmail, password: "not the admin password" });
   assert.equal(new URL(response.headers.get("location")).searchParams.get("message"), "failed");
   assert.equal(jar.size, 0);
@@ -313,9 +339,15 @@ try {
       .rows[0],
     { isAdmin: true, emailVerified: true },
   );
+  assert.notEqual(
+    (await pool.query(`SELECT password FROM "Account" WHERE "userId"='squatter-qa'`)).rows[0]
+      .password,
+    "not-a-hash",
+    "the unverified squatter's password is replaced",
+  );
   let page = await (await fetch(`${base}/admin`, { headers: { cookie: cookieHeader() } })).text();
   assert.ok(page.includes("Site settings") && page.includes("test-controller@example.invalid"));
-  checks.push("admin bootstrapped from ADMIN_EMAIL signs in at /admin; others get 404");
+  checks.push("admin bootstrap takes over an unverified squatter; others get 404");
 
   response = await adminForm("settings", {
     ...settingsFields,

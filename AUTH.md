@@ -78,14 +78,19 @@ In `.env`, required before accounts work:
   Encrypts the stored SMTP password (AES-256-GCM, as in vocabulary-training), so
   a database dump alone does not reveal it. Changing it makes the stored
   password unreadable; `/admin` then says so and asks for it again.
-- `ADMIN_EMAIL`, `ADMIN_PASSWORD`: the first admin. While no admin exists, the
-  first sign-in at `/admin` creates that verified account (password of at least
-  15 characters), or promotes an existing account with that email without
-  changing its password. Once an admin exists, both are ignored. Others can be
+- `ADMIN_EMAIL`, `ADMIN_PASSWORD`: the first admin. While no admin exists, a
+  sign-in at `/admin` with exactly these values creates that verified account
+  (password of at least 15 characters). A verified account with that email is
+  promoted and keeps its own password; an unverified one proves nobody's
+  ownership, so it is taken over: verified, given `ADMIN_PASSWORD`, its sessions
+  ended. Once an admin exists, both are ignored. Others can be
   made admin with `UPDATE "User" SET "isAdmin" = true`.
 
 At `/admin` (direct URL only, never linked, `noindex`; signed-out visitors see
-only the sign-in form and everyone but an admin gets 404 from its API):
+only the sign-in form and everyone but an admin gets 404 from its API). Every
+sign-in attempt goes through Better Auth's rate-limited sign-in, so responses
+do not reveal which emails are admins; a non-admin who signs in there has that
+session ended at once and sees the same failure:
 
 - Mail: SMTP host, port, implicit TLS, user, password and from address. External
   SMTP must use TLS; user and password must be present or absent together. The

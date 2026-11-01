@@ -13,9 +13,10 @@ const operations: Record<string, string> = {
   resend: "send-verification-email",
 };
 export async function POST(request: Request, { params }: { params: Promise<{ action: string }> }) {
-  const config = await loadAccountConfig();
   const { action } = await params;
   if (!operations[action]) return new Response(null, { status: 404 });
+  // Registrations read the settings fresh, so a registration switch-off applies at once.
+  const config = await loadAccountConfig(action === "register");
   if (!config.configured) return new Response(config.problem, { status: 503 });
   // Fail closed: only exact allowed origins; no null/absent origins, wildcards,
   // forwarded-host guesses or GET mutations.

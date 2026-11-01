@@ -63,8 +63,10 @@ function fromMap(settings: Map<string, string>): AccountSettings {
 // cache at once; other processes pick changes up within CACHE_MS.
 const CACHE_MS = 30_000;
 let cache: { at: number; value: Promise<AccountSettings> } | null = null;
-export function loadAccountSettings(): Promise<AccountSettings> {
-  if (cache && Date.now() - cache.at < CACHE_MS) return cache.value;
+// `fresh` skips the cache: sign-ups use it, so switching registration off at /admin
+// applies at once in every app process.
+export function loadAccountSettings(fresh = false): Promise<AccountSettings> {
+  if (!fresh && cache && Date.now() - cache.at < CACHE_MS) return cache.value;
   const value = readSettingsMap().then(fromMap);
   cache = { at: Date.now(), value };
   value.catch(() => {
@@ -75,8 +77,8 @@ export function loadAccountSettings(): Promise<AccountSettings> {
 
 // Without the database, mail and privacy count as missing: accounts report
 // themselves unavailable instead of the page failing.
-export async function loadAccountConfig() {
-  return accountConfig(await loadAccountSettings().catch(() => ({})));
+export async function loadAccountConfig(fresh = false) {
+  return accountConfig(await loadAccountSettings(fresh).catch(() => ({})));
 }
 
 export type SettingsView = Omit<AccountSettings, "smtpPassword"> & {

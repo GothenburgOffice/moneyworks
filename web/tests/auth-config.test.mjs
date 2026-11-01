@@ -1,7 +1,12 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { getCookies } from "better-auth/cookies";
-import { accountConfig, authCookieOptions, requestOrigin } from "../src/lib/auth-config.ts";
+import {
+  accountConfig,
+  authCookieOptions,
+  requestOrigin,
+  validEmail,
+} from "../src/lib/auth-config.ts";
 
 const fields = [
   "APP_ORIGIN",
@@ -68,6 +73,12 @@ test("stored registration counts only with mail and real privacy details", () =>
   const noMail = config({ ...real, SMTP_HOST: "", STORED_REGISTRATION: true });
   assert.equal(noMail.registrationPossible, false);
   assert.equal(noMail.registrationEnabled, false);
+  // A trailing DNS root dot is rejected, so it cannot hide a reserved domain.
+  assert.equal(validEmail("privacy@example.test."), false);
+  assert.equal(
+    config({ ...real, PRIVACY_CONTACT_EMAIL: "privacy@example.com." }).privacyReady,
+    false,
+  );
   // The devcontainer and test fixture force it on, even with example details.
   assert.equal(
     config({ PRIVACY_CONTACT_EMAIL: "dev-privacy@example.test" }).registrationEnabled,

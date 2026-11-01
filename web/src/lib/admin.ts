@@ -1,24 +1,63 @@
 import "server-only";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID, timingSafeEqual } from "node:crypto";
 import { hashPassword } from "better-auth/crypto";
 import { validEmail } from "./auth-config";
 import { getAuth } from "./auth";
 import { getDatabase } from "./db";
 
-// While no admin exists, the admin login creates ADMIN_EMAIL with ADMIN_PASSWORD
-// (as vocabulary-training does on start), or promotes an existing account with that
-// email without touching its password. Once an admin exists, .env is ignored.
-export async function ensureAdmin(env: Record<string, string | undefined> = process.env) {
+type Env = Record<string, string | undefined>;
+const digest = (value: string) => createHash("sha256").update(value).digest();
+
+// True when a login submits exactly ADMIN_EMAIL and ADMIN_PASSWORD (constant time).
+export function isBootstrapLogin(email: string, password: string, env: Env = process.env) {
+  const expected = (env.ADMIN_EMAIL || "").trim().toLowerCase();
+  if (!expected || !env.ADMIN_PASSWORD) return false;
+  const emailMatches = timingSafeEqual(digest(email), digest(expected));
+  return timingSafeEqual(digest(password), digest(env.ADMIN_PASSWORD)) && emailMatches;
+}
+
+// While no admin exists, a login with ADMIN_EMAIL and ADMIN_PASSWORD creates that
+// verified account (as vocabulary-training does on start). A verified account with
+// that email is promoted with its own password. An unverified one proves nobody's
+// ownership, so it is taken over: verified, given ADMIN_PASSWORD, its sessions ended.
+// Once an admin exists, .env is ignored.
+export async function ensureAdmin(env: Env = process.env) {
   const email = (env.ADMIN_EMAIL || "").trim().toLowerCase();
   const password = env.ADMIN_PASSWORD || "";
   if (!email) return "skipped";
   const db = getDatabase();
   if (await db.user.findFirst({ where: { isAdmin: true }, select: { id: true } })) return "exists";
-  if (!validEmail(email)) return "invalid";
-  const promoted = await db.user.updateMany({ where: { email }, data: { isAdmin: true } });
-  if (promoted.count) return "promoted";
   // Better Auth's own limits, so the account can sign in normally.
-  if (password.length < 15 || password.length > 128) return "invalid";
+  if (!validEmail(email) || password.length < 15 || password.length > 128) return "invalid";
+  const existing = await db.user.findUnique({
+    where: { email },
+    select: { id: true, emailVerified: true },
+  });
+  if (existing?.emailVerified) {
+    await db.user.update({ where: { id: existing.id }, data: { isAdmin: true } });
+    return "promoted";
+  }
+  if (existing) {
+    const hash = await hashPassword(password);
+    await db.$transaction([
+      db.session.deleteMany({ where: { userId: existing.id } }),
+      db.account.deleteMany({ where: { userId: existing.id, providerId: "credential" } }),
+      db.account.create({
+        data: {
+          id: randomUUID(),
+          userId: existing.id,
+          accountId: existing.id,
+          providerId: "credential",
+          password: hash,
+        },
+      }),
+      db.user.update({
+        where: { id: existing.id },
+        data: { isAdmin: true, emailVerified: true },
+      }),
+    ]);
+    return "taken over";
+  }
   const id = randomUUID();
   try {
     await db.user.create({

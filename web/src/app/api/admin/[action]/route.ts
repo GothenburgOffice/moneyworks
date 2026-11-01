@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { boundedBody, handleAuthRequest } from "@/lib/auth-http";
 import { accountConfig, validEmail } from "@/lib/auth-config";
-import { currentAdmin, ensureAdmin } from "@/lib/admin";
+import { currentAdmin, ensureAdmin, isBootstrapLogin } from "@/lib/admin";
 import { getDatabase } from "@/lib/db";
 import { encryptionReady } from "@/lib/secrets";
 import { loadAccountSettings, saveSettings } from "@/lib/site-settings";
@@ -48,23 +48,29 @@ export async function POST(request: Request, { params }: { params: Promise<{ act
   };
 
   if (action === "login") {
-    await ensureAdmin();
     const email = field("email").toLowerCase();
-    // Only admins may sign in here; everyone else gets the same failure.
-    const admin = await getDatabase().user.findFirst({
-      where: { email, isAdmin: true },
-      select: { id: true },
+    const password = String(form.get("password") || "");
+    // Only someone who knows ADMIN_EMAIL and ADMIN_PASSWORD can trigger the bootstrap.
+    if (isBootstrapLogin(email, password)) await ensureAdmin();
+    // Every attempt, admin or not, goes through Better Auth's rate-limited sign-in, so
+    // neither the result nor the rate limit reveals which emails are admins.
+    const started = new Date();
+    const result = await auth("sign-in/email", { email, password, rememberMe: false });
+    if (result.status === 429) return redirect("tooMany");
+    if (!result.ok) return redirect("failed");
+    const user = await getDatabase().user.findUnique({
+      where: { email },
+      select: { id: true, isAdmin: true },
     });
-    if (!admin) return redirect("failed");
-    const result = await auth("sign-in/email", {
-      email,
-      password: String(form.get("password") || ""),
-      rememberMe: false,
-    });
-    return redirect(
-      result.status === 429 ? "tooMany" : result.ok ? "" : "failed",
-      result.headers.getSetCookie(),
-    );
+    if (!user?.isAdmin) {
+      // Signed in but not an admin: end the session this sign-in created, fail the same way.
+      if (user)
+        await getDatabase().session.deleteMany({
+          where: { userId: user.id, createdAt: { gte: started } },
+        });
+      return redirect("failed");
+    }
+    return redirect("", result.headers.getSetCookie());
   }
 
   // Everyone but a signed-in admin gets 404, so the admin area doesn't reveal itself.

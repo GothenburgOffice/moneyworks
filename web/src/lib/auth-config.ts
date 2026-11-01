@@ -32,7 +32,8 @@ export type AccountSettings = {
   mailFrom: string;
   allowRegistration: boolean;
 };
-const emailPattern = /^[^\s<>@]+@[^\s<>@]+\.[^\s<>@]+$/;
+// No trailing dot: "user@example.com." would otherwise slip past the placeholder check.
+const emailPattern = /^[^\s<>@]+@[^\s<>@]+\.[^\s<>@]*[^\s<>@.]$/;
 export const validEmail = (value: string) => emailPattern.test(value);
 
 // Configuration is lazy: public SSG never needs auth secrets, SMTP or a database.
@@ -80,7 +81,7 @@ export function accountConfig(settings: Partial<AccountSettings> = {}) {
   );
   const privacyReady = Boolean(controller.trim() && validEmail(contact));
   // The devcontainer and CI use reserved example domains for their fake details.
-  const placeholderPrivacy = /@(.+\.)?(example(\.(com|net|org))?|test|invalid|localhost)$/i.test(
+  const placeholderPrivacy = /@(.+\.)?(example(\.(com|net|org))?|test|invalid|localhost)\.*$/i.test(
     contact,
   );
   // Public registration is switched on at /admin, and only counts with mail and a
