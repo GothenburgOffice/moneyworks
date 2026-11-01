@@ -119,6 +119,28 @@ change.
 Database data lives in the `postgres18_data` volume. `docker compose down` keeps
 it; do not use `down --volumes` on data you want to keep.
 
+## Release image
+
+The root [Dockerfile](Dockerfile) builds a production image: the Next.js
+standalone server running as a non-root user, plus the tooling to apply
+migrations. CI tests it and publishes it from `main` as
+`ghcr.io/gothenburgoffice/moneyworks` (`latest` and `sha-<commit>`).
+
+[docker-compose.images.yml](docker-compose.images.yml) runs that image with
+PostgreSQL and no source checkout. It needs `POSTGRES_PASSWORD` in `.env`,
+applies migrations before the app starts, and keeps public signup off unless
+`AUTH_PUBLIC_SIGNUP=true`:
+
+```bash
+docker compose -f docker-compose.images.yml up --detach --wait
+```
+
+To try a local build, run `docker build --file Dockerfile --tag moneyworks:local web`
+and set `MONEYWORKS_IMAGE=moneyworks:local`. Expired auth records are removed
+with `docker compose -f docker-compose.images.yml run --rm web node scripts/cleanup-auth.mjs --apply`.
+A real deployment still needs HTTPS, backups and scheduling, tracked in
+[#11](https://github.com/GothenburgOffice/moneyworks/issues/11).
+
 ## Repository layout
 
 ```text
@@ -126,8 +148,10 @@ moneyworks/
 ├── web/                       # Next.js app, Prisma schema, tests
 ├── .devcontainer/             # VS Code devcontainer on top of the dev Compose stack
 ├── .github/                   # CI, Dependabot, contributor/agent instructions
+├── Dockerfile                 # Release image
 ├── Dockerfile.dev             # Debian-based Node development image
 ├── docker-compose.dev.yml     # web and PostgreSQL services
+├── docker-compose.images.yml  # Release image with PostgreSQL
 ├── moneyworks.code-workspace  # VS Code workspace and extension recommendations
 └── .env.example               # Local configuration template
 ```

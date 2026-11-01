@@ -4,6 +4,8 @@ import createNextIntlPlugin from "next-intl/plugin";
 const withNextIntl = createNextIntlPlugin();
 
 const nextConfig: NextConfig = {
+  // Self-contained server for the release image (see the root Dockerfile).
+  output: 'standalone',
   // Verification/recovery URLs contain tokens. Do not print incoming URLs in
   // development logs; proxy/hosting logs must separately redact them as well.
   logging: { incomingRequests: false },

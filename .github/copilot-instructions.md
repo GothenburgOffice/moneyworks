@@ -22,7 +22,7 @@ This file is the shared reference for coding agents (Copilot reads it directly; 
 - **Application:** Next.js App Router, React, strict TypeScript, Tailwind CSS and `next-intl`, with `en` and `sv` locales.
 - **Database:** PostgreSQL 18 via Prisma 7 and `@prisma/adapter-pg`. Models: `Greeting` (connection test) plus `User`, `Account`, `Session`, `Verification` and `RateLimit`.
 - **Toolchain:** Node.js and npm run only inside the Debian-based development container; the host needs Docker, not Node. CI installs its own matching toolchain.
-- **Node support:** `engines.node` is `>=22.12.0` for hosting flexibility. The dev image and `@types/node` track Node 22 so newer-only APIs fail locally; CI runs the unit job on Node 22 and the current LTS. Raise the floor in `package.json`, `Dockerfile.dev`, `@types/node`, the CI matrix and the Dependabot holds together.
+- **Node support:** `engines.node` is `>=22.12.0` for hosting flexibility. The dev image and `@types/node` track Node 22 so newer-only APIs fail locally; CI runs the unit job on Node 22 and the current LTS. Raise the floor in `package.json`, `Dockerfile.dev`, `Dockerfile`, `@types/node`, the CI matrix and the Dependabot holds together.
 - **Dependency policy:** Compatible stable releases, exact direct versions, committed lockfile. No forced peer overrides or prereleases. TypeScript and ESLint majors are held in Dependabot until lint-plugin peers support them.
 
 ## Repository layout
@@ -37,8 +37,10 @@ moneyworks/
 ├── .editorconfig / .gitattributes # LF rules
 ├── .env.example                  # Template for the gitignored root .env
 ├── CLAUDE.md                     # Claude Code entry point; imports this file
+├── Dockerfile                    # Release image (standalone app + migration tooling)
 ├── Dockerfile.dev                # Debian (trixie-slim) Node 22 development image
 ├── docker-compose.dev.yml        # web and db services
+├── docker-compose.images.yml     # Release image + PostgreSQL, no source mounts
 ├── moneyworks.code-workspace     # VS Code workspace and extension recommendations
 └── web/
     ├── messages/                 # English/Swedish interface messages
@@ -101,7 +103,8 @@ moneyworks/
 - **Network:** Inside Docker the app listens on 3000 and PostgreSQL on `db:5432`. The app's host port is deliberately uncommon so the stack runs beside other projects: `localhost:3410`, overridable with `MONEYWORKS_WEB_PORT`. PostgreSQL publishes no host port; use the Compose network or `docker compose exec db psql`.
 - **Persistence:** PostgreSQL 18 uses the `postgres18_data` volume at `/var/lib/postgresql`. Preserve it and any retained PostgreSQL 16 volume.
 - **Configuration:** Compose has development defaults, so local runs need no `.env`. The optional root `.env` (from the all-commented `.env.example`) holds owner overrides; never overwrite it or commit real credentials. `DATABASE_URL` is derived from `POSTGRES_*` unless set (set it only when the password needs URL-encoding). Editing `.env` does not rotate an existing role's password.
-- **Hosting:** Only development Docker configuration exists. Production image, reverse proxy, TLS and backups are tracked in GitHub issues; do not describe them as done.
+- **Release image:** The root `Dockerfile` (context `web/`) builds a non-root Next.js standalone image that also runs migrations (`prisma migrate deploy` from a copied, lockfile-exact Prisma CLI) and `scripts/cleanup-auth.mjs` as one-shot commands. `docker-compose.images.yml` runs it with PostgreSQL and no source checkout; it requires `POSTGRES_PASSWORD` and defaults public signup off. CI publishes it to `ghcr.io/gothenburgoffice/moneyworks` (`sha-<commit>`, `latest`) from `main` only.
+- **Hosting:** No host, reverse proxy, TLS, backups or scheduled cleanup exist yet; they are tracked in #11 and depend on the hosting decision. Do not describe them as done.
 
 ## Accounts and privacy
 
@@ -148,7 +151,8 @@ Rebuild the devcontainer after infrastructure changes. Never run `down -v`, `dow
 - **Branch protection:** `main` requires a pull request (0 approvals), resolved conversations, and the `unit` and `containers` checks passing on a branch up to date with `main`; force pushes and deletion are blocked, admins included. `unit` is a gate job over the Node matrix so the required name never changes; keep it when editing the matrix.
 - **Unit job:** Line endings, ESLint, UI/architecture/FIRE/auth-config tests, type checking, Prisma validation, production build, migrations and account lifecycle against a disposable database, and a high-severity audit.
 - **Container job:** Exercises `core.autocrlf=true`, builds the app and starts disposable app/PostgreSQL containers, runs smoke tests, verifies live database reads, and checks that outages change only the status before recovery.
-- **Isolation and cleanup:** `COMPOSE_PROJECT_NAME=moneyworks-ci` with example credentials. Keep the `if: always()` cleanup and its verification; never copy that destructive cleanup into normal commands. Preserve failure logs, finite retries and job timeouts.
+- **Release image job:** After `unit` and `containers`, builds the release image once, runs it through `docker-compose.images.yml` (migrations, smoke tests, non-root/no-source checks, auth cleanup dry run, restart persistence) and, on `main` only, pushes that exact image to GHCR and verifies an anonymous pull. Workflow runs on `main` are never cancelled.
+- **Isolation and cleanup:** `COMPOSE_PROJECT_NAME=moneyworks-ci` (and `moneyworks-release-ci`) with disposable credentials. Keep the `if: always()` cleanup and its verification; never copy that destructive cleanup into normal commands. Preserve failure logs, finite retries and job timeouts.
 - **LF rules:** Preserve `.gitattributes` and `.editorconfig`, especially for shell scripts, Dockerfiles, YAML, SQL and Prisma files. If a shell entrypoint is added, test both LF and CRLF inputs.
 - **Workflow archives:** `.github/workflows export-ignore` only omits workflows from source archives; keep them tracked.
 - **Dependabot:** Review grouped Next/config, React/types, Prisma and Tailwind updates together.
