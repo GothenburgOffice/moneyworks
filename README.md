@@ -126,6 +126,12 @@ Copy `.env.example` to the gitignored root `.env` before starting any stack.
 Database data lives in the `postgres18_data` volume. `docker compose down` keeps
 it; do not use `down --volumes` on data you want to keep.
 
+All three Compose files use the project name `moneyworks`, so they share that
+volume. On a server, switching between `compose.yaml` (built from source) and
+`compose.images.yaml` (published image) keeps your data. On a development
+machine, the release stack therefore opens the development database; set
+`COMPOSE_PROJECT_NAME` (for example `moneyworks-release`) to give it its own.
+
 ## Release image
 
 The [Dockerfile](Dockerfile)'s `production` target builds the release image:
