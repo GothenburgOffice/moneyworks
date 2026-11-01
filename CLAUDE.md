@@ -14,7 +14,12 @@ The shared project reference for coding agents (also read by Copilot):
 - Node 22 is the oldest supported line and the dev runtime. Do not use APIs
   added after Node 22; CI and the release image also run on Node 22.
 - Claude Code's login and settings persist in the devcontainer's
-  `claude_config` volume (`CLAUDE_CONFIG_DIR=/root/.claude`).
+  `claude-config` volume (`CLAUDE_CONFIG_DIR=/root/.claude`). Project memory is
+  shared with the Windows host: it lives in `%USERPROFILE%\.claude-memory\moneyworks`,
+  the host's `.claude\projects\<slug>\memory` is a junction to it, and the
+  container bind-mounts it at `/root/.claude/projects/-workspace/memory`. To
+  remove or retarget the junction, use `cmd /c rmdir "<link>"`; in PowerShell 5.1
+  `Remove-Item -Recurse` on a junction can delete the target's contents.
 - Never label issues `good first issue` or `help wanted`; the owner sets those
   manually. Outside pull requests are only accepted for `help wanted` issues or
   approved plans (see `CONTRIBUTING.md`).

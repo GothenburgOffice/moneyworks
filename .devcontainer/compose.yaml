@@ -7,10 +7,10 @@ services:
       # Claude Code keeps its sign-in and settings in this volume across rebuilds.
       CLAUDE_CONFIG_DIR: /root/.claude
     volumes:
-      - claude_config:/root/.claude
+      - claude-config:/root/.claude
       # Claude Code's project memory lives outside the repo, so `git clean` or a fresh
       # clone never removes it. /workspace maps to the "-workspace" project folder.
       - ${CLAUDE_MEMORY_DIR:-${HOME:-${USERPROFILE}}/.claude-memory/moneyworks}:/root/.claude/projects/-workspace/memory
 
 volumes:
-  claude_config:
+  claude-config:
