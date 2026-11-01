@@ -66,7 +66,7 @@ stored in browser storage.
   header and footer with the hub.
 - **LearnSection:** native disclosures, one open initially.
 - **Footer:** logo, necessary-only cookie notice as a sentence with native
-  details (no banner), and the database status kept visually subordinate.
+  details (no banner).
 - **FIRE inputs:** native labelled fields and radios, editable pension rows,
   a separate result region with SVG chart and accessible yearly table.
 - **Account:** two-column entry layout stacking on mobile, one native form

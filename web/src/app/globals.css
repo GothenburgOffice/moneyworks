@@ -769,25 +769,6 @@ details[open] > summary .plus-icon {
   color: var(--muted);
   font-size: 12px;
 }
-.database-status {
-  font-variant-numeric: tabular-nums;
-  display: flex;
-  align-items: center;
-  gap: 7px;
-}
-.database-status::before {
-  content: "";
-  width: 5px;
-  height: 5px;
-  background: currentColor;
-  border-radius: 50%;
-}
-.database-status[data-state="connected"] {
-  color: var(--positive);
-}
-.database-status[data-state="unavailable"] {
-  color: var(--negative);
-}
 
 @media (min-width: 1500px) {
   :root {

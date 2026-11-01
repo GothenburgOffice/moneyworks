@@ -101,11 +101,6 @@ jobs:
           docker compose exec -T app npm run test:smoke
           docker compose exec -T app npm run db:validate
           docker compose exec -T app sh -c 'printf "SELECT 1;" | npx prisma db execute --stdin'
-      - name: Verify live database reads independently of the fixed page heading
-        run: |
-          docker compose exec -T db psql -U moneyworks -d moneyworks -c "UPDATE \"Greeting\" SET message = 'CI database greeting changed' WHERE locale = 'en';"
-          curl --fail --silent --show-error "$BASE_URL/api/health" | grep -F '"message":"CI database greeting changed"'
-          docker compose exec -T app npm run test:smoke
       - name: Verify database failures are visible and not cached
         run: |
           docker compose stop db
@@ -113,7 +108,6 @@ jobs:
           grep -F '"status":"error"' /tmp/db-health.json
           curl --fail --silent --show-error --max-time 20 "$BASE_URL/en" | grep -F '>A clearer view</span>'
           curl --fail --silent --show-error --max-time 20 "$BASE_URL/sv" | grep -F '>En tydligare bild</span>'
-          docker compose exec -T -e EXPECTED_DB_STATUS=unavailable app npm run test:db-status
           docker compose start db
           curl --fail --silent --show-error --retry 20 --retry-all-errors --retry-delay 2 --max-time 15 "$BASE_URL/api/health" | grep -F '"status":"ok"'
           docker compose exec -T app npm run test:smoke
@@ -163,7 +157,7 @@ jobs:
         run: docker build --file Dockerfile --target production --label "org.opencontainers.image.revision=$GITHUB_SHA" --tag "$MONEYWORKS_IMAGE" web
       - name: Start image-only stack (migrations run from the image)
         run: docker compose up --detach --wait --wait-timeout 180
-      - name: Smoke test pages, health and database status
+      - name: Smoke test pages and health
         working-directory: web
         run: TEST_BASE_URL="$BASE_URL" npm run test:smoke
       - name: Verify non-root runtime without source and the auth cleanup command
@@ -173,9 +167,10 @@ jobs:
           docker compose run --rm --no-deps -T app node scripts/cleanup-auth.mjs
       - name: Verify data persists across restart
         run: |
-          docker compose exec -T db psql -U moneyworks -d moneyworks -c "UPDATE \"Greeting\" SET message = 'Release image restart check' WHERE locale = 'en';"
+          docker compose exec -T db psql -U moneyworks -d moneyworks -c "CREATE TABLE ci_restart_check (value text); INSERT INTO ci_restart_check VALUES ('Release image restart check');"
           docker compose restart db app
-          curl --fail --silent --show-error --retry 30 --retry-all-errors --retry-delay 2 --max-time 15 "$BASE_URL/api/health" | grep -F '"message":"Release image restart check"'
+          curl --fail --silent --show-error --retry 30 --retry-all-errors --retry-delay 2 --max-time 15 "$BASE_URL/api/health" | grep -F '"status":"ok"'
+          docker compose exec -T db psql -U moneyworks -d moneyworks -tAc "SELECT value FROM ci_restart_check;" | grep -Fx 'Release image restart check'
       - name: Sign in to GHCR
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         uses: docker/login-action@v4.7.0

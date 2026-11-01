@@ -1,5 +1,5 @@
 import { headers } from "next/headers";
-import { setRequestLocale, getTranslations } from "next-intl/server";
+import { setRequestLocale } from "next-intl/server";
 import type { Metadata } from "next";
 import { getSiteCopy } from "@/content/site";
 import { getBrand } from "@/content/brand";
@@ -49,7 +49,6 @@ export default async function AccountPage({ params, searchParams }: Props) {
           headers: requestHeaders,
         })
       : null;
-  const status = await getTranslations("ConnectionStatus");
   const disabled =
     !config.configured ||
     (view === "register" && !config.registrationEnabled) ||
@@ -105,16 +104,7 @@ export default async function AccountPage({ params, searchParams }: Props) {
       <main id="main-content" className="account-page page-width" data-ui>
         {content}
       </main>
-      <SiteFooter
-        copy={site}
-        locale={language}
-        status={{
-          databaseChecking: status("databaseChecking"),
-          databaseConnected: status("databaseConnected"),
-          databaseUnavailable: status("databaseUnavailable"),
-        }}
-      />
-      <script src="/db-status.js" data-health-url="/api/health" defer />
+      <SiteFooter copy={site} locale={language} />
       <script src="/site-ui.js" defer />
     </div>
   );
