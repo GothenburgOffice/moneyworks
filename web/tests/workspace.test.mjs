@@ -47,6 +47,6 @@ test("devcontainer installs the in-container tooling and formats with the projec
 });
 
 test("the dev stack leaves NODE_ENV to Next so builds work in the container", () => {
-  const compose = readFileSync(new URL("../../docker-compose.dev.yml", import.meta.url), "utf8");
+  const compose = readFileSync(new URL("../../compose.dev.yaml", import.meta.url), "utf8");
   assert.doesNotMatch(compose, /^\s*-?\s*NODE_ENV\s*[=:]/m);
 });

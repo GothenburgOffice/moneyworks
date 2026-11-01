@@ -22,7 +22,7 @@ This file is the shared reference for coding agents (Copilot reads it directly; 
 - **Application:** Next.js App Router, React, strict TypeScript, Tailwind CSS and `next-intl`, with `en` and `sv` locales.
 - **Database:** PostgreSQL 18 via Prisma 7 and `@prisma/adapter-pg`. Models: `Greeting` (connection test) plus `User`, `Account`, `Session`, `Verification` and `RateLimit`.
 - **Toolchain:** Node.js and npm run only inside the Debian-based development container; the host needs Docker, not Node. CI installs its own matching toolchain.
-- **Node support:** `engines.node` is `>=22.12.0` for hosting flexibility. The dev image and `@types/node` track Node 22 so newer-only APIs fail locally; CI runs a single unit job on Node 22, like vocabulary-training. Raise the floor in `package.json`, `Dockerfile.dev`, `Dockerfile`, `@types/node`, the CI `node-version` and the Dependabot holds together.
+- **Node support:** `engines.node` is `>=22.12.0` for hosting flexibility. The Dockerfile and `@types/node` track Node 22 so newer-only APIs fail locally; CI runs a single unit job on Node 22, like vocabulary-training. Raise the floor in `package.json`, `Dockerfile`, `@types/node`, the CI `node-version` and the Dependabot holds together.
 - **Dependency policy:** Compatible stable releases, exact direct versions, committed lockfile. No forced peer overrides or prereleases. TypeScript and ESLint majors are held in Dependabot until lint-plugin peers support them. Prettier and `eslint-config-prettier` are dev-only, for one shared formatting standard across GothenburgOffice repositories.
 
 ## Repository layout
@@ -35,12 +35,12 @@ moneyworks/
 │   ├── dependabot.yml            # Weekly updates and compatibility holds
 │   └── workflows/ci.yml          # Checks and disposable container integration tests
 ├── .editorconfig / .gitattributes # LF rules
-├── .env.example                  # Template for the gitignored root .env
+├── .env.example                  # Template for the required, gitignored root .env
 ├── CLAUDE.md                     # Claude Code entry point; imports this file
-├── Dockerfile                    # Release image (standalone app + migration tooling)
-├── Dockerfile.dev                # Debian (trixie-slim) Node 22 development image
-├── docker-compose.dev.yml        # web and db services
-├── docker-compose.images.yml     # Release image + PostgreSQL, no source mounts
+├── Dockerfile                    # development, migration and production targets (Node 22, trixie-slim)
+├── compose.yaml                  # Base stack: db, migrate, app (production build from source)
+├── compose.dev.yaml              # Development override: dev target and source mounts
+├── compose.images.yaml           # Published release image + PostgreSQL
 ├── moneyworks.code-workspace     # VS Code workspace and extension recommendations
 └── web/
     ├── messages/                 # English/Swedish interface messages
@@ -91,7 +91,8 @@ moneyworks/
 - **Small enhancements:** `public/db-status.js` updates the footer status from the uncached health endpoint; `public/site-ui.js` closes the mobile menu and provides theme switching. Dark is the static default; `light`/`dark` are the only accepted URL preference values, carried through locale links with guarded history updates. No browser-storage APIs. Hide the theme control without JavaScript. Initial database status says "checking"; failures change the status, not the content. Builds need no database.
 - **Brand:** Direction C (Bright works) as recorded in `DESIGN.md`: charcoal/lime, bold headings, contrasting tool panels, original marks, self-hosted Manrope, CSS tokens.
 - **Country-neutral:** Do not assume SEK, a tax jurisdiction, a trading method or financial outputs.
-- **Health endpoint:** `/api/health/db` reads a greeting; HTTP 200 `status: "ok"` or 503 `status: "error"`, always `Cache-Control: no-store`.
+- **Security headers:** `next.config.ts` sends the same site-wide set as vocabulary-training on every route: CSP (`default-src 'self'`, `object-src 'none'`, `frame-ancestors 'none'`; inline scripts for Next.js hydration, eval only in development), `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy: same-origin` and a restrictive `Permissions-Policy`; `poweredByHeader` is off. Self-host every asset; adding an external origin needs a CSP change and a reason.
+- **Health endpoint:** `/api/health` reads a greeting; HTTP 200 `status: "ok"` or 503 `status: "error"`, always `Cache-Control: no-store`.
 - **Connection handling:** Reuse the Prisma pool across hot reloads, initialize lazily and keep finite connection/query timeouts.
 - **Secrets:** Never expose connection strings, credentials or raw database errors. Never put secrets in `NEXT_PUBLIC_` variables.
 - **Localization:** English is the default regardless of browser language or old locale cookies; automatic detection stays disabled. Localized pages live under `src/app/[locale]/`.
@@ -99,11 +100,12 @@ moneyworks/
 ## Containers and credentials
 
 - **Paths:** The repository is mounted at `/workspace`; the app works in `/workspace/web`. `node_modules` and `.next` stay in Docker volumes.
-- **Startup:** Normal Compose waits for database health, runs `npm ci` and `npm run db:setup`, then starts the dev server. The devcontainer runs install/setup on creation and leaves starting the server to the terminal. It installs Claude Code, ESLint, Prettier (format on save, using the project's pinned Prettier) and Prisma extensions in the container and keeps Claude Code's configuration in the `claude_config` volume.
-- **Network:** Inside Docker the app listens on 3000 and PostgreSQL on `db:5432`. The app's host port is deliberately uncommon so the stack runs beside other projects: `localhost:3410`, overridable with `MONEYWORKS_WEB_PORT`. PostgreSQL publishes no host port; use the Compose network or `docker compose exec db psql`.
+- **Compose layout (shared with vocabulary-training):** `compose.yaml` is the base and runs the production build from source (`db`, one-shot `migrate`, `app`). `compose.dev.yaml` only overrides `app` with the `development` target, source mounts and a command that runs `npm ci` when the lockfile changed, then `npm run dev`. `compose.images.yaml` runs the published image. Keep shared settings in `compose.yaml`; dev may differ only through the override. One `Dockerfile` holds the `development`, `migration` and `production` targets.
+- **Startup:** `migrate` applies migrations after the database is healthy; `app` starts after it completes. The devcontainer (`compose.yaml` + `compose.dev.yaml` + `.devcontainer/compose.yaml`) keeps the service command, so the dev server starts with the container. It installs Claude Code, ESLint, Prettier (format on save, using the project's pinned Prettier), GitHub Actions and Prisma extensions, keeps Claude Code's configuration in the `claude_config` volume and mounts its project memory from `~/.claude-memory/moneyworks` on the host.
+- **Network:** Inside Docker the app listens on 3000 and PostgreSQL on `db:5432`. The app's host port is deliberately uncommon so the stack runs beside other projects: `localhost:3410` (`APP_PORT`; vocabulary-training uses 3420). PostgreSQL publishes no host port; use the Compose network or `docker compose exec db psql`.
 - **Persistence:** PostgreSQL 18 uses the `postgres18_data` volume at `/var/lib/postgresql`. Preserve it and any retained PostgreSQL 16 volume.
-- **Configuration:** Compose has development defaults, so local runs need no `.env`. The optional root `.env` (from the all-commented `.env.example`) holds owner overrides; never overwrite it or commit real credentials. `DATABASE_URL` is derived from `POSTGRES_*` unless set (set it only when the password needs URL-encoding). Editing `.env` does not rotate an existing role's password.
-- **Release image:** The root `Dockerfile` (context `web/`) builds a non-root Next.js standalone image that also runs migrations (`prisma migrate deploy` from a copied, lockfile-exact Prisma CLI) and `scripts/cleanup-auth.mjs` as one-shot commands. `docker-compose.images.yml` runs it with PostgreSQL and no source checkout; it requires `POSTGRES_PASSWORD` and defaults public signup off. CI publishes it to `ghcr.io/gothenburgoffice/moneyworks` (`sha-<commit>`, `latest`) from `main` only.
+- **Configuration:** Every stack requires a root `.env` copied from `.env.example`; never overwrite it or commit real credentials. Only `POSTGRES_PASSWORD` is mandatory (`${POSTGRES_PASSWORD:?...}`); it must be URL-safe because Compose builds `DATABASE_URL` from it. The database user and name are fixed to `moneyworks` in every stack. Everything else is optional and defaults to off; no hardcoded development secrets. Shared names with vocabulary-training: `APP_ORIGIN` (single public origin, used in email links), `APP_ORIGIN_ALIASES` (optional extra exact origins; a malformed entry disables accounts with a clear 503; development defaults to `http://127.0.0.1:<APP_PORT>`), `ALLOW_REGISTRATION`, `APP_PORT`, service `app`, `/api/health`. Auth cookies follow the request's own allowed origin: `__Host-`/Secure on HTTPS, development names on loopback HTTP. Editing `.env` does not rotate an existing role's password.
+- **Release image:** The root `Dockerfile` (context `web/`) builds a non-root Next.js standalone image that also runs migrations (`prisma migrate deploy` from a copied, lockfile-exact Prisma CLI) and `scripts/cleanup-auth.mjs` as one-shot commands. `compose.images.yaml` runs it with PostgreSQL and no source build; it requires `POSTGRES_PASSWORD` and defaults public signup off. CI publishes it to `ghcr.io/gothenburgoffice/moneyworks` (`sha-<commit>`, `latest`) from `main` only.
 - **Hosting:** No host, reverse proxy, TLS, backups or scheduled cleanup exist yet; they are tracked in #11 and depend on the hosting decision. Do not describe them as done.
 
 ## Accounts and privacy
@@ -117,7 +119,7 @@ moneyworks/
 
 ## Commands
 
-Inside the devcontainer, work in `/workspace/web` and run `npm run dev -- --hostname 0.0.0.0`. From the host, prefix commands with `docker compose -f docker-compose.dev.yml exec web`.
+Inside the devcontainer, work in `/workspace/web`; the dev server already runs (`npm run dev` binds to `0.0.0.0:3000` in the container). From the host, prefix commands with `docker compose -f compose.yaml -f compose.dev.yaml exec app`.
 
 ```bash
 npm run format              # Prettier; CI runs npm run format:check
@@ -152,7 +154,7 @@ Rebuild the devcontainer after infrastructure changes. Never run `down -v`, `dow
 - **Branch protection:** `main` requires a pull request (0 approvals), resolved conversations, and the `unit`, `containers` and `release image` checks passing on a branch up to date with `main`; force pushes and deletion are blocked, admins included. Keep those job names stable; renaming one requires updating branch protection.
 - **Unit job:** Line endings, Prettier check, ESLint, UI/architecture/FIRE/auth-config tests, type checking, Prisma validation, production build, migrations and account lifecycle against a disposable database, and a high-severity audit.
 - **Container job:** Exercises `core.autocrlf=true`, builds the app and starts disposable app/PostgreSQL containers, runs smoke tests, verifies live database reads, and checks that outages change only the status before recovery.
-- **Release image job:** After `unit` and `containers`, builds the release image once, runs it through `docker-compose.images.yml` (migrations, smoke tests, non-root/no-source checks, auth cleanup dry run, restart persistence) and, on `main` only, pushes that exact image to GHCR and verifies an anonymous pull. Workflow runs on `main` are never cancelled.
+- **Release image job:** After `unit` and `containers`, builds the release image once, runs it through `compose.images.yaml` (migrations, smoke tests, non-root/no-source checks, auth cleanup dry run, restart persistence) and, on `main` only, pushes that exact image to GHCR and verifies an anonymous pull. Workflow runs on `main` are never cancelled.
 - **Isolation and cleanup:** `COMPOSE_PROJECT_NAME=moneyworks-ci` (and `moneyworks-release-ci`) with disposable credentials. Keep the `if: always()` cleanup and its verification; never copy that destructive cleanup into normal commands. Preserve failure logs, finite retries and job timeouts.
 - **LF rules:** Preserve `.gitattributes` and `.editorconfig`, especially for shell scripts, Dockerfiles, YAML, SQL and Prisma files. If a shell entrypoint is added, test both LF and CRLF inputs.
 - **Workflow archives:** `.github/workflows export-ignore` only omits workflows from source archives; keep them tracked.

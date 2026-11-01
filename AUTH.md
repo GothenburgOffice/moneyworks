@@ -34,9 +34,9 @@ calculator is client-local and does not save inputs to an account.
 The `/en` and `/sv` homepage remains SSG with metadata and native navigation.
 Reading account cookies is confined to the separate dynamic account route and
 auth endpoints. The header's generic Account link does not make home dynamic.
-Account HTML is private/no-store, noindex and anti-framing. Its strict-origin
-referrer policy excludes paths/query tokens while preserving the real Origin on
-native form POSTs. Do not use no-referrer on these pages: browsers then submit
+Account HTML is private/no-store, noindex and anti-framing. The site-wide
+same-origin referrer policy sends no referrer to other sites (so no paths or
+query tokens) while preserving the real Origin on native same-origin form POSTs. Do not use no-referrer on these pages: browsers then submit
 Origin:null and the intentionally strict CSRF check must reject them.
 
 Forms work through full-document POST/redirect/GET without JavaScript. The small
@@ -55,20 +55,26 @@ split from global tokens/site styles without changing the C design.
 
 ## Operator configuration
 
-Set account values in the optional root `.env` (uncomment them from
-`.env.example`); there is no generator. Without them, accounts stay disabled.
-Compose passes account settings only to web. Launch prerequisites are tracked in #12.
+Set account values in the root `.env` (copied from `.env.example`); there is
+no generator. They are optional: without them, accounts stay disabled.
+Compose passes account settings only to the app service. Launch prerequisites are tracked in #12.
 
 Required before registration is available:
 
-- `AUTH_BASE_URL`: exact origin, HTTPS except explicit loopback development.
+- `APP_ORIGIN`: exact origin, HTTPS except explicit loopback development.
+- `APP_ORIGIN_ALIASES` (optional): comma-separated extra exact origins, such as
+  another domain or `http://127.0.0.1:<port>` locally (the development default).
+  Each follows the same rules as `APP_ORIGIN`; one malformed entry disables
+  accounts with a 503 that names this setting. Email links always use
+  `APP_ORIGIN`. Cookies follow the request's own origin: `__Host-` and Secure
+  on HTTPS, the development names on loopback HTTP.
 - `AUTH_SECRET`: a private, independently maintained random value of at least
   32 characters. The template's replacement marker is rejected.
 - `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASSWORD`, `MAIL_FROM`.
   External SMTP must use TLS; both credential fields must be present or absent.
 - `PRIVACY_CONTROLLER_NAME`, `PRIVACY_CONTACT_EMAIL`: real publishable details,
   not a fictitious operator or an inferred personal email.
-- `AUTH_PUBLIC_SIGNUP=true`: public self-registration after the above is ready.
+- `ALLOW_REGISTRATION=true`: public self-registration after the above is ready.
   Set false to suspend registration without deleting existing accounts.
 
 Test delivery through the configured SMTP service before enabling public signup.

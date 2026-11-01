@@ -86,11 +86,23 @@ test("English is the default even with Swedish browser language and cookie", asy
 });
 
 test("database health performs a real uncached read", async () => {
-  const response = await fetch(`${base}/api/health/db`);
+  const response = await fetch(`${base}/api/health`);
   assert.equal(response.status, 200);
   assert.equal(response.headers.get("cache-control"), "no-store");
   const health = await response.json();
   assert.equal(health.status, "ok");
   assert.equal(typeof health.message, "string");
   assert.ok(Number.isFinite(Date.parse(health.checkedAt)));
+});
+
+test("public pages send the site-wide security headers", async () => {
+  const response = await fetch(`${base}/en`);
+  assert.equal(response.status, 200);
+  const csp = response.headers.get("content-security-policy") ?? "";
+  for (const directive of ["default-src 'self'", "object-src 'none'", "frame-ancestors 'none'"])
+    assert.ok(csp.includes(directive), `Missing CSP directive: ${directive}`);
+  assert.equal(response.headers.get("x-frame-options"), "DENY");
+  assert.equal(response.headers.get("x-content-type-options"), "nosniff");
+  assert.equal(response.headers.get("referrer-policy"), "same-origin");
+  assert.equal(response.headers.get("x-powered-by"), null);
 });

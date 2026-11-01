@@ -1,0 +1,32 @@
+# Development override for compose.yaml:
+#   docker compose -f compose.yaml -f compose.dev.yaml up --build
+# Database, migrations, health check and settings come from compose.yaml.
+# No NODE_ENV here: `next dev` and `next build` each set their own.
+services:
+  app:
+    build:
+      target: development
+    working_dir: /workspace/web
+    # Reinstall dependencies only when the lockfile changed, before the dev server
+    # starts, so the node_modules volume never goes stale.
+    command:
+      - sh
+      - -c
+      - >-
+        cmp -s package-lock.json node_modules/.installed-lock ||
+        (npm ci && cp package-lock.json node_modules/.installed-lock);
+        exec npm run dev
+    environment:
+      ALLOW_REGISTRATION: ${ALLOW_REGISTRATION:-true}
+      # Also accept the 127.0.0.1 spelling of the local origin.
+      APP_ORIGIN_ALIASES: ${APP_ORIGIN_ALIASES:-http://127.0.0.1:${APP_PORT:-3410}}
+      CHOKIDAR_USEPOLLING: "true"
+      WATCHPACK_POLLING: "true"
+    volumes:
+      - .:/workspace
+      - web_node_modules:/workspace/web/node_modules
+      - web_next:/workspace/web/.next
+
+volumes:
+  web_node_modules:
+  web_next:

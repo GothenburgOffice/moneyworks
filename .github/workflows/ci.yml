@@ -24,13 +24,13 @@ jobs:
       auth-test-db:
         image: postgres:18.6
         env:
-          POSTGRES_USER: postgres
+          POSTGRES_USER: moneyworks
           POSTGRES_PASSWORD: password
           POSTGRES_DB: moneyworks
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U postgres -d moneyworks"
+          --health-cmd "pg_isready -U moneyworks -d moneyworks"
           --health-interval 5s
           --health-timeout 3s
           --health-retries 20
@@ -40,7 +40,7 @@ jobs:
         shell: bash
     env:
       NEXT_TELEMETRY_DISABLED: "1"
-      DATABASE_URL: postgresql://postgres:password@localhost:5432/moneyworks
+      DATABASE_URL: postgresql://moneyworks:password@localhost:5432/moneyworks
     steps:
       - uses: actions/checkout@v7.0.1
       - uses: actions/setup-node@v7.1.0
@@ -64,7 +64,7 @@ jobs:
         run: npm run db:deploy
       - name: Verify account lifecycle with capture-only SMTP
         env:
-          AUTH_TEST_DATABASE_URL: postgresql://postgres:password@localhost:5432/moneyworks
+          AUTH_TEST_DATABASE_URL: postgresql://moneyworks:password@localhost:5432/moneyworks
         run: npm run test:accounts
       - run: npm audit --audit-level=high
 
@@ -76,6 +76,9 @@ jobs:
         shell: bash
     env:
       COMPOSE_PROJECT_NAME: moneyworks-ci
+      # The development stack: compose.yaml with the compose.dev.yaml override.
+      COMPOSE_FILE: compose.yaml:compose.dev.yaml
+      BASE_URL: http://localhost:3410
     steps:
       - uses: actions/checkout@v7.0.1
       - name: Exercise Windows-style Git checkout settings
@@ -83,42 +86,45 @@ jobs:
       - uses: docker/setup-buildx-action@v4.4.1
       - name: Validate Compose and devcontainer configuration
         run: |
-          docker compose -f docker-compose.dev.yml config --quiet
+          # Every stack requires a .env with POSTGRES_PASSWORD.
+          ! docker compose config --quiet 2>/dev/null
           cp .env.example .env
-          docker compose -f docker-compose.dev.yml config --quiet
-          docker compose -f docker-compose.dev.yml -f .devcontainer/docker-compose.yml config --quiet
+          docker compose -f compose.yaml config --quiet
+          docker compose config --quiet
+          docker compose -f compose.yaml -f compose.dev.yaml -f .devcontainer/compose.yaml config --quiet
+          docker compose -f compose.images.yaml config --quiet
       - name: Build and start development stack
-        run: docker compose -f docker-compose.dev.yml up --build --detach --wait --wait-timeout 180
+        run: docker compose up --build --detach --wait --wait-timeout 240
       - name: Smoke test English and Swedish pages and database access
         run: |
-          curl --fail --silent --show-error --retry 60 --retry-all-errors --retry-delay 2 --connect-timeout 2 --max-time 15 http://localhost:3410/api/health/db | grep -F '"status":"ok"'
-          docker compose -f docker-compose.dev.yml exec -T web npm run test:smoke
-          docker compose -f docker-compose.dev.yml exec -T web npm run db:validate
-          docker compose -f docker-compose.dev.yml exec -T web sh -c 'printf "SELECT 1;" | npx prisma db execute --stdin'
+          curl --fail --silent --show-error --retry 60 --retry-all-errors --retry-delay 2 --connect-timeout 2 --max-time 15 "$BASE_URL/api/health" | grep -F '"status":"ok"'
+          docker compose exec -T app npm run test:smoke
+          docker compose exec -T app npm run db:validate
+          docker compose exec -T app sh -c 'printf "SELECT 1;" | npx prisma db execute --stdin'
       - name: Verify live database reads independently of the fixed page heading
         run: |
-          docker compose -f docker-compose.dev.yml exec -T db psql -U postgres -d moneyworks -c "UPDATE \"Greeting\" SET message = 'CI database greeting changed' WHERE locale = 'en';"
-          curl --fail --silent --show-error http://localhost:3410/api/health/db | grep -F '"message":"CI database greeting changed"'
-          docker compose -f docker-compose.dev.yml exec -T web npm run test:smoke
+          docker compose exec -T db psql -U moneyworks -d moneyworks -c "UPDATE \"Greeting\" SET message = 'CI database greeting changed' WHERE locale = 'en';"
+          curl --fail --silent --show-error "$BASE_URL/api/health" | grep -F '"message":"CI database greeting changed"'
+          docker compose exec -T app npm run test:smoke
       - name: Verify database failures are visible and not cached
         run: |
-          docker compose -f docker-compose.dev.yml stop db
-          test "$(curl --silent --show-error --max-time 20 --output /tmp/db-health.json --write-out '%{http_code}' http://localhost:3410/api/health/db)" = 503
+          docker compose stop db
+          test "$(curl --silent --show-error --max-time 20 --output /tmp/db-health.json --write-out '%{http_code}' "$BASE_URL/api/health")" = 503
           grep -F '"status":"error"' /tmp/db-health.json
-          curl --fail --silent --show-error --max-time 20 http://localhost:3410/en | grep -F '>A clearer view</span>'
-          curl --fail --silent --show-error --max-time 20 http://localhost:3410/sv | grep -F '>En tydligare bild</span>'
-          docker compose -f docker-compose.dev.yml exec -T -e EXPECTED_DB_STATUS=unavailable web npm run test:db-status
-          docker compose -f docker-compose.dev.yml start db
-          curl --fail --silent --show-error --retry 20 --retry-all-errors --retry-delay 2 --max-time 15 http://localhost:3410/api/health/db | grep -F '"status":"ok"'
-          docker compose -f docker-compose.dev.yml exec -T web npm run test:smoke
+          curl --fail --silent --show-error --max-time 20 "$BASE_URL/en" | grep -F '>A clearer view</span>'
+          curl --fail --silent --show-error --max-time 20 "$BASE_URL/sv" | grep -F '>En tydligare bild</span>'
+          docker compose exec -T -e EXPECTED_DB_STATUS=unavailable app npm run test:db-status
+          docker compose start db
+          curl --fail --silent --show-error --retry 20 --retry-all-errors --retry-delay 2 --max-time 15 "$BASE_URL/api/health" | grep -F '"status":"ok"'
+          docker compose exec -T app npm run test:smoke
       - name: Container logs
         if: failure()
-        run: docker compose -f docker-compose.dev.yml logs
+        run: docker compose logs
       - name: Remove disposable test containers, volumes, network and app image
         if: always()
         run: |
-          if test -f docker-compose.dev.yml; then
-            docker compose --env-file .env.example -f docker-compose.dev.yml down --volumes --remove-orphans --rmi local
+          if test -f compose.yaml; then
+            docker compose --env-file .env.example down --volumes --remove-orphans --rmi local
             test -z "$(docker ps --all --quiet --filter "label=com.docker.compose.project=$COMPOSE_PROJECT_NAME")"
             test -z "$(docker volume ls --quiet --filter "label=com.docker.compose.project=$COMPOSE_PROJECT_NAME")"
             test -z "$(docker network ls --quiet --filter "label=com.docker.compose.project=$COMPOSE_PROJECT_NAME")"
@@ -142,6 +148,7 @@ jobs:
         shell: bash
     env:
       COMPOSE_PROJECT_NAME: moneyworks-release-ci
+      COMPOSE_FILE: compose.images.yaml
       MONEYWORKS_IMAGE: moneyworks:release-candidate
       POSTGRES_PASSWORD: ci-only-disposable-image-test-password
       BASE_URL: http://127.0.0.1:3410
@@ -153,20 +160,20 @@ jobs:
       - name: Build release candidate
         run: docker build --file Dockerfile --target production --label "org.opencontainers.image.revision=$GITHUB_SHA" --tag "$MONEYWORKS_IMAGE" web
       - name: Start image-only stack (migrations run from the image)
-        run: docker compose -f docker-compose.images.yml up --detach --wait --wait-timeout 180
+        run: docker compose up --detach --wait --wait-timeout 180
       - name: Smoke test pages, health and database status
         working-directory: web
         run: TEST_BASE_URL="$BASE_URL" npm run test:smoke
       - name: Verify non-root runtime without source and the auth cleanup command
         run: |
-          test "$(docker compose -f docker-compose.images.yml exec -T web id -u)" != 0
-          docker compose -f docker-compose.images.yml exec -T web test ! -e /app/src
-          docker compose -f docker-compose.images.yml run --rm --no-deps -T web node scripts/cleanup-auth.mjs
+          test "$(docker compose exec -T app id -u)" != 0
+          docker compose exec -T app test ! -e /app/src
+          docker compose run --rm --no-deps -T app node scripts/cleanup-auth.mjs
       - name: Verify data persists across restart
         run: |
-          docker compose -f docker-compose.images.yml exec -T db psql -U moneyworks -d moneyworks -c "UPDATE \"Greeting\" SET message = 'Release image restart check' WHERE locale = 'en';"
-          docker compose -f docker-compose.images.yml restart db web
-          curl --fail --silent --show-error --retry 30 --retry-all-errors --retry-delay 2 --max-time 15 "$BASE_URL/api/health/db" | grep -F '"message":"Release image restart check"'
+          docker compose exec -T db psql -U moneyworks -d moneyworks -c "UPDATE \"Greeting\" SET message = 'Release image restart check' WHERE locale = 'en';"
+          docker compose restart db app
+          curl --fail --silent --show-error --retry 30 --retry-all-errors --retry-delay 2 --max-time 15 "$BASE_URL/api/health" | grep -F '"message":"Release image restart check"'
       - name: Sign in to GHCR
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         uses: docker/login-action@v4.7.0
@@ -200,9 +207,9 @@ jobs:
           fi
       - name: Container logs
         if: failure()
-        run: docker compose -f docker-compose.images.yml logs --tail=200
+        run: docker compose logs --tail=200
       - name: Remove disposable image-test containers and volumes
         if: always()
         run: |
-          docker compose -f docker-compose.images.yml down --volumes --remove-orphans
+          docker compose down --volumes --remove-orphans
           test -z "$(docker volume ls --quiet --filter "label=com.docker.compose.project=$COMPOSE_PROJECT_NAME")"

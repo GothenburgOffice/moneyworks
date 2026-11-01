@@ -5,14 +5,14 @@ import { getDatabase } from "./db";
 import { accountConfig, authCookieOptions } from "./auth-config";
 import { queueAccountEmail } from "./auth-mail";
 
-function createAuth() {
+function createAuth(secure: boolean) {
   const config = accountConfig();
-  if (!config.configured) throw new Error("Account service is not configured.");
+  if (!config.configured) throw new Error(config.problem);
   return betterAuth({
     appName: "MoneyWorks",
     baseURL: config.baseURL,
     secret: config.secret,
-    trustedOrigins: [config.baseURL],
+    trustedOrigins: config.origins,
     database: prismaAdapter(getDatabase(), { provider: "postgresql" }),
     telemetry: { enabled: false },
     emailAndPassword: {
@@ -74,14 +74,21 @@ function createAuth() {
     advanced: {
       // Set the prefix ourselves: Better Auth's automatic __Secure- would be put
       // in front of __Host- and make the name invalid. Secure stays mandatory on HTTPS.
-      ...authCookieOptions(config),
+      ...authCookieOptions({ secure }),
       ipAddress: { ipAddressHeaders: ["x-moneyworks-client-ip"] },
     },
   });
 }
 
-let instance: ReturnType<typeof createAuth> | undefined;
-export function getAuth() {
-  instance ??= createAuth();
+// One instance per cookie mode: HTTPS origins get __Host- Secure cookies, HTTP
+// loopback aliases the development names. Pass the request's allowed origin.
+const instances = new Map<boolean, ReturnType<typeof createAuth>>();
+export function getAuth(origin: string) {
+  const secure = origin.startsWith("https:");
+  let instance = instances.get(secure);
+  if (!instance) {
+    instance = createAuth(secure);
+    instances.set(secure, instance);
+  }
   return instance;
 }

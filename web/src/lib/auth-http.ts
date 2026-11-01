@@ -20,7 +20,8 @@ export async function boundedBody(request: Request): Promise<Uint8Array | null> 
   return new Uint8Array(Buffer.concat(chunks));
 }
 
-export async function handleAuthRequest(request: Request) {
+// `origin` is the request's allowed origin; it selects the cookie mode.
+export async function handleAuthRequest(request: Request, origin: string) {
   const headers = new Headers(request.headers);
   // Never accept the internal limiter header from a client. By default all
   // callers share a conservative bucket. An operator may trust ONE header only
@@ -32,7 +33,7 @@ export async function handleAuthRequest(request: Request) {
     request.method === "GET" || request.method === "HEAD" ? undefined : await boundedBody(request);
   if (body === null) return new Response(null, { status: 413 });
   headers.delete("content-length");
-  const result = await getAuth().handler(
+  const result = await getAuth(origin).handler(
     new Request(request.url, {
       method: request.method,
       headers,
