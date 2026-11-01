@@ -243,6 +243,48 @@ try {
   }
   checks.push("anonymous bilingual pages set no cookies");
 
+  // /admin: native form posts, an admin bootstrapped from ADMIN_EMAIL/ADMIN_PASSWORD.
+  jar.clear();
+  const adminForm = (action, fields, headers = {}) =>
+    fetch(`${base}/api/admin/${action}`, {
+      method: "POST",
+      redirect: "manual",
+      headers: {
+        origin: base,
+        "content-type": "application/x-www-form-urlencoded",
+        "x-test-client-ip": `198.51.100.${counter++}`,
+        ...(jar.size ? { cookie: cookieHeader() } : {}),
+        ...headers,
+      },
+      body: new URLSearchParams(fields),
+    }).then((response) => {
+      for (const set of response.headers.getSetCookie()) {
+        const [first] = set.split(";");
+        const [key, value] = [
+          first.slice(0, first.indexOf("=")),
+          first.slice(first.indexOf("=") + 1),
+        ];
+        if (!value || /Max-Age=0/i.test(set)) jar.delete(key);
+        else jar.set(key, value);
+      }
+      return response;
+    });
+  const message = (result) => new URL(result.headers.get("location")).searchParams.get("message");
+  // A member signing in at /admin fails like a wrong password and keeps no session.
+  const memberSessions = async () =>
+    (
+      await pool.query(
+        'SELECT count(*)::int AS n FROM "Session" s JOIN "User" u ON u.id = s."userId" WHERE u.email = $1',
+        [email],
+      )
+    ).rows[0].n;
+  const sessionsBefore = await memberSessions();
+  response = await adminForm("login", { email, password: newPassword });
+  assert.equal(message(response), "failed");
+  assert.equal(await memberSessions(), sessionsBefore);
+  assert.equal(jar.size, 0);
+  checks.push("a member signing in at /admin fails the same way and keeps no session");
+
   const insertScenario = (userId) =>
     pool.query(
       `INSERT INTO "Scenario" (id, "userId", "toolId", name, "schemaVersion", data, "updatedAt")
@@ -260,6 +302,86 @@ try {
     0,
   );
   checks.push("scenarios require an existing user and are deleted with the user");
+  const adminEmail = "mw-admin-qa@example.invalid";
+  const settingsFields = {
+    controllerName: "Automated test controller, not a public operator",
+    contactEmail: "test-controller@example.invalid",
+    smtpHost: "127.0.0.1",
+    smtpPort: "10252",
+    mailFrom: "test-mail@example.invalid",
+  };
+  const setting = async (key) =>
+    (await pool.query('SELECT value FROM "SiteSetting" WHERE key=$1', [key])).rows[0]?.value;
+  assert.equal((await adminForm("settings", settingsFields)).status, 404, "settings need an admin");
+  assert.ok(!(await (await fetch(`${base}/admin`)).text()).includes("Site settings"));
+  // Someone registered the admin email first but never verified it: the bootstrap
+  // takes that account over instead of keeping its stranger-chosen password.
+  await pool.query(
+    `INSERT INTO "User" (id, name, email, "emailVerified", "updatedAt")
+     VALUES ('squatter-qa', 'Squatter', $1, false, now())`,
+    [adminEmail],
+  );
+  await pool.query(
+    `INSERT INTO "Account" (id, "accountId", "providerId", "userId", password, "updatedAt")
+     VALUES ('squatter-qa-credential', 'squatter-qa', 'credential', 'squatter-qa', 'not-a-hash', now())`,
+  );
+  response = await adminForm("login", { email: adminEmail, password: "not the admin password" });
+  assert.equal(new URL(response.headers.get("location")).searchParams.get("message"), "failed");
+  assert.equal(jar.size, 0);
+  response = await adminForm("login", {
+    email: adminEmail,
+    password: "an automated admin test passphrase",
+  });
+  assert.equal(response.status, 303);
+  assert.ok(jar.size, "admin sign-in sets a session cookie");
+  assert.deepEqual(
+    (await pool.query('SELECT "isAdmin","emailVerified" FROM "User" WHERE email=$1', [adminEmail]))
+      .rows[0],
+    { isAdmin: true, emailVerified: true },
+  );
+  assert.notEqual(
+    (await pool.query(`SELECT password FROM "Account" WHERE "userId"='squatter-qa'`)).rows[0]
+      .password,
+    "not-a-hash",
+    "the unverified squatter's password is replaced",
+  );
+  let page = await (await fetch(`${base}/admin`, { headers: { cookie: cookieHeader() } })).text();
+  assert.ok(page.includes("Site settings") && page.includes("test-controller@example.invalid"));
+  checks.push("admin bootstrap takes over an unverified squatter; others get 404");
+
+  response = await adminForm("settings", {
+    ...settingsFields,
+    smtpUser: "mailer",
+    smtpPassword: "an smtp test-only password",
+  });
+  assert.equal(new URL(response.headers.get("location")).searchParams.get("message"), "saved");
+  const storedPassword = await setting("smtp.password");
+  assert.match(storedPassword, /^v1:/);
+  assert.ok(!storedPassword.includes("an smtp test-only password"));
+  page = await (await fetch(`${base}/admin`, { headers: { cookie: cookieHeader() } })).text();
+  assert.ok(page.includes("set (leave blank to keep it)") && !page.includes("test-only password"));
+  response = await adminForm("settings", { ...settingsFields, allowRegistration: "on" });
+  assert.equal(
+    new URL(response.headers.get("location")).searchParams.get("message"),
+    "registrationBlocked",
+    "example privacy details cannot open public registration",
+  );
+  assert.equal(await setting("registration.allowed"), "");
+  response = await adminForm("settings", { ...settingsFields, smtpPort: "99999" });
+  assert.equal(new URL(response.headers.get("location")).searchParams.get("message"), "invalid");
+  assert.equal(await setting("smtp.port"), "10252");
+  assert.equal(
+    (await adminForm("settings", settingsFields, { origin: "https://attacker.invalid" })).status,
+    403,
+  );
+  await adminForm("settings", { ...settingsFields, clearSmtpPassword: "on" });
+  assert.equal(await setting("smtp.password"), undefined);
+  assert.equal(await setting("smtp.user"), "");
+  checks.push("admin settings: SMTP password stored encrypted, never shown; bad input rejected");
+
+  await adminForm("logout", {});
+  assert.equal((await adminForm("settings", settingsFields)).status, 404);
+  checks.push("admin sign-out ends access");
   console.log(
     JSON.stringify(
       {
@@ -274,10 +396,13 @@ try {
   );
 } finally {
   try {
-    await pool.query('DELETE FROM "User" WHERE email=$1', [email]);
+    await pool.query('DELETE FROM "User" WHERE email = ANY($1)', [
+      [email, "mw-admin-qa@example.invalid"],
+    ]);
+    await pool.query('DELETE FROM "SiteSetting"');
     await pool.query('DELETE FROM "RateLimit" WHERE key LIKE $1 OR key LIKE $2', [
       "%192.0.2.%",
-      "%198.51.100.42%",
+      "%198.51.100.%",
     ]);
   } finally {
     await pool.end();

@@ -1,6 +1,6 @@
 import "server-only";
 import nodemailer from "nodemailer";
-import { accountConfig } from "./auth-config";
+import { loadAccountConfig } from "./site-settings";
 
 // SMTP is deliberately the only delivery integration. No hosted mail SDK,
 // templates package, tracking pixels, analytics or log containing recovery URLs.
@@ -10,7 +10,21 @@ export function queueAccountEmail(
   kind: "verify" | "reset",
   locale: string,
 ) {
-  const config = accountConfig();
+  // Do not make public reset/registration response time depend on whether an
+  // email exists. The owner-hosted process stays alive; delivery errors are safe.
+  void loadAccountConfig()
+    .then((config) => sendAccountEmail(config, to, url, kind, locale))
+    .catch(() => console.error("Account email delivery failed; check the SMTP service."));
+}
+
+async function sendAccountEmail(
+  config: Awaited<ReturnType<typeof loadAccountConfig>>,
+  to: string,
+  url: string,
+  kind: "verify" | "reset",
+  locale: string,
+) {
+  if (!config.configured) throw new Error("Mail is not configured.");
   const sv = locale === "sv";
   const subject =
     kind === "verify"
@@ -31,26 +45,23 @@ export function queueAccountEmail(
   const transport = nodemailer.createTransport({
     host: config.mailHost,
     port: config.mailPort,
-    secure: process.env.SMTP_SECURE === "true",
+    secure: config.mailSecure,
     requireTLS: !config.plainLocalMail,
     ignoreTLS: config.plainLocalMail,
     connectionTimeout: 10_000,
     socketTimeout: 15_000,
-    auth: process.env.SMTP_USER
-      ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASSWORD || "" }
-      : undefined,
+    auth: config.mailUser ? { user: config.mailUser, pass: config.mailPassword } : undefined,
   });
-  // Do not make public reset/registration response time depend on whether an
-  // email exists. The owner-hosted process stays alive; delivery errors are safe.
-  void transport
-    .sendMail({
+  try {
+    await transport.sendMail({
       from: config.mailFrom,
       to,
       subject,
       text: `${intro}\n\n${url}\n\n${sv ? "Om du inte begärde detta kan du ignorera mejlet." : "If you did not request this, you can ignore this email."}`,
       disableFileAccess: true,
       disableUrlAccess: true,
-    })
-    .catch(() => console.error("Account email delivery failed; check the SMTP service."))
-    .finally(() => transport.close());
+    });
+  } finally {
+    transport.close();
+  }
 }

@@ -20,6 +20,8 @@ model User {
   name          String
   email         String    @unique
   emailVerified Boolean   @default(false)
+  // Admins see /admin. Set in the database, or once from ADMIN_EMAIL (lib/admin.ts).
+  isAdmin       Boolean   @default(false)
   image         String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -92,4 +94,12 @@ model Scenario {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   @@index([userId, toolId])
+}
+
+// Site-wide settings edited at /admin. Secrets such as the SMTP password are
+// stored encrypted with SETTINGS_ENCRYPTION_KEY (lib/secrets.ts).
+model SiteSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
 }
