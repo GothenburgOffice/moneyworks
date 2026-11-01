@@ -4,6 +4,9 @@
 services:
   app:
     environment:
+      # Local development only: always allow registering throwaway accounts here,
+      # whatever ALLOW_REGISTRATION says in .env (as in vocabulary-training).
+      ALLOW_REGISTRATION: "true"
       # Claude Code keeps its sign-in and settings in this volume across rebuilds.
       CLAUDE_CONFIG_DIR: /root/.claude
     volumes:

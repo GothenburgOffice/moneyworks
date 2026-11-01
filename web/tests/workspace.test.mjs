@@ -65,5 +65,12 @@ test("the dev stack reads account and origin settings only from DEV_ variables",
       new RegExp(String.raw`^\s+${name}: \$\{DEV_${name}:-`, "m"),
       `${name} is not dev-only`,
     );
+});
+
+test("the devcontainer always allows registration, whatever .env says", () => {
+  const compose = readFileSync(
+    new URL("../../.devcontainer/compose.yaml", import.meta.url),
+    "utf8",
+  );
   assert.match(compose, /^\s+ALLOW_REGISTRATION: "true"/m);
 });
