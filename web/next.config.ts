@@ -38,6 +38,14 @@ const nextConfig: NextConfig = {
           { key: "Content-Security-Policy", value: contentSecurityPolicy },
         ],
       },
+      {
+        // Account URLs can carry recovery tokens in the query. strict-origin
+        // never sends paths or queries as Referer, not even to this site's own
+        // scripts and /api/health, yet keeps the real Origin on form POSTs.
+        // Listed last so it overrides the site-wide value for this route.
+        source: "/:locale/account",
+        headers: [{ key: "Referrer-Policy", value: "strict-origin" }],
+      },
     ];
   },
 };

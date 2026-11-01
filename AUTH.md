@@ -34,10 +34,13 @@ calculator is client-local and does not save inputs to an account.
 The `/en` and `/sv` homepage remains SSG with metadata and native navigation.
 Reading account cookies is confined to the separate dynamic account route and
 auth endpoints. The header's generic Account link does not make home dynamic.
-Account HTML is private/no-store, noindex and anti-framing. The site-wide
-same-origin referrer policy sends no referrer to other sites (so no paths or
-query tokens) while preserving the real Origin on native same-origin form POSTs. Do not use no-referrer on these pages: browsers then submit
-Origin:null and the intentionally strict CSRF check must reject them.
+Account HTML is private/no-store, noindex and anti-framing. It overrides the
+site-wide `same-origin` referrer policy with `strict-origin`: recovery URLs carry
+tokens in the query, and `same-origin` would send the full URL as `Referer` to the
+page's own scripts and `/api/health`, where logs could keep it. `strict-origin`
+sends only the origin, yet preserves the real Origin on native form POSTs. Do
+not use no-referrer on these pages: browsers then submit Origin:null and the
+intentionally strict CSRF check must reject them.
 
 Forms work through full-document POST/redirect/GET without JavaScript. The small
 form bridge invokes the actual Better Auth HTTP handler, not `auth.api` for

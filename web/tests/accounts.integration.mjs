@@ -122,7 +122,7 @@ try {
     headers: { cookie: cookieHeader() },
   });
   assert.match(workspaceResponse.headers.get("cache-control"), /no-store/);
-  assert.equal(workspaceResponse.headers.get("referrer-policy"), "same-origin");
+  assert.equal(workspaceResponse.headers.get("referrer-policy"), "strict-origin");
   assert.equal(workspaceResponse.headers.get("x-frame-options"), "DENY");
   const workspace = await workspaceResponse.text();
   assert.ok(

@@ -106,3 +106,10 @@ test("public pages send the site-wide security headers", async () => {
   assert.equal(response.headers.get("referrer-policy"), "same-origin");
   assert.equal(response.headers.get("x-powered-by"), null);
 });
+
+test("account pages keep tokens out of Referer with strict-origin", async () => {
+  const response = await fetch(`${base}/en/account?view=reset&token=smoke-test-token`);
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get("referrer-policy"), "strict-origin");
+  assert.match(response.headers.get("content-security-policy") ?? "", /frame-ancestors 'none'/);
+});
