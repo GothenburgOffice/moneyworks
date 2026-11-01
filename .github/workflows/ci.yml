@@ -140,8 +140,10 @@ jobs:
     permissions:
       contents: read
       packages: write
+    # Only main publishes, so only main shares one lock (never cancelled);
+    # pull requests and other refs test the image in their own group.
     concurrency:
-      group: release-image-${{ github.repository }}
+      group: release-image-${{ github.ref == 'refs/heads/main' && 'publish' || github.ref }}
       cancel-in-progress: false
     defaults:
       run:

@@ -135,7 +135,8 @@ Copy `.env.example` to the gitignored root `.env` before starting any stack.
 - `APP_PORT` (default 3410) sets the app's host port and `APP_ORIGIN` its
   public URL. `APP_ORIGIN_ALIASES` optionally lists extra exact origins (for
   example another domain); development accepts `http://127.0.0.1:<APP_PORT>` by
-  default.
+  default. The dev server allows its scripts and hot reload on these origins'
+  hosts (Next.js `allowedDevOrigins`); other hosts get a 403 for dev resources.
 - Everything else is optional and off by default. Account and mail settings
   are described in [AUTH.md](AUTH.md); registration stays disabled until mail
   and privacy contact details are configured. `ALLOW_REGISTRATION` is always on

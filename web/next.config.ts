@@ -19,7 +19,18 @@ const contentSecurityPolicy = [
   "frame-ancestors 'none'",
 ].join("; ");
 
+// The dev server serves its scripts and hot reload only to localhost unless a
+// host is allowed here. Allow the configured origins' hosts (the dev stack adds
+// http://127.0.0.1:<port>); malformed entries are skipped, and accounts report them.
+const devOriginHosts = [
+  process.env.APP_ORIGIN,
+  ...(process.env.APP_ORIGIN_ALIASES || "").split(","),
+]
+  .map((origin) => URL.parse(origin?.trim() || "")?.hostname)
+  .filter((host): host is string => Boolean(host));
+
 const nextConfig: NextConfig = {
+  allowedDevOrigins: [...new Set(devOriginHosts)],
   // Self-contained server for the release image (see the root Dockerfile).
   output: "standalone",
   poweredByHeader: false,
