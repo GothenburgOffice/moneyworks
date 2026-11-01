@@ -101,7 +101,7 @@ if (themeButton) {
         const url = new URL(location.href);
         url.searchParams.set('theme', theme);
         history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`);
-      } catch { /* Opaque preview frames may restrict history. */ }
+      } catch { /* Some browsers throttle or block replaceState; the links still carry the theme. */ }
     }
   };
   applyTheme();

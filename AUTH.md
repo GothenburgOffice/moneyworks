@@ -143,7 +143,7 @@ self-service deletion screen.
 - Existing lint, typecheck, Prisma, SSG, status, line-ending and audit checks remain.
 
 Account pages send anti-framing headers. Do not weaken cookie/origin or framing
-protections to make sign-in work inside an iframe or preview tool. Real public
+protections to make sign-in work inside an iframe. Real public
 signup requires operator mail/privacy configuration and hosting (#11, #12).
 
 Before storing financial records, add per-user authorization on every read/write
