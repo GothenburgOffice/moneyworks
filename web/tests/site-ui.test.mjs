@@ -96,7 +96,7 @@ test('only valid query preferences are accepted', () => {
   assert.equal(setup({ query: '?theme=dark' }).root.dataset.theme, 'dark');
   assert.equal(setup({ query: '?theme=invalid' }).root.dataset.theme, 'dark');
 });
-test('theme and locale navigation work when the iframe restricts history', () => {
+test('theme and locale navigation work when history updates fail', () => {
   const ui = setup({ blockedHistory: true });
   ui.click();
   assert.equal(ui.root.dataset.theme, 'light');
