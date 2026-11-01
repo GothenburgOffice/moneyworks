@@ -22,7 +22,7 @@ This file is the shared reference for coding agents (Copilot reads it directly; 
 - **Application:** Next.js App Router, React, strict TypeScript, Tailwind CSS and `next-intl`, with `en` and `sv` locales.
 - **Database:** PostgreSQL 18 via Prisma 7 and `@prisma/adapter-pg`. Models: `Greeting` (connection test) plus `User`, `Account`, `Session`, `Verification` and `RateLimit`.
 - **Toolchain:** Node.js and npm run only inside the Debian-based development container; the host needs Docker, not Node. CI installs its own matching toolchain.
-- **Node support:** `engines.node` is `>=22.12.0` for hosting flexibility. The dev image and `@types/node` track Node 22 so newer-only APIs fail locally; CI runs the unit job on Node 22 and the current LTS. Raise the floor in `package.json`, `Dockerfile.dev`, `Dockerfile`, `@types/node`, the CI matrix and the Dependabot holds together.
+- **Node support:** `engines.node` is `>=22.12.0` for hosting flexibility. The dev image and `@types/node` track Node 22 so newer-only APIs fail locally; CI runs a single unit job on Node 22, like vocabulary-training. Raise the floor in `package.json`, `Dockerfile.dev`, `Dockerfile`, `@types/node`, the CI `node-version` and the Dependabot holds together.
 - **Dependency policy:** Compatible stable releases, exact direct versions, committed lockfile. No forced peer overrides or prereleases. TypeScript and ESLint majors are held in Dependabot until lint-plugin peers support them. Prettier and `eslint-config-prettier` are dev-only, for one shared formatting standard across GothenburgOffice repositories.
 
 ## Repository layout
@@ -149,7 +149,7 @@ Rebuild the devcontainer after infrastructure changes. Never run `down -v`, `dow
 ## Tests, CI and line endings
 
 - **Triggers:** CI runs on pushes to `main`, pull requests and manual dispatch.
-- **Branch protection:** `main` requires a pull request (0 approvals), resolved conversations, and the `unit` and `containers` checks passing on a branch up to date with `main`; force pushes and deletion are blocked, admins included. `unit` is a gate job over the Node matrix so the required name never changes; keep it when editing the matrix.
+- **Branch protection:** `main` requires a pull request (0 approvals), resolved conversations, and the `unit`, `containers` and `release image` checks passing on a branch up to date with `main`; force pushes and deletion are blocked, admins included. Keep those job names stable; renaming one requires updating branch protection.
 - **Unit job:** Line endings, Prettier check, ESLint, UI/architecture/FIRE/auth-config tests, type checking, Prisma validation, production build, migrations and account lifecycle against a disposable database, and a high-severity audit.
 - **Container job:** Exercises `core.autocrlf=true`, builds the app and starts disposable app/PostgreSQL containers, runs smoke tests, verifies live database reads, and checks that outages change only the status before recovery.
 - **Release image job:** After `unit` and `containers`, builds the release image once, runs it through `docker-compose.images.yml` (migrations, smoke tests, non-root/no-source checks, auth cleanup dry run, restart persistence) and, on `main` only, pushes that exact image to GHCR and verifies an anonymous pull. Workflow runs on `main` are never cancelled.
