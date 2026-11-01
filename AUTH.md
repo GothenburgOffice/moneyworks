@@ -55,7 +55,8 @@ split from global tokens/site styles without changing the C design.
 
 ## Operator configuration
 
-Maintain root `.env` manually from `.env.example`; there is no generator.
+Set account values in the optional root `.env` (uncomment them from
+`.env.example`); there is no generator. Without them, accounts stay disabled.
 Compose passes account settings only to web. Launch prerequisites are tracked in #12.
 
 Required before registration is available:
