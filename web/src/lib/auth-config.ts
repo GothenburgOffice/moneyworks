@@ -19,8 +19,26 @@ export function parseOrigin(raw: string) {
   return "";
 }
 
+// Mail and privacy settings are edited at /admin and stored in SiteSetting
+// (lib/site-settings.ts loads them); everything else comes from the environment.
+export type AccountSettings = {
+  controllerName: string;
+  contactEmail: string;
+  smtpHost: string;
+  smtpPort: string;
+  smtpSecure: boolean;
+  smtpUser: string;
+  smtpPassword: string;
+  mailFrom: string;
+  allowRegistration: boolean;
+};
+const emailPattern = /^[^\s<>@]+@[^\s<>@]+\.[^\s<>@]+$/;
+export const validEmail = (value: string) => emailPattern.test(value);
+
 // Configuration is lazy: public SSG never needs auth secrets, SMTP or a database.
-export function accountConfig() {
+// `ready` is enough to sign in (the admin login); `configured` adds mail delivery,
+// which public accounts need for verification and recovery.
+export function accountConfig(settings: Partial<AccountSettings> = {}) {
   // APP_ORIGIN is the single public origin (used in email links). Aliases are
   // extra exact-match origins, e.g. other domains or http://127.0.0.1 locally.
   const baseURL = parseOrigin(process.env.APP_ORIGIN || "");
@@ -39,28 +57,38 @@ export function accountConfig() {
   const aliasesValid = aliasesWellFormed && hostsUnique;
   const origins = baseURL && aliasesValid ? candidates : [];
   const secret = process.env.AUTH_SECRET || "";
-  const mailHost = process.env.SMTP_HOST || "";
+  const mailHost = settings.smtpHost || "";
   const localMail = ["localhost", "127.0.0.1", "::1"].includes(mailHost);
   const plainLocalMail = localMail && process.env.SMTP_ALLOW_LOCAL_PLAINTEXT === "true";
-  const mailFrom = process.env.MAIL_FROM || "";
-  const mailPort = Number(process.env.SMTP_PORT || 587);
-  const controller = process.env.PRIVACY_CONTROLLER_NAME || "";
-  const contact = process.env.PRIVACY_CONTACT_EMAIL || "";
+  const mailFrom = settings.mailFrom || "";
+  const mailPort = Number(settings.smtpPort || 587);
+  const mailUser = settings.smtpUser || "";
+  const mailPassword = settings.smtpPassword || "";
+  const controller = settings.controllerName || "";
+  const contact = settings.contactEmail || "";
+  const ready = Boolean(
+    baseURL && aliasesValid && secret.length >= 32 && !secret.startsWith("replace-"),
+  );
   const configured = Boolean(
-    baseURL &&
-    aliasesValid &&
-    secret.length >= 32 &&
-    !secret.startsWith("replace-") &&
+    ready &&
     mailHost &&
     Number.isInteger(mailPort) &&
     mailPort > 0 &&
     mailPort <= 65535 &&
-    Boolean(process.env.SMTP_USER) === Boolean(process.env.SMTP_PASSWORD) &&
-    /^[^\s<>@]+@[^\s<>@]+\.[^\s<>@]+$/.test(mailFrom),
+    Boolean(mailUser) === Boolean(mailPassword) &&
+    validEmail(mailFrom),
   );
-  const privacyReady = Boolean(
-    controller.trim() && /^[^\s<>@]+@[^\s<>@]+\.[^\s<>@]+$/.test(contact),
+  const privacyReady = Boolean(controller.trim() && validEmail(contact));
+  // The devcontainer and CI use reserved example domains for their fake details.
+  const placeholderPrivacy = /@(.+\.)?(example(\.(com|net|org))?|test|invalid|localhost)$/i.test(
+    contact,
   );
+  // Public registration is switched on at /admin, and only counts with mail and a
+  // real privacy controller. ALLOW_REGISTRATION is set only by the devcontainer and
+  // the test fixture, never .env: it forces registration on for development.
+  const forcedRegistration = process.env.ALLOW_REGISTRATION === "true";
+  const registrationAllowed =
+    forcedRegistration || (Boolean(settings.allowRegistration) && !placeholderPrivacy);
   return {
     baseURL,
     origins,
@@ -72,15 +100,23 @@ export function accountConfig() {
         : "Account service is not configured.",
     secure,
     secret,
+    ready,
     configured,
     privacyReady,
     controller,
     contact,
-    registrationEnabled: configured && privacyReady && process.env.ALLOW_REGISTRATION === "true",
+    placeholderPrivacy,
+    forcedRegistration,
+    // What /admin requires before public registration can be switched on.
+    registrationPossible: configured && privacyReady && !placeholderPrivacy,
+    registrationEnabled: configured && privacyReady && registrationAllowed,
     cookiePrefix: cookiePrefix(secure),
     mailHost,
     mailFrom,
     mailPort,
+    mailSecure: Boolean(settings.smtpSecure),
+    mailUser,
+    mailPassword,
     plainLocalMail,
   };
 }

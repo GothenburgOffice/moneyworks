@@ -5,8 +5,12 @@ services:
   app:
     environment:
       # Local development only: always allow registering throwaway accounts here,
-      # whatever ALLOW_REGISTRATION says in .env (as in vocabulary-training).
+      # whatever is saved at /admin (as in vocabulary-training). Never set in .env.
       ALLOW_REGISTRATION: "true"
+      # Clearly fake privacy details so local registration works; stored in the dev
+      # database only while none exist (edit them at /admin). Never read from .env.
+      PRIVACY_CONTROLLER_NAME: Local development, not a real operator
+      PRIVACY_CONTACT_EMAIL: dev-privacy@example.test
       # Claude Code keeps its sign-in and settings in this volume across rebuilds.
       CLAUDE_CONFIG_DIR: /root/.claude
     volumes:

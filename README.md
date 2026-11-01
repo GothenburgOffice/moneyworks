@@ -138,14 +138,15 @@ Copy `.env.example` to the gitignored root `.env` before starting any stack.
   default. The dev server allows its scripts and hot reload on these origins'
   hosts (Next.js `allowedDevOrigins`); other hosts get a 403 for dev resources.
 - Everything else is optional and off by default. Account and mail settings
-  are described in [AUTH.md](AUTH.md); registration stays disabled until mail
-  and privacy contact details are configured. `ALLOW_REGISTRATION` is always on
-  in the devcontainer; elsewhere, including plain Compose development, it follows
-  `.env` and is off by default.
+  are described in [AUTH.md](AUTH.md). Mail, the privacy controller and public
+  registration are not in `.env`: an admin sets them at `/admin` (sign in with
+  `ADMIN_EMAIL` and `ADMIN_PASSWORD`), and they are stored in the database.
+  Registration stays off until mail and real privacy details are saved there;
+  the devcontainer always allows it and fills in clearly fake privacy details.
 - Development ignores the production `APP_ORIGIN`, `APP_ORIGIN_ALIASES`,
-  `AUTH_SECRET` and SMTP values in `.env`. It reads `DEV_`-prefixed versions
-  instead (listed at the end of `.env.example`), so one `.env` can hold
-  production settings without dev using them or sending real mail.
+  `AUTH_SECRET` and `SETTINGS_ENCRYPTION_KEY` in `.env`. It reads `DEV_`-prefixed
+  versions instead (listed at the end of `.env.example`). Mail settings live in
+  the dev database, so dev never uses production SMTP.
 - Never prefix secrets with `NEXT_PUBLIC_` or commit `.env`.
 
 Database data lives in the `postgres18_data` volume. `docker compose down` keeps
@@ -165,8 +166,8 @@ apply migrations. CI tests it and publishes it from `main` as
 `ghcr.io/gothenburgoffice/moneyworks` (`latest` and `sha-<commit>`).
 
 [compose.images.yaml](compose.images.yaml) runs that image with PostgreSQL and
-no source build. It applies migrations before the app starts and keeps public
-signup off unless `ALLOW_REGISTRATION=true`:
+no source build. It applies migrations before the app starts; public signup
+stays off until an admin switches it on at `/admin`:
 
 ```bash
 docker compose -f compose.images.yaml up --detach --wait

@@ -8,33 +8,38 @@ const fields = [
   "APP_ORIGIN_ALIASES",
   "AUTH_SECRET",
   "ALLOW_REGISTRATION",
-  "PRIVACY_CONTROLLER_NAME",
-  "PRIVACY_CONTACT_EMAIL",
-  "SMTP_HOST",
-  "SMTP_PORT",
-  "SMTP_USER",
-  "SMTP_PASSWORD",
-  "MAIL_FROM",
   "SMTP_ALLOW_LOCAL_PLAINTEXT",
 ];
+// Mail and privacy come from SiteSetting, passed in as settings; the rest is environment.
+const settingNames = {
+  PRIVACY_CONTROLLER_NAME: "controllerName",
+  PRIVACY_CONTACT_EMAIL: "contactEmail",
+  SMTP_HOST: "smtpHost",
+  SMTP_PORT: "smtpPort",
+  SMTP_USER: "smtpUser",
+  SMTP_PASSWORD: "smtpPassword",
+  MAIL_FROM: "mailFrom",
+  STORED_REGISTRATION: "allowRegistration",
+};
 function config(extra = {}) {
   const previous = Object.fromEntries(fields.map((key) => [key, process.env[key]]));
   for (const key of fields) delete process.env[key];
-  Object.assign(
-    process.env,
-    {
-      APP_ORIGIN: "https://moneyworks.example",
-      AUTH_SECRET: "unit-test-only-secret-not-for-a-hosted-instance",
-      ALLOW_REGISTRATION: "true",
-      SMTP_HOST: "smtp.example.invalid",
-      MAIL_FROM: "test@example.invalid",
-      PRIVACY_CONTROLLER_NAME: "Test controller",
-      PRIVACY_CONTACT_EMAIL: "privacy@example.invalid",
-    },
-    extra,
-  );
+  const values = {
+    APP_ORIGIN: "https://moneyworks.example",
+    AUTH_SECRET: "unit-test-only-secret-not-for-a-hosted-instance",
+    ALLOW_REGISTRATION: "true",
+    SMTP_HOST: "smtp.example.invalid",
+    MAIL_FROM: "test@example.invalid",
+    PRIVACY_CONTROLLER_NAME: "Test controller",
+    PRIVACY_CONTACT_EMAIL: "privacy@example.invalid",
+    ...extra,
+  };
+  const settings = {};
+  for (const [key, value] of Object.entries(values))
+    if (key in settingNames) settings[settingNames[key]] = value;
+    else process.env[key] = value;
   try {
-    return accountConfig();
+    return accountConfig(settings);
   } finally {
     for (const key of fields)
       if (previous[key] === undefined) delete process.env[key];
@@ -49,6 +54,33 @@ test("registration requires deliberate setup, mail and privacy identity", () => 
   assert.equal(config({ SMTP_PORT: "not-a-port" }).configured, false);
   assert.equal(config({ AUTH_SECRET: "replace-this-owner-placeholder" }).configured, false);
   assert.equal(config({ ALLOW_REGISTRATION: "false" }).registrationEnabled, false);
+});
+test("stored registration counts only with mail and real privacy details", () => {
+  const real = { ALLOW_REGISTRATION: "", PRIVACY_CONTACT_EMAIL: "privacy@moneyworks.se" };
+  assert.equal(config(real).registrationEnabled, false, "off by default");
+  assert.equal(config({ ...real, STORED_REGISTRATION: true }).registrationEnabled, true);
+  assert.equal(config({ ...real, STORED_REGISTRATION: true }).registrationPossible, true);
+  for (const contact of ["dev-privacy@example.test", "ci@example.invalid", "a@example.com"]) {
+    const fake = config({ ...real, PRIVACY_CONTACT_EMAIL: contact, STORED_REGISTRATION: true });
+    assert.equal(fake.registrationEnabled, false, contact);
+    assert.equal(fake.registrationPossible, false, contact);
+  }
+  const noMail = config({ ...real, SMTP_HOST: "", STORED_REGISTRATION: true });
+  assert.equal(noMail.registrationPossible, false);
+  assert.equal(noMail.registrationEnabled, false);
+  // The devcontainer and test fixture force it on, even with example details.
+  assert.equal(
+    config({ PRIVACY_CONTACT_EMAIL: "dev-privacy@example.test" }).registrationEnabled,
+    true,
+  );
+});
+test("signing in (the admin login) needs only the origin and secret, not mail", () => {
+  const setup = config({ SMTP_HOST: "", MAIL_FROM: "", PRIVACY_CONTROLLER_NAME: "" });
+  assert.equal(setup.ready, true);
+  assert.equal(setup.configured, false);
+  assert.equal(config({ AUTH_SECRET: "too-short" }).ready, false);
+  assert.equal(config({ SMTP_USER: "mailer" }).configured, false, "user without password");
+  assert.equal(config({ SMTP_USER: "mailer", SMTP_PASSWORD: "secret" }).configured, true);
 });
 test("HTTP is allowed only for explicit loopback development; HTTPS is required elsewhere", () => {
   assert.equal(config({ APP_ORIGIN: "http://localhost:3000" }).configured, true);
