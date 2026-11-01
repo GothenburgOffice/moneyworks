@@ -115,8 +115,12 @@ Copy `.env.example` to the gitignored root `.env` before starting any stack.
   default.
 - Everything else is optional and off by default. Account and mail settings
   are described in [AUTH.md](AUTH.md); registration stays disabled until mail
-  and privacy contact details are configured. `ALLOW_REGISTRATION` left blank
-  means on in development and off in the production stacks.
+  and privacy contact details are configured. `ALLOW_REGISTRATION` is always on
+  in development and off by default in the production stacks.
+- Development ignores the production `APP_ORIGIN`, `APP_ORIGIN_ALIASES`,
+  `AUTH_SECRET` and SMTP values in `.env`. It reads `DEV_`-prefixed versions
+  instead (listed at the end of `.env.example`), so one `.env` can hold
+  production settings without dev using them or sending real mail.
 - Never prefix secrets with `NEXT_PUBLIC_` or commit `.env`.
 
 Database data lives in the `postgres18_data` volume. `docker compose down` keeps

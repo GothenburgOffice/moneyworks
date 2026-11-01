@@ -16,10 +16,23 @@ services:
         (cmp -s package-lock.json node_modules/.installed-lock ||
         (npm ci && cp package-lock.json node_modules/.installed-lock)) &&
         exec npm run dev
+    # Development ignores the production values in .env (as vocabulary-training
+    # does for its AI keys): origins stay local, and the account secret and SMTP
+    # come only from DEV_* variables, so dev never sends real mail. Without
+    # DEV_AUTH_SECRET and DEV_SMTP_* settings, accounts stay off here.
     environment:
-      ALLOW_REGISTRATION: ${ALLOW_REGISTRATION:-true}
-      # Also accept the 127.0.0.1 spelling of the local origin.
-      APP_ORIGIN_ALIASES: ${APP_ORIGIN_ALIASES:-http://127.0.0.1:${APP_PORT:-3410}}
+      ALLOW_REGISTRATION: "true"
+      APP_ORIGIN: ${DEV_APP_ORIGIN:-http://localhost:${APP_PORT:-3410}}
+      APP_ORIGIN_ALIASES: ${DEV_APP_ORIGIN_ALIASES:-http://127.0.0.1:${APP_PORT:-3410}}
+      AUTH_SECRET: ${DEV_AUTH_SECRET:-}
+      SMTP_HOST: ${DEV_SMTP_HOST:-}
+      SMTP_PORT: ${DEV_SMTP_PORT:-587}
+      SMTP_SECURE: ${DEV_SMTP_SECURE:-false}
+      SMTP_USER: ${DEV_SMTP_USER:-}
+      SMTP_PASSWORD: ${DEV_SMTP_PASSWORD:-}
+      MAIL_FROM: ${DEV_MAIL_FROM:-}
+      # Only for a local capture server such as Mailpit on 127.0.0.1.
+      SMTP_ALLOW_LOCAL_PLAINTEXT: ${DEV_SMTP_ALLOW_LOCAL_PLAINTEXT:-false}
       CHOKIDAR_USEPOLLING: "true"
       WATCHPACK_POLLING: "true"
     volumes:

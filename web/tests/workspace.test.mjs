@@ -50,3 +50,20 @@ test("the dev stack leaves NODE_ENV to Next so builds work in the container", ()
   const compose = readFileSync(new URL("../../compose.dev.yaml", import.meta.url), "utf8");
   assert.doesNotMatch(compose, /^\s*-?\s*NODE_ENV\s*[=:]/m);
 });
+
+test("the dev stack reads account and origin settings only from DEV_ variables", () => {
+  const compose = readFileSync(new URL("../../compose.dev.yaml", import.meta.url), "utf8");
+  for (const name of [
+    "APP_ORIGIN",
+    "APP_ORIGIN_ALIASES",
+    "AUTH_SECRET",
+    "SMTP_HOST",
+    "SMTP_PASSWORD",
+  ])
+    assert.match(
+      compose,
+      new RegExp(String.raw`^\s+${name}: \$\{DEV_${name}:-`, "m"),
+      `${name} is not dev-only`,
+    );
+  assert.match(compose, /^\s+ALLOW_REGISTRATION: "true"/m);
+});
