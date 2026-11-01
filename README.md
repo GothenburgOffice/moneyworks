@@ -16,7 +16,7 @@ are the decision log: open ones need answering before dependent work starts,
 closed ones record what was decided.
 
 Pages are pre-rendered by Next.js and readable without JavaScript; small
-scripts add theme switching, the database status and FIRE calculations.
+scripts add theme switching and FIRE calculations.
 Financial inputs never leave the browser.
 
 ## Documentation

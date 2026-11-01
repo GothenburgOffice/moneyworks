@@ -13,11 +13,6 @@ datasource db {
   provider = "postgresql"
 }
 
-model Greeting {
-  locale  String @id
-  message String
-}
-
 // A user owns future saved work; credentials and future OAuth identities are
 // separate accounts. Never use an email address as the business-data foreign key.
 model User {
@@ -30,6 +25,7 @@ model User {
   updatedAt     DateTime  @updatedAt
   sessions      Session[]
   accounts      Account[]
+  scenarios     Scenario[]
 }
 
 model Session {
@@ -81,4 +77,19 @@ model RateLimit {
   key         String @unique
   count       Int
   lastRequest BigInt
+}
+
+// Saved work from any tool. toolId matches features/tools/catalog.ts, and the
+// tool's own validator checks data against schemaVersion before every write.
+model Scenario {
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  toolId        String
+  name          String
+  schemaVersion Int
+  data          Json
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  @@index([userId, toolId])
 }

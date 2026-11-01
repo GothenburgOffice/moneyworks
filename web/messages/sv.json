@@ -1,9 +1,4 @@
 {
-  "ConnectionStatus": {
-    "databaseConnected": "Databasanslutning: OK",
-    "databaseChecking": "Databasanslutning: kontrollerar…",
-    "databaseUnavailable": "Databasanslutning: inte tillgänglig"
-  },
   "Metadata": {
     "title": "Pengar jobbar | En tydligare bild av din ekonomi",
     "description": "Planera ekonomiskt oberoende med pensionsutbetalningar och planerad kapitalförbrukning. En landsneutral FIRE-kalkylator på svenska och engelska."

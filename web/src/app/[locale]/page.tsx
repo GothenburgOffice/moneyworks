@@ -32,7 +32,6 @@ export default async function HomePage({ params }: Props) {
   const language = locale === "sv" ? "sv" : "en";
   const copy = getSiteCopy(language);
   const fire = getFireCopy(language);
-  const status = await getTranslations("ConnectionStatus");
 
   return (
     <div id="top">
@@ -60,16 +59,7 @@ export default async function HomePage({ params }: Props) {
           <FireCalculator locale={language} />
         </ToolView>
       </main>
-      <SiteFooter
-        copy={copy}
-        locale={language}
-        status={{
-          databaseChecking: status("databaseChecking"),
-          databaseConnected: status("databaseConnected"),
-          databaseUnavailable: status("databaseUnavailable"),
-        }}
-      />
-      <script src="/db-status.js" data-health-url="/api/health" defer />
+      <SiteFooter copy={copy} locale={language} />
       <script src="/site-ui.js" defer />
       <script src="/fire-calculator.js" defer />
     </div>

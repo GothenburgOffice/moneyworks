@@ -28,14 +28,8 @@ export function getDatabase() {
   return globalForPrisma.prisma;
 }
 
-export async function getDatabaseGreeting(locale: string) {
-  const greeting = await getDatabase().greeting.findUniqueOrThrow({
-    where: { locale },
-    select: { message: true },
-  });
-
-  return {
-    message: greeting.message,
-    checkedAt: new Date().toISOString(),
-  };
+// A real round trip to PostgreSQL; throws when the database is unreachable.
+export async function checkDatabase() {
+  await getDatabase().$queryRaw`SELECT 1`;
+  return { checkedAt: new Date().toISOString() };
 }

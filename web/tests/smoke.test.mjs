@@ -55,13 +55,11 @@ for (const [locale, title, fire, crypto, planned] of [
     for (const id of ["tools", "fire", "fire-calculator", "crypto", "learn", "about"]) {
       assert.ok(main.includes(`id="${id}"`), `Missing ${id} section`);
     }
-    assert.ok(html.includes("data-db-status"));
     assert.ok(html.includes('aria-label="') && html.includes('href="/sv"'));
     assert.ok(!main.includes("<time"));
     assert.ok(!main.includes("from PostgreSQL"));
     assert.ok(!main.includes("från PostgreSQL"));
     assert.ok(html.includes('name="description"'));
-    assert.ok(html.includes('src="/db-status.js"'));
     assert.ok(html.includes('src="/site-ui.js"'));
     assert.ok(html.includes('src="/fire-calculator.js"'));
     assert.ok(main.includes("data-fire-form"));
@@ -91,7 +89,6 @@ test("database health performs a real uncached read", async () => {
   assert.equal(response.headers.get("cache-control"), "no-store");
   const health = await response.json();
   assert.equal(health.status, "ok");
-  assert.equal(typeof health.message, "string");
   assert.ok(Number.isFinite(Date.parse(health.checkedAt)));
 });
 

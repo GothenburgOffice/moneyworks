@@ -1,9 +1,4 @@
 {
-  "ConnectionStatus": {
-    "databaseConnected": "Database connection: OK",
-    "databaseChecking": "Database connection: checking…",
-    "databaseUnavailable": "Database connection: unavailable"
-  },
   "Metadata": {
     "title": "MoneyWorks | A clearer view of your money",
     "description": "Plan financial independence with pension age ranges and planned portfolio drawdown. A country-neutral FIRE calculator in English and Swedish."

@@ -20,7 +20,7 @@ This file is the shared reference for coding agents (Copilot reads it directly; 
 
 - **Repository:** `GothenburgOffice/moneyworks`, MIT licensed, public.
 - **Application:** Next.js App Router, React, strict TypeScript, Tailwind CSS and `next-intl`, with `en` and `sv` locales.
-- **Database:** PostgreSQL 18 via Prisma 7 and `@prisma/adapter-pg`. Models: `Greeting` (connection test) plus `User`, `Account`, `Session`, `Verification` and `RateLimit`.
+- **Database:** PostgreSQL 18 via Prisma 7 and `@prisma/adapter-pg`. Models: `User`, `Account`, `Session`, `Verification` and `RateLimit` for accounts, plus `Scenario` for saved tool work (`userId`, `toolId`, `name`, `schemaVersion`, JSON `data`, created/updated times; deleted with its user). Nothing writes scenarios yet: saving is decision #8.
 - **Toolchain:** Node.js and npm run only inside the Debian-based development container; the host needs Docker, not Node. CI installs its own matching toolchain.
 - **Node support:** `engines.node` is `>=22.12.0` for hosting flexibility. The Dockerfile and `@types/node` track Node 22 so newer-only APIs fail locally; CI runs a single unit job on Node 22, like vocabulary-training. Raise the floor in `package.json`, `Dockerfile`, `@types/node`, the CI `node-version` and the Dependabot holds together.
 - **Dependency policy:** Compatible stable releases, exact direct versions, committed lockfile. No forced peer overrides or prereleases. TypeScript and ESLint majors are held in Dependabot until lint-plugin peers support them. Prettier and `eslint-config-prettier` are dev-only, for one shared formatting standard across GothenburgOffice repositories.
@@ -88,11 +88,11 @@ moneyworks/
 
 - **Hub and tool views:** One pre-rendered content page per locale composed from separate components. Available tools open a pre-rendered ToolView by native hash, with their own banner/workspace and the shared header/footer. Keep no-JS entry, Back/Forward, section exits and context-preserving theme/locale controls. Financial inputs never enter the URL.
 - **Static content:** Pre-render `/en` and `/sv` with localized metadata. Do not client-render the page or fetch the body after load.
-- **Small enhancements:** `public/db-status.js` updates the footer status from the uncached health endpoint; `public/site-ui.js` closes the mobile menu and provides theme switching. Dark is the static default; `light`/`dark` are the only accepted URL preference values, carried through locale links with guarded history updates. No browser-storage APIs. Hide the theme control without JavaScript. Initial database status says "checking"; failures change the status, not the content. Builds need no database.
+- **Small enhancements:** `public/site-ui.js` closes the mobile menu and provides theme switching. Dark is the static default; `light`/`dark` are the only accepted URL preference values, carried through locale links with guarded history updates. No browser-storage APIs. Hide the theme control without JavaScript. Pages never call the database; builds need no database.
 - **Brand:** Direction C (Bright works) as recorded in `DESIGN.md`: charcoal/lime, bold headings, contrasting tool panels, original marks, self-hosted Manrope, CSS tokens.
 - **Country-neutral:** Do not assume SEK, a tax jurisdiction, a trading method or financial outputs.
 - **Security headers:** `next.config.ts` sends the same site-wide set as vocabulary-training on every route: CSP (`default-src 'self'`, `object-src 'none'`, `frame-ancestors 'none'`; inline scripts for Next.js hydration, eval only in development), `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy: same-origin` (account pages override it with `strict-origin`, because recovery URLs carry tokens) and a restrictive `Permissions-Policy`; `poweredByHeader` is off. Self-host every asset; adding an external origin needs a CSP change and a reason.
-- **Health endpoint:** `/api/health` reads a greeting; HTTP 200 `status: "ok"` or 503 `status: "error"`, always `Cache-Control: no-store`.
+- **Health endpoint:** `/api/health` runs `SELECT 1` against PostgreSQL (used by Compose and CI health checks); HTTP 200 `status: "ok"` or 503 `status: "error"`, always `Cache-Control: no-store`.
 - **Connection handling:** Reuse the Prisma pool across hot reloads, initialize lazily and keep finite connection/query timeouts.
 - **Secrets:** Never expose connection strings, credentials or raw database errors. Never put secrets in `NEXT_PUBLIC_` variables.
 - **Localization:** English is the default regardless of browser language or old locale cookies; automatic detection stays disabled. Localized pages live under `src/app/[locale]/`.
@@ -146,14 +146,14 @@ Rebuild the devcontainer after infrastructure changes. Never run `down -v`, `dow
 - The generated client in `src/generated/prisma/` is gitignored and excluded from ESLint; never hand-edit it.
 - Edit the schema, create a migration with `npm run db:migrate` and commit the SQL. Never rewrite an applied migration.
 - `npm run db:setup` generates the client and runs `prisma migrate deploy`; `npm run db:deploy` only applies migrations.
-- Initial greetings come from the first migration; do not reseed or overwrite them on startup.
+- `Scenario.data` holds one tool's inputs; validate it with that tool's model validator for its `schemaVersion` before every write, and authorize every read and write by `User.id`.
 
 ## Tests, CI and line endings
 
 - **Triggers:** CI runs on pushes to `main`, pull requests and manual dispatch.
 - **Branch protection:** `main` requires a pull request (0 approvals), resolved conversations, and the `unit`, `containers` and `release image` checks passing on a branch up to date with `main`; force pushes and deletion are blocked, admins included. Keep those job names stable; renaming one requires updating branch protection.
 - **Unit job:** Line endings, Prettier check, ESLint, UI/architecture/FIRE/auth-config tests, type checking, Prisma validation, production build, migrations and account lifecycle against a disposable database, and a high-severity audit.
-- **Container job:** Exercises `core.autocrlf=true`, builds the app and starts disposable app/PostgreSQL containers, runs smoke tests, verifies live database reads, and checks that outages change only the status before recovery.
+- **Container job:** Exercises `core.autocrlf=true`, builds the app and starts disposable app/PostgreSQL containers, runs smoke tests, checks that a database outage turns the health endpoint to 503 while static pages keep working, then recovery.
 - **Release image job:** After `unit` and `containers`, builds the release image once, runs it through `compose.images.yaml` (migrations, smoke tests, non-root/no-source checks, auth cleanup dry run, restart persistence) and, on `main` only, pushes that exact image to GHCR and verifies an anonymous pull. Workflow runs on `main` are never cancelled; only `main` shares the publish concurrency group, so pull requests test their images in parallel.
 - **Isolation and cleanup:** `COMPOSE_PROJECT_NAME=moneyworks-ci` (and `moneyworks-release-ci`) with disposable credentials. Keep the `if: always()` cleanup and its verification; never copy that destructive cleanup into normal commands. Preserve failure logs, finite retries and job timeouts.
 - **LF rules:** Preserve `.gitattributes` and `.editorconfig`, especially for shell scripts, Dockerfiles, YAML, SQL and Prisma files. If a shell entrypoint is added, test both LF and CRLF inputs.

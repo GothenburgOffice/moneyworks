@@ -83,7 +83,6 @@ function link(text) {
   return url[0];
 }
 try {
-  const before = await pool.query('SELECT locale,message FROM "Greeting" ORDER BY locale');
   let response = await call("/api/auth/sign-up/email", {
     name: "Test member",
     email,
@@ -242,11 +241,25 @@ try {
     );
     assert.ok((await anonymous.text()).includes("cookie-information"));
   }
-  assert.deepEqual(
-    (await pool.query('SELECT locale,message FROM "Greeting" ORDER BY locale')).rows,
-    before.rows,
+  checks.push("anonymous bilingual pages set no cookies");
+
+  const insertScenario = (userId) =>
+    pool.query(
+      `INSERT INTO "Scenario" (id, "userId", "toolId", name, "schemaVersion", data, "updatedAt")
+       VALUES (gen_random_uuid()::text, $1, 'fire', 'Test plan', 1, '{"spending":1}', now())`,
+      [userId],
+    );
+  await assert.rejects(insertScenario("no-such-user"), /foreign key/);
+  const { id: userId } = (await pool.query('SELECT id FROM "User" WHERE email=$1', [email]))
+    .rows[0];
+  await insertScenario(userId);
+  await pool.query('DELETE FROM "User" WHERE id=$1', [userId]);
+  assert.equal(
+    (await pool.query('SELECT count(*)::int AS n FROM "Scenario" WHERE "userId"=$1', [userId]))
+      .rows[0].n,
+    0,
   );
-  checks.push("anonymous bilingual pages set no cookies; greeting data preserved");
+  checks.push("scenarios require an existing user and are deleted with the user");
   console.log(
     JSON.stringify(
       {
