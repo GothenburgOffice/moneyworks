@@ -1,22 +1,23 @@
-# Release stack from a built or published image: no source checkout or Node.
-# Requires POSTGRES_PASSWORD in .env. Accounts also need the settings in AUTH.md;
-# hosted use needs HTTPS in front (see #11).
-name: moneyworks-release
+# Release stack from a published (or locally built) image: no source build.
+#   docker compose -f compose.images.yaml up --detach --wait
+# Copy .env.example to .env first; only POSTGRES_PASSWORD is required. Accounts
+# also need the settings in AUTH.md, and hosted use needs HTTPS in front (#11).
+name: moneyworks
 
-x-database-url: &database-url ${DATABASE_URL:-postgresql://${POSTGRES_USER:-moneyworks}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-moneyworks}}
+x-database-url: &database-url postgresql://moneyworks:${POSTGRES_PASSWORD}@db:5432/moneyworks
 
 services:
   db:
     image: postgres:18.6
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-moneyworks}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
-      POSTGRES_DB: ${POSTGRES_DB:-moneyworks}
+      POSTGRES_DB: moneyworks
+      POSTGRES_USER: moneyworks
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Copy .env.example to .env and set POSTGRES_PASSWORD}
     volumes:
       - postgres18_data:/var/lib/postgresql
     healthcheck:
-      test: ["CMD-SHELL", 'pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"']
+      test: ["CMD-SHELL", "pg_isready -U moneyworks -d moneyworks"]
       interval: 5s
       timeout: 5s
       retries: 20
@@ -39,16 +40,17 @@ services:
         condition: service_healthy
     restart: "no"
 
-  web:
+  app:
     image: ${MONEYWORKS_IMAGE:-ghcr.io/gothenburgoffice/moneyworks:latest}
     restart: unless-stopped
     ports:
-      - "127.0.0.1:${MONEYWORKS_WEB_PORT:-3410}:3000"
+      - "127.0.0.1:${APP_PORT:-3410}:3000"
     environment:
       DATABASE_URL: *database-url
-      AUTH_BASE_URL: ${AUTH_BASE_URL:-http://localhost:${MONEYWORKS_WEB_PORT:-3410}}
+      APP_ORIGIN: ${APP_ORIGIN:-http://localhost:${APP_PORT:-3410}}
+      APP_ORIGIN_ALIASES: ${APP_ORIGIN_ALIASES:-}
+      ALLOW_REGISTRATION: ${ALLOW_REGISTRATION:-false}
       AUTH_SECRET: ${AUTH_SECRET:-}
-      AUTH_PUBLIC_SIGNUP: ${AUTH_PUBLIC_SIGNUP:-false}
       PRIVACY_CONTROLLER_NAME: ${PRIVACY_CONTROLLER_NAME:-}
       PRIVACY_CONTACT_EMAIL: ${PRIVACY_CONTACT_EMAIL:-}
       SMTP_HOST: ${SMTP_HOST:-}
@@ -67,7 +69,7 @@ services:
           "CMD",
           "node",
           "-e",
-          "fetch('http://127.0.0.1:3000/api/health/db').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))",
+          "fetch('http://127.0.0.1:3000/api/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))",
         ]
       interval: 15s
       timeout: 5s

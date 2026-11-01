@@ -69,7 +69,7 @@ export default async function HomePage({ params }: Props) {
           databaseUnavailable: status("databaseUnavailable"),
         }}
       />
-      <script src="/db-status.js" data-health-url="/api/health/db" defer />
+      <script src="/db-status.js" data-health-url="/api/health" defer />
       <script src="/site-ui.js" defer />
       <script src="/fire-calculator.js" defer />
     </div>

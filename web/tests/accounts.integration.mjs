@@ -148,6 +148,18 @@ try {
   });
   assert.equal(response.status, 403);
   checks.push("direct API and native form reject cross-site mutation");
+  response = await fetch(`${base}/api/account/logout`, {
+    method: "POST",
+    headers: {
+      origin: "http://localhost:3302",
+      "content-type": "application/x-www-form-urlencoded",
+    },
+    body: "locale=en",
+    redirect: "manual",
+  });
+  assert.equal(response.status, 303);
+  assert.ok(response.headers.get("location").startsWith("http://localhost:3302/en/account"));
+  checks.push("an APP_ORIGIN_ALIASES origin is accepted and stays on its own origin");
   response = await call("/api/auth/sign-out");
   assert.equal(response.status, 405);
   assert.equal((await (await call("/api/auth/get-session")).json()).user.email, email);

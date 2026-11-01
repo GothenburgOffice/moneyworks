@@ -9,9 +9,10 @@ if (!process.env.AUTH_TEST_DATABASE_URL)
   throw new Error("Set AUTH_TEST_DATABASE_URL to a disposable migrated test database.");
 process.env.DATABASE_URL = process.env.AUTH_TEST_DATABASE_URL;
 Object.assign(process.env, {
-  AUTH_BASE_URL: "http://127.0.0.1:3302",
+  APP_ORIGIN: "http://127.0.0.1:3302",
+  APP_ORIGIN_ALIASES: "http://localhost:3302",
   AUTH_SECRET: "private-test-fixture-only-not-a-deployment-secret-2026",
-  AUTH_PUBLIC_SIGNUP: "true",
+  ALLOW_REGISTRATION: "true",
   PRIVACY_CONTROLLER_NAME: "Automated test controller, not a public operator",
   PRIVACY_CONTACT_EMAIL: "test-controller@example.invalid",
   SMTP_HOST: "127.0.0.1",

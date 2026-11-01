@@ -6,7 +6,7 @@ import { getBrand } from "@/content/brand";
 import { getAccountCopy } from "@/content/account";
 import { getPrivacyCopy } from "@/content/privacy";
 import { parseAccountQuery } from "@/features/account/view";
-import { accountConfig } from "@/lib/auth-config";
+import { accountConfig, requestOrigin } from "@/lib/auth-config";
 import { getAuth } from "@/lib/auth";
 import { AccountEntry } from "@/components/account/account-entry";
 import { AccountWorkspace } from "@/components/account/account-workspace";
@@ -42,9 +42,12 @@ export default async function AccountPage({ params, searchParams }: Props) {
   const privacy = getPrivacyCopy(language);
   const { view, message, token, hasError } = parseAccountQuery(await searchParams);
   const config = accountConfig();
+  const requestHeaders = await headers();
   const session =
     view !== "privacy" && config.configured
-      ? await getAuth().api.getSession({ headers: await headers() })
+      ? await getAuth(requestOrigin(config, requestHeaders) || config.baseURL).api.getSession({
+          headers: requestHeaders,
+        })
       : null;
   const status = await getTranslations("ConnectionStatus");
   const disabled =
@@ -111,7 +114,7 @@ export default async function AccountPage({ params, searchParams }: Props) {
           databaseUnavailable: status("databaseUnavailable"),
         }}
       />
-      <script src="/db-status.js" data-health-url="/api/health/db" defer />
+      <script src="/db-status.js" data-health-url="/api/health" defer />
       <script src="/site-ui.js" defer />
     </div>
   );

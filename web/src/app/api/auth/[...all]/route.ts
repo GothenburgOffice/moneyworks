@@ -1,5 +1,5 @@
 import { handleAuthRequest } from "@/lib/auth-http";
-import { accountConfig } from "@/lib/auth-config";
+import { accountConfig, requestOrigin } from "@/lib/auth-config";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -23,9 +23,11 @@ async function handle(request: Request) {
     !recoveryRedirect
   )
     return new Response(null, { status: 405 });
-  if (!accountConfig().configured)
-    return Response.json({ error: "Account service is not configured." }, { status: 503 });
-  return handleAuthRequest(request);
+  const config = accountConfig();
+  if (!config.configured) return Response.json({ error: config.problem }, { status: 503 });
+  // A disallowed Origin falls back to APP_ORIGIN's mode; Better Auth's own
+  // trusted-origin check then rejects the request.
+  return handleAuthRequest(request, requestOrigin(config, request.headers) || config.baseURL);
 }
 export const GET = handle;
 export const POST = handle;

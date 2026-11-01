@@ -1,16 +1,18 @@
 {
-  "name": "Moneyworks",
-  "dockerComposeFile": ["../docker-compose.dev.yml", "docker-compose.yml"],
-  "service": "web",
+  "name": "MoneyWorks",
+  "dockerComposeFile": ["../compose.yaml", "../compose.dev.yaml", "compose.yaml"],
+  "service": "app",
   "workspaceFolder": "/workspace",
+  "runServices": ["db", "migrate", "app"],
+  "overrideCommand": false,
   "shutdownAction": "stopCompose",
-  "postCreateCommand": "cd /workspace/web && npm ci && npm run db:setup",
   "customizations": {
     "vscode": {
       "extensions": [
         "anthropic.claude-code",
         "dbaeumer.vscode-eslint",
         "esbenp.prettier-vscode",
+        "github.vscode-github-actions",
         "Prisma.prisma"
       ],
       "settings": {

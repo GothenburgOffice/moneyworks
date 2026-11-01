@@ -16,7 +16,7 @@ for (const [locale, connected, unavailable] of [
     await runInNewContext(source, {
       document: {
         querySelector: () => element,
-        currentScript: { dataset: { healthUrl: `${base}/api/health/db` } },
+        currentScript: { dataset: { healthUrl: `${base}/api/health` } },
       },
       fetch,
       AbortController,

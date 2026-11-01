@@ -1,13 +1,6 @@
 import { defineConfig, env } from "prisma/config";
 
-// Compose injects DATABASE_URL. The optional root .env also supports CLI
-// commands in the devcontainer; existing variables take precedence.
-try {
-  process.loadEnvFile("../.env");
-} catch {
-  // No .env: rely on the environment alone.
-}
-
+// Compose builds DATABASE_URL from POSTGRES_PASSWORD and injects it.
 export default defineConfig({
   schema: "prisma/schema.prisma",
   migrations: {

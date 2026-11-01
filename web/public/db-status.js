@@ -2,7 +2,7 @@
   const element = document.querySelector("[data-db-status]");
   if (!element) return;
 
-  const endpoint = document.currentScript?.dataset.healthUrl || "/api/health/db";
+  const endpoint = document.currentScript?.dataset.healthUrl || "/api/health";
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 6000);
 

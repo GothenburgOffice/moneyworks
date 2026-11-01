@@ -16,10 +16,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ act
   const config = accountConfig();
   const { action } = await params;
   if (!operations[action]) return new Response(null, { status: 404 });
-  if (!config.configured)
-    return new Response("Account service is not configured.", { status: 503 });
-  // Fail closed: no null/absent origins, wildcards, forwarded-host guesses or GET mutations.
-  if (request.headers.get("origin") !== config.baseURL) return new Response(null, { status: 403 });
+  if (!config.configured) return new Response(config.problem, { status: 503 });
+  // Fail closed: only exact allowed origins; no null/absent origins, wildcards,
+  // forwarded-host guesses or GET mutations.
+  const origin = request.headers.get("origin") || "";
+  if (!config.origins.includes(origin)) return new Response(null, { status: 403 });
   if (Number(request.headers.get("content-length") || 0) > 8192)
     return new Response(null, { status: 413 });
   if (!request.headers.get("content-type")?.startsWith("application/x-www-form-urlencoded"))
@@ -28,7 +29,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ act
   if (raw === null) return new Response(null, { status: 413 });
   const form = new URLSearchParams(new TextDecoder().decode(raw));
   const locale = form.get("locale") === "sv" ? "sv" : "en";
-  const page = new URL(`/${locale}/account`, config.baseURL);
+  // Stay on the origin the form was posted from (APP_ORIGIN or an alias).
+  const page = new URL(`/${locale}/account`, origin);
   const redirect = (view: string, message: string, recoveryToken = "") => {
     const url = new URL(page);
     url.searchParams.set("view", view);
@@ -63,11 +65,12 @@ export async function POST(request: Request, { params }: { params: Promise<{ act
   headers.set("x-moneyworks-locale", locale);
   // Use the actual handler, not auth.api: server API calls bypass rate limits.
   const result = await handleAuthRequest(
-    new Request(new URL(`/api/auth/${operations[action]}`, config.baseURL), {
+    new Request(new URL(`/api/auth/${operations[action]}`, origin), {
       method: "POST",
       headers,
       body: JSON.stringify(body),
     }),
+    origin,
   );
   const view = action === "register" ? "register" : action === "forgot" ? "forgot" : "login";
   const message =

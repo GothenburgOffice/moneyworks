@@ -1,11 +1,36 @@
 # syntax=docker/dockerfile:1
-# Release image. Build from the repository root with web/ as the context:
-#   docker build --file Dockerfile --tag moneyworks web
+# One Dockerfile for every stack; web/ is the build context:
+#   docker build --file Dockerfile --target production --tag moneyworks web
+# Node 22 is the oldest supported line, so newer-only APIs fail in development.
 FROM node:22.23.4-trixie-slim AS dependencies
+# Prisma's migration engine links against OpenSSL.
+RUN apt-get update \
+    && apt-get install --yes --no-install-recommends ca-certificates openssl \
+    && rm -rf /var/lib/apt/lists/* \
+    && npm install --global npm@12.2.1
 WORKDIR /app
-RUN npm install --global npm@12.2.1
 COPY package.json package-lock.json ./
 RUN npm ci
+
+# compose.dev.yaml mounts the repository at /workspace and works in web/.
+FROM dependencies AS development
+RUN apt-get update \
+    && apt-get install --yes --no-install-recommends git \
+    && rm -rf /var/lib/apt/lists/*
+WORKDIR /workspace/web
+RUN mv /app/node_modules ./
+COPY . .
+ENV NEXT_TELEMETRY_DISABLED=1
+EXPOSE 3000
+CMD ["npm", "run", "dev"]
+
+# One-shot `prisma migrate deploy` for compose.yaml and compose.dev.yaml.
+FROM dependencies AS migration
+COPY prisma ./prisma
+COPY prisma.config.ts ./
+ENV CHECKPOINT_DISABLE=1
+USER node
+CMD ["npx", "prisma", "migrate", "deploy"]
 
 FROM dependencies AS builder
 COPY . .
@@ -15,13 +40,12 @@ ENV NEXT_TELEMETRY_DISABLED=1 \
     DATABASE_URL=postgresql://build:unused@localhost:5432/build
 RUN npm run build
 
-# Only the Prisma CLI and its locked dependencies, for one-shot migrations.
+# Only the Prisma CLI and its locked dependencies, for the release image.
 FROM dependencies AS migration-tools
 RUN npm query "#prisma, #prisma *" > /tmp/prisma-cli.json \
     && node -e 'const fs = require("node:fs"); for (const { location } of JSON.parse(fs.readFileSync("/tmp/prisma-cli.json"))) fs.cpSync(location, `/migrate/${location}`, { recursive: true });'
 
 FROM node:22.23.4-trixie-slim AS production
-# Prisma's migration engine links against OpenSSL.
 RUN apt-get update \
     && apt-get install --yes --no-install-recommends openssl \
     && rm -rf /var/lib/apt/lists/*
