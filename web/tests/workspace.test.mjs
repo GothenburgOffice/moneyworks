@@ -17,18 +17,19 @@ test('workspace recommends the requested extensions and existing-stack tooling',
   for (const id of [
     'anthropic.claude-code', 'ms-azuretools.vscode-docker',
     'github.vscode-github-actions', 'ms-vscode-remote.remote-containers',
-    'dbaeumer.vscode-eslint', 'Prisma.prisma',
+    'dbaeumer.vscode-eslint', 'esbenp.prettier-vscode', 'Prisma.prisma',
   ]) assert.ok(ids.includes(id), `Missing ${id}`);
   assert.equal(workspace.tasks, undefined);
   assert.equal(workspace.launch, undefined);
 });
 
-test('devcontainer installs the in-container tooling without a formatter', () => {
-  const ids = devcontainer.customizations.vscode.extensions;
-  for (const id of ['anthropic.claude-code', 'dbaeumer.vscode-eslint', 'Prisma.prisma']) {
+test('devcontainer installs the in-container tooling and formats with the project Prettier', () => {
+  const { extensions: ids, settings } = devcontainer.customizations.vscode;
+  for (const id of ['anthropic.claude-code', 'dbaeumer.vscode-eslint', 'esbenp.prettier-vscode', 'Prisma.prisma']) {
     assert.ok(ids.includes(id), `Missing ${id}`);
   }
-  assert.ok(!ids.includes('esbenp.prettier-vscode'), 'The project has no Prettier configuration');
+  assert.equal(settings['editor.defaultFormatter'], 'esbenp.prettier-vscode');
+  assert.equal(settings['prettier.prettierPath'], '/workspace/web/node_modules/prettier');
 });
 
 test('the dev stack leaves NODE_ENV to Next so builds work in the container', () => {

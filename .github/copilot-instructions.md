@@ -23,7 +23,7 @@ This file is the shared reference for coding agents (Copilot reads it directly; 
 - **Database:** PostgreSQL 18 via Prisma 7 and `@prisma/adapter-pg`. Models: `Greeting` (connection test) plus `User`, `Account`, `Session`, `Verification` and `RateLimit`.
 - **Toolchain:** Node.js and npm run only inside the Debian-based development container; the host needs Docker, not Node. CI installs its own matching toolchain.
 - **Node support:** `engines.node` is `>=22.12.0` for hosting flexibility. The dev image and `@types/node` track Node 22 so newer-only APIs fail locally; CI runs the unit job on Node 22 and the current LTS. Raise the floor in `package.json`, `Dockerfile.dev`, `Dockerfile`, `@types/node`, the CI matrix and the Dependabot holds together.
-- **Dependency policy:** Compatible stable releases, exact direct versions, committed lockfile. No forced peer overrides or prereleases. TypeScript and ESLint majors are held in Dependabot until lint-plugin peers support them.
+- **Dependency policy:** Compatible stable releases, exact direct versions, committed lockfile. No forced peer overrides or prereleases. TypeScript and ESLint majors are held in Dependabot until lint-plugin peers support them. Prettier and `eslint-config-prettier` are dev-only, for one shared formatting standard across GothenburgOffice repositories.
 
 ## Repository layout
 
@@ -99,7 +99,7 @@ moneyworks/
 ## Containers and credentials
 
 - **Paths:** The repository is mounted at `/workspace`; the app works in `/workspace/web`. `node_modules` and `.next` stay in Docker volumes.
-- **Startup:** Normal Compose waits for database health, runs `npm ci` and `npm run db:setup`, then starts the dev server. The devcontainer runs install/setup on creation and leaves starting the server to the terminal. It installs Claude Code, ESLint and Prisma extensions in the container (no formatter) and keeps Claude Code's configuration in the `claude_config` volume.
+- **Startup:** Normal Compose waits for database health, runs `npm ci` and `npm run db:setup`, then starts the dev server. The devcontainer runs install/setup on creation and leaves starting the server to the terminal. It installs Claude Code, ESLint, Prettier (format on save, using the project's pinned Prettier) and Prisma extensions in the container and keeps Claude Code's configuration in the `claude_config` volume.
 - **Network:** Inside Docker the app listens on 3000 and PostgreSQL on `db:5432`. The app's host port is deliberately uncommon so the stack runs beside other projects: `localhost:3410`, overridable with `MONEYWORKS_WEB_PORT`. PostgreSQL publishes no host port; use the Compose network or `docker compose exec db psql`.
 - **Persistence:** PostgreSQL 18 uses the `postgres18_data` volume at `/var/lib/postgresql`. Preserve it and any retained PostgreSQL 16 volume.
 - **Configuration:** Compose has development defaults, so local runs need no `.env`. The optional root `.env` (from the all-commented `.env.example`) holds owner overrides; never overwrite it or commit real credentials. `DATABASE_URL` is derived from `POSTGRES_*` unless set (set it only when the password needs URL-encoding). Editing `.env` does not rotate an existing role's password.
@@ -120,6 +120,7 @@ moneyworks/
 Inside the devcontainer, work in `/workspace/web` and run `npm run dev -- --hostname 0.0.0.0`. From the host, prefix commands with `docker compose -f docker-compose.dev.yml exec web`.
 
 ```bash
+npm run format              # Prettier; CI runs npm run format:check
 npm run lint
 npm run typecheck
 npm run test:ui
@@ -149,7 +150,7 @@ Rebuild the devcontainer after infrastructure changes. Never run `down -v`, `dow
 
 - **Triggers:** CI runs on pushes to `main`, pull requests and manual dispatch.
 - **Branch protection:** `main` requires a pull request (0 approvals), resolved conversations, and the `unit` and `containers` checks passing on a branch up to date with `main`; force pushes and deletion are blocked, admins included. `unit` is a gate job over the Node matrix so the required name never changes; keep it when editing the matrix.
-- **Unit job:** Line endings, ESLint, UI/architecture/FIRE/auth-config tests, type checking, Prisma validation, production build, migrations and account lifecycle against a disposable database, and a high-severity audit.
+- **Unit job:** Line endings, Prettier check, ESLint, UI/architecture/FIRE/auth-config tests, type checking, Prisma validation, production build, migrations and account lifecycle against a disposable database, and a high-severity audit.
 - **Container job:** Exercises `core.autocrlf=true`, builds the app and starts disposable app/PostgreSQL containers, runs smoke tests, verifies live database reads, and checks that outages change only the status before recovery.
 - **Release image job:** After `unit` and `containers`, builds the release image once, runs it through `docker-compose.images.yml` (migrations, smoke tests, non-root/no-source checks, auth cleanup dry run, restart persistence) and, on `main` only, pushes that exact image to GHCR and verifies an anonymous pull. Workflow runs on `main` are never cancelled.
 - **Isolation and cleanup:** `COMPOSE_PROJECT_NAME=moneyworks-ci` (and `moneyworks-release-ci`) with disposable credentials. Keep the `if: always()` cleanup and its verification; never copy that destructive cleanup into normal commands. Preserve failure logs, finite retries and job timeouts.
@@ -159,6 +160,7 @@ Rebuild the devcontainer after infrastructure changes. Never run `down -v`, `dow
 
 ## Coding conventions
 
+- **Formatting:** Prettier owns formatting (`printWidth: 100`, root `.prettierrc.json`, shared with vocabulary-training); `eslint-config-prettier` turns off conflicting lint rules. Run `npm run format` before committing. Whole-repo reformat commits go in `.git-blame-ignore-revs`.
 - **TypeScript:** Strict checking, useful explicit types at interfaces and API boundaries, no `any` to silence errors.
 - **React:** Prefer Server Components; add client components only for browser interaction or state.
 - **Routes:** App Router handlers under `src/app/api/`. Validate inputs and return proper status codes without exposing internal errors.

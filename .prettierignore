@@ -1,0 +1,5 @@
+# Generated or tool-owned files; .gitignore files are also passed to Prettier.
+package-lock.json
+web/next-env.d.ts
+web/public/fire-calculator.js
+web/src/generated/

@@ -13,9 +13,16 @@
             "extensions": [
                 "anthropic.claude-code",
                 "dbaeumer.vscode-eslint",
+                "esbenp.prettier-vscode",
                 "Prisma.prisma"
             ],
             "settings": {
+                "editor.defaultFormatter": "esbenp.prettier-vscode",
+                "editor.formatOnSave": true,
+                "prettier.prettierPath": "/workspace/web/node_modules/prettier",
+                "[prisma]": {
+                    "editor.defaultFormatter": "Prisma.prisma"
+                },
                 "typescript.tsdk": "/workspace/web/node_modules/typescript/lib",
                 "typescript.enablePromptUseWorkspaceTsdk": true,
                 "eslint.workingDirectories": [

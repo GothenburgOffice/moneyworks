@@ -84,6 +84,7 @@ Run inside the devcontainer from `/workspace/web`, or from the host with
 
 | Command | Purpose |
 | --- | --- |
+| `npm run format` / `npm run format:check` | Format with Prettier / check formatting (CI) |
 | `npm run lint` / `npm run typecheck` | ESLint and TypeScript |
 | `npm run test:fire` | FIRE model tests (also rebuilds the browser script) |
 | `npm run test:ui` / `npm run test:architecture` | Enhancement scripts and import boundaries |
