@@ -1,5 +1,5 @@
-import type { PrivacyCopy } from '@/content/privacy';
-import type { Locale } from '@/content/site';
+import type { PrivacyCopy } from "@/content/privacy";
+import type { Locale } from "@/content/site";
 
 type Props = {
   locale: Locale;
@@ -20,15 +20,20 @@ export function PrivacyContent({ locale, copy, backLabel, controller }: Props) {
       <h2>{copy.controller}</h2>
       {controller ? (
         <p>
-          {controller.name}<br />
+          {controller.name}
+          <br />
           {copy.contact}: <a href={`mailto:${controller.contact}`}>{controller.contact}</a>
         </p>
-      ) : <p className="account-notice">{copy.privacyMissing}</p>}
+      ) : (
+        <p className="account-notice">{copy.privacyMissing}</p>
+      )}
       <p>{copy.privacyLead}</p>
       <p>{copy.privacyPurpose}</p>
       <p>{copy.privacyRetention}</p>
       <p>{copy.privacyRights}</p>
-      <a className="text-link" href={`/${locale}`}>{backLabel} →</a>
+      <a className="text-link" href={`/${locale}`}>
+        {backLabel} →
+      </a>
     </section>
   );
 }

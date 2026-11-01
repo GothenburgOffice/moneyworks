@@ -21,11 +21,11 @@ Financial inputs never leave the browser.
 
 ## Documentation
 
-| File | Contents |
-| --- | --- |
-| [DESIGN.md](DESIGN.md) | Visual system (direction C, "Bright works") |
-| [FIRE.md](FIRE.md) | FIRE model semantics, assumptions and how to add a tool |
-| [AUTH.md](AUTH.md) | Accounts, privacy, operator configuration and security boundaries |
+| File                                                               | Contents                                                                                  |
+| ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------- |
+| [DESIGN.md](DESIGN.md)                                             | Visual system (direction C, "Bright works")                                               |
+| [FIRE.md](FIRE.md)                                                 | FIRE model semantics, assumptions and how to add a tool                                   |
+| [AUTH.md](AUTH.md)                                                 | Accounts, privacy, operator configuration and security boundaries                         |
 | [.github/copilot-instructions.md](.github/copilot-instructions.md) | Engineering rules for contributors and coding agents (imported by [CLAUDE.md](CLAUDE.md)) |
 
 ## Stack
@@ -82,18 +82,18 @@ opens a SQL prompt.
 Run inside the devcontainer from `/workspace/web`, or from the host with
 `docker compose -f docker-compose.dev.yml exec web <command>`.
 
-| Command | Purpose |
-| --- | --- |
-| `npm run format` / `npm run format:check` | Format with Prettier / check formatting (CI) |
-| `npm run lint` / `npm run typecheck` | ESLint and TypeScript |
-| `npm run test:fire` | FIRE model tests (also rebuilds the browser script) |
-| `npm run test:ui` / `npm run test:architecture` | Enhancement scripts and import boundaries |
-| `npm run test:auth-config` | Auth configuration and cookie attributes |
-| `npm run test:smoke` | Live pages and health check (app must be running) |
-| `npm run build` | Production build |
-| `npm run db:migrate -- --name <name>` | Create a migration after a schema change |
-| `npm run db:setup` | Generate the Prisma client and apply migrations |
-| `npm install --save-exact <pkg>` | Add a dependency; commit both package files |
+| Command                                         | Purpose                                             |
+| ----------------------------------------------- | --------------------------------------------------- |
+| `npm run format` / `npm run format:check`       | Format with Prettier / check formatting (CI)        |
+| `npm run lint` / `npm run typecheck`            | ESLint and TypeScript                               |
+| `npm run test:fire`                             | FIRE model tests (also rebuilds the browser script) |
+| `npm run test:ui` / `npm run test:architecture` | Enhancement scripts and import boundaries           |
+| `npm run test:auth-config`                      | Auth configuration and cookie attributes            |
+| `npm run test:smoke`                            | Live pages and health check (app must be running)   |
+| `npm run build`                                 | Production build                                    |
+| `npm run db:migrate -- --name <name>`           | Create a migration after a schema change            |
+| `npm run db:setup`                              | Generate the Prisma client and apply migrations     |
+| `npm install --save-exact <pkg>`                | Add a dependency; commit both package files         |
 
 CI ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs all checks, the
 account lifecycle against a disposable database and a full container stack

@@ -11,12 +11,12 @@ export type ToolContent = {
 
 // Add only owner-approved tools. Status reflects actual local functionality.
 export const toolCatalog = [
-  { id: 'fire', status: 'available', href: '#fire-calculator' },
-  { id: 'crypto', status: 'planned', href: undefined },
-] as const satisfies readonly { id: string; status: 'planned' | 'available'; href?: string }[];
+  { id: "fire", status: "available", href: "#fire-calculator" },
+  { id: "crypto", status: "planned", href: undefined },
+] as const satisfies readonly { id: string; status: "planned" | "available"; href?: string }[];
 
-export type ToolId = (typeof toolCatalog)[number]['id'];
+export type ToolId = (typeof toolCatalog)[number]["id"];
 
 export function getTools(copy: Record<ToolId, ToolContent>) {
-  return toolCatalog.map(tool => ({ ...tool, content: copy[tool.id] }));
+  return toolCatalog.map((tool) => ({ ...tool, content: copy[tool.id] }));
 }
