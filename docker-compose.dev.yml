@@ -1,3 +1,7 @@
+# One project name for plain Compose and the devcontainer, so both share the
+# same containers and volumes. CI overrides it with COMPOSE_PROJECT_NAME.
+name: moneyworks
+
 services:
   web:
     build:
