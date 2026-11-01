@@ -29,7 +29,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: `${getBrand(language).name} | ${getAccountCopy(language).account}`,
     icons: { icon: getBrand(language).icon },
     robots: { index: false, follow: false },
-    referrer: "same-origin",
+    referrer: "strict-origin",
   };
 }
 
