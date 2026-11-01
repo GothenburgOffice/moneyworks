@@ -1,9 +1,9 @@
-import type { ComponentProps } from 'react';
-import type { AccountFormView } from '@/features/account/view';
-import { AccountForm } from './account-form';
-import { getBrand } from '@/content/brand';
+import type { ComponentProps } from "react";
+import type { AccountFormView } from "@/features/account/view";
+import { AccountForm } from "./account-form";
+import { getBrand } from "@/content/brand";
 
-type Props = Omit<ComponentProps<typeof AccountForm>, 'title'>;
+type Props = Omit<ComponentProps<typeof AccountForm>, "title">;
 
 export function AccountEntry(props: Props) {
   const { locale, view, copy } = props;
@@ -14,8 +14,12 @@ export function AccountEntry(props: Props) {
     reset: copy.resetTitle,
     resend: copy.resendTitle,
   };
-  const intro = view === 'register' ? copy.registerIntro
-    : view === 'forgot' ? copy.forgotIntro : copy.loginIntro;
+  const intro =
+    view === "register"
+      ? copy.registerIntro
+      : view === "forgot"
+        ? copy.forgotIntro
+        : copy.loginIntro;
 
   return (
     <div className="account-entry">
@@ -23,7 +27,9 @@ export function AccountEntry(props: Props) {
         <p className="account-kicker">{getBrand(locale).name}</p>
         <h1>{titles[view]}</h1>
         <p>{intro}</p>
-        <a className="text-link" href={`/${locale}`}>{copy.back} →</a>
+        <a className="text-link" href={`/${locale}`}>
+          {copy.back} →
+        </a>
       </section>
       <AccountForm {...props} title={titles[view]} />
     </div>

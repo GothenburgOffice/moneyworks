@@ -9,6 +9,6 @@ maintainer approved your plan in the issue, will be reviewed. See CONTRIBUTING.m
 
 ## Checks
 
-- [ ] `npm run lint`, `npm run typecheck`, `npm run test:ui`, `npm run test:architecture`, `npm run test:fire`, `npm run build`
+- [ ] `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm run test:ui`, `npm run test:architecture`, `npm run test:fire`, `npm run build`
 - [ ] `npm run test:smoke` (if pages, routing or database code changed) / `npm run test:auth-config` (if account code changed)
 - [ ] AI assistance disclosed (tool, and what you verified yourself), or none used

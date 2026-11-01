@@ -1,27 +1,29 @@
 {
-    "name": "Moneyworks",
-    "dockerComposeFile": [
-        "../docker-compose.dev.yml",
-        "docker-compose.yml"
-    ],
-    "service": "web",
-    "workspaceFolder": "/workspace",
-    "shutdownAction": "stopCompose",
-    "postCreateCommand": "cd /workspace/web && npm ci && npm run db:setup",
-    "customizations": {
-        "vscode": {
-            "extensions": [
-                "anthropic.claude-code",
-                "dbaeumer.vscode-eslint",
-                "Prisma.prisma"
-            ],
-            "settings": {
-                "typescript.tsdk": "/workspace/web/node_modules/typescript/lib",
-                "typescript.enablePromptUseWorkspaceTsdk": true,
-                "eslint.workingDirectories": [
-                    "web"
-                ]
-            }
-        }
+  "name": "Moneyworks",
+  "dockerComposeFile": ["../docker-compose.dev.yml", "docker-compose.yml"],
+  "service": "web",
+  "workspaceFolder": "/workspace",
+  "shutdownAction": "stopCompose",
+  "postCreateCommand": "cd /workspace/web && npm ci && npm run db:setup",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "anthropic.claude-code",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "Prisma.prisma"
+      ],
+      "settings": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true,
+        "prettier.prettierPath": "/workspace/web/node_modules/prettier",
+        "[prisma]": {
+          "editor.defaultFormatter": "Prisma.prisma"
+        },
+        "typescript.tsdk": "/workspace/web/node_modules/typescript/lib",
+        "typescript.enablePromptUseWorkspaceTsdk": true,
+        "eslint.workingDirectories": ["web"]
+      }
     }
+  }
 }

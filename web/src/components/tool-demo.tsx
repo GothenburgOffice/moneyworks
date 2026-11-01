@@ -1,4 +1,4 @@
-import '@/styles/tool-demo.css';
+import "@/styles/tool-demo.css";
 
 type ToolDemoProps = {
   id: string;
@@ -16,37 +16,77 @@ type ToolDemoProps = {
 
 /** Static, reusable self-hosted media. Native controls work without React/JS. */
 export function ToolDemo({
-  id, title, label, note, example, downloadLabel, transcriptLabel,
-  steps, source, poster, subtitles,
+  id,
+  title,
+  label,
+  note,
+  example,
+  downloadLabel,
+  transcriptLabel,
+  steps,
+  source,
+  poster,
+  subtitles,
 }: ToolDemoProps) {
   return (
     <details id={id} className="tool-demo" data-tool-demo>
       <summary>
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
-          <path d="m9 5 11 7-11 7V5Z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          aria-hidden="true"
+          focusable="false"
+        >
+          <path
+            d="m9 5 11 7-11 7V5Z"
+            stroke="currentColor"
+            strokeWidth="1.7"
+            strokeLinejoin="round"
+          />
         </svg>
         <span>{title}</span>
       </summary>
       <div className="tool-demo-body">
         <p id={`${id}-description`}>{note}</p>
         <video
-          controls playsInline crossOrigin="anonymous" preload="none" width="1280" height="720"
-          poster={poster} aria-label={label} aria-describedby={`${id}-description`}
+          controls
+          playsInline
+          crossOrigin="anonymous"
+          preload="none"
+          width="1280"
+          height="720"
+          poster={poster}
+          aria-label={label}
+          aria-describedby={`${id}-description`}
         >
           <source src={source} type="video/mp4" />
-          {subtitles.map(track => (
-            <track key={track.language} kind="subtitles" src={track.source}
-              srcLang={track.language} label={track.label} default={track.default} />
+          {subtitles.map((track) => (
+            <track
+              key={track.language}
+              kind="subtitles"
+              src={track.source}
+              srcLang={track.language}
+              label={track.label}
+              default={track.default}
+            />
           ))}
           <a href={source}>{downloadLabel}</a>
         </video>
         <div className="tool-demo-links">
           <p>{example}</p>
-          <a href={source} download>{downloadLabel}</a>
+          <a href={source} download>
+            {downloadLabel}
+          </a>
         </div>
         <details className="tool-demo-transcript">
           <summary>{transcriptLabel}</summary>
-          <ol>{steps.map(step => <li key={step}>{step}</li>)}</ol>
+          <ol>
+            {steps.map((step) => (
+              <li key={step}>{step}</li>
+            ))}
+          </ol>
         </details>
       </div>
     </details>

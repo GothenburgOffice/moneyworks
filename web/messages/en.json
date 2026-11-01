@@ -11,7 +11,16 @@
   "Site": {
     "skip": "Skip to content",
     "home": "MoneyWorks, back to the top",
-    "nav": { "label": "Main navigation", "tools": "Tools", "learn": "Good to know", "about": "About", "menu": "Menu", "language": "Choose language", "themeLight": "Switch to light theme", "themeDark": "Switch to dark theme" },
+    "nav": {
+      "label": "Main navigation",
+      "tools": "Tools",
+      "learn": "Good to know",
+      "about": "About",
+      "menu": "Menu",
+      "language": "Choose language",
+      "themeLight": "Switch to light theme",
+      "themeDark": "Switch to dark theme"
+    },
     "intro": {
       "title": "A clearer view of your money.",
       "titleLead": "A clearer view",
@@ -37,7 +46,11 @@
         "description": "Put your financial independence plans into perspective, one scenario at a time.",
         "context": "For the life you want to build.",
         "detailTitle": "What you can model",
-        "items": ["Portfolio needed or the first funded retirement age.", "Government and employer pensions with custom payout ages.", "Planned drawdown or preserving capital at the plan end."],
+        "items": [
+          "Portfolio needed or the first funded retirement age.",
+          "Government and employer pensions with custom payout ages.",
+          "Planned drawdown or preserving capital at the plan end."
+        ],
         "note": "Runs in this page with explicit assumptions. No account needed, no saved plans and no promise about future returns."
       },
       "crypto": {
@@ -46,7 +59,11 @@
         "description": "Bring some order to your trading history and the questions that come with it.",
         "context": "For the details that need a clearer picture.",
         "detailTitle": "What we're planning",
-        "items": ["An organised view of your crypto-trading activity.", "Calculations with the chosen rules clearly explained.", "Explicit country support, without guessing where you file."],
+        "items": [
+          "An organised view of your crypto-trading activity.",
+          "Calculations with the chosen rules clearly explained.",
+          "Explicit country support, without guessing where you file."
+        ],
         "note": "Not available yet. Supported countries and tax methods have not been selected."
       }
     },
@@ -54,9 +71,18 @@
       "title": "A little context goes a long way.",
       "description": "Good tools should make things easier to understand, not give you another set of numbers to decipher.",
       "items": [
-        { "question": "What is MoneyWorks?", "answer": "A growing home for personal finance tools and straightforward information. We're starting with financial independence planning and crypto-trading tax calculations, with room for more useful tools over time." },
-        { "question": "Can I use the calculators yet?", "answer": "The FIRE calculator is available below the tool panels. It needs JavaScript for local calculations; its explanation is pre-rendered. The crypto tax calculator is still planned. FIRE inputs are not sent to a server or saved." },
-        { "question": "Is the site for a particular country?", "answer": "MoneyWorks is country-neutral and available in English and Swedish. When a tool needs country-specific rules, supported countries and assumptions will be stated explicitly." }
+        {
+          "question": "What is MoneyWorks?",
+          "answer": "A growing home for personal finance tools and straightforward information. We're starting with financial independence planning and crypto-trading tax calculations, with room for more useful tools over time."
+        },
+        {
+          "question": "Can I use the calculators yet?",
+          "answer": "The FIRE calculator is available below the tool panels. It needs JavaScript for local calculations; its explanation is pre-rendered. The crypto tax calculator is still planned. FIRE inputs are not sent to a server or saved."
+        },
+        {
+          "question": "Is the site for a particular country?",
+          "answer": "MoneyWorks is country-neutral and available in English and Swedish. When a tool needs country-specific rules, supported countries and assumptions will be stated explicitly."
+        }
       ]
     },
     "about": {

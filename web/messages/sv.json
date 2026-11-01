@@ -11,7 +11,16 @@
   "Site": {
     "skip": "Hoppa till innehållet",
     "home": "Pengar jobbar, tillbaka till toppen",
-    "nav": { "label": "Huvudnavigation", "tools": "Verktyg", "learn": "Bra att veta", "about": "Om sidan", "menu": "Meny", "language": "Välj språk", "themeLight": "Byt till ljust tema", "themeDark": "Byt till mörkt tema" },
+    "nav": {
+      "label": "Huvudnavigation",
+      "tools": "Verktyg",
+      "learn": "Bra att veta",
+      "about": "Om sidan",
+      "menu": "Meny",
+      "language": "Välj språk",
+      "themeLight": "Byt till ljust tema",
+      "themeDark": "Byt till mörkt tema"
+    },
     "intro": {
       "title": "En tydligare bild av din ekonomi.",
       "titleLead": "En tydligare bild",
@@ -37,7 +46,11 @@
         "description": "Sätt dina planer på ekonomiskt oberoende i perspektiv, ett scenario i taget.",
         "context": "För livet du vill bygga.",
         "detailTitle": "Det här kan du modellera",
-        "items": ["Kapital som behövs eller den första finansierade pensionsåldern.", "Allmän pension och tjänstepension med egna åldersintervall.", "Planerad förbrukning eller bevarat kapital vid planens slut."],
+        "items": [
+          "Kapital som behövs eller den första finansierade pensionsåldern.",
+          "Allmän pension och tjänstepension med egna åldersintervall.",
+          "Planerad förbrukning eller bevarat kapital vid planens slut."
+        ],
         "note": "Körs på sidan med tydliga antaganden. Inget konto behövs, inga planer sparas och ingen framtida avkastning utlovas."
       },
       "crypto": {
@@ -46,7 +59,11 @@
         "description": "Få bättre ordning på din handelshistorik och frågorna som följer med den.",
         "context": "För detaljerna som behöver en tydligare bild.",
         "detailTitle": "Det här planerar vi",
-        "items": ["En samlad bild av din handel med kryptovalutor.", "Beräkningar där de valda reglerna förklaras tydligt.", "Uttryckligt stöd för länder, utan att gissa var du deklarerar."],
+        "items": [
+          "En samlad bild av din handel med kryptovalutor.",
+          "Beräkningar där de valda reglerna förklaras tydligt.",
+          "Uttryckligt stöd för länder, utan att gissa var du deklarerar."
+        ],
         "note": "Inte tillgänglig ännu. Länder och beräkningsmetoder har inte valts."
       }
     },
@@ -54,9 +71,18 @@
       "title": "Lite sammanhang gör stor skillnad.",
       "description": "Bra verktyg ska göra saker lättare att förstå, inte ge dig ännu fler siffror att tolka.",
       "items": [
-        { "question": "Vad är Pengar jobbar?", "answer": "En växande plats för privatekonomiska verktyg och tydlig information. Vi börjar med planering för ekonomiskt oberoende och skatt på kryptohandel, med utrymme för fler användbara verktyg framöver." },
-        { "question": "Kan jag använda kalkylatorerna ännu?", "answer": "FIRE-kalkylatorn finns under verktygspanelerna. JavaScript behövs för lokala beräkningar; förklaringen är förrenderad. Kryptoskattekalkylatorn planeras fortfarande. FIRE-uppgifter skickas inte till en server och sparas inte." },
-        { "question": "Är sidan avsedd för ett visst land?", "answer": "Pengar jobbar är landsneutralt och finns på engelska och svenska. När ett verktyg behöver landsspecifika regler kommer stödda länder och antaganden att anges tydligt." }
+        {
+          "question": "Vad är Pengar jobbar?",
+          "answer": "En växande plats för privatekonomiska verktyg och tydlig information. Vi börjar med planering för ekonomiskt oberoende och skatt på kryptohandel, med utrymme för fler användbara verktyg framöver."
+        },
+        {
+          "question": "Kan jag använda kalkylatorerna ännu?",
+          "answer": "FIRE-kalkylatorn finns under verktygspanelerna. JavaScript behövs för lokala beräkningar; förklaringen är förrenderad. Kryptoskattekalkylatorn planeras fortfarande. FIRE-uppgifter skickas inte till en server och sparas inte."
+        },
+        {
+          "question": "Är sidan avsedd för ett visst land?",
+          "answer": "Pengar jobbar är landsneutralt och finns på engelska och svenska. När ett verktyg behöver landsspecifika regler kommer stödda länder och antaganden att anges tydligt."
+        }
       ]
     },
     "about": {

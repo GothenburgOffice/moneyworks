@@ -23,8 +23,9 @@ That includes unsolicited fixes, refactors, dependency bumps and typo-only chang
 - Link the issue (`Closes #123`) and keep the change limited to it.
 - Branch from an up-to-date `main`. Merging needs the `unit` and `containers`
   CI checks to pass on an up-to-date branch.
-- Before pushing, run `npm run lint`, `npm run typecheck`, `npm run test:ui`,
-  `npm run test:architecture`, `npm run test:fire` and `npm run build` in `web/`.
+- Before pushing, run `npm run format`, `npm run lint`, `npm run typecheck`,
+  `npm run test:ui`, `npm run test:architecture`, `npm run test:fire` and
+  `npm run build` in `web/`.
   Run `npm run test:smoke` too if you changed pages, routing or the database,
   and `npm run test:auth-config` if you changed account code. The
   [devcontainer](README.md#option-a-vs-code-devcontainer-recommended) has

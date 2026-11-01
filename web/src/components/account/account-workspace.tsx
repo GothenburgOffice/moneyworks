@@ -1,5 +1,5 @@
-import type { AccountCopy } from '@/content/account';
-import type { Locale } from '@/content/site';
+import type { AccountCopy } from "@/content/account";
+import type { Locale } from "@/content/site";
 
 type Props = {
   locale: Locale;
@@ -18,7 +18,9 @@ export function AccountWorkspace({ locale, copy, privacyLabel, user }: Props) {
         </div>
         <form action="/api/account/logout" method="post">
           <input type="hidden" name="locale" value={locale} />
-          <button className="account-secondary" type="submit">{copy.logout}</button>
+          <button className="account-secondary" type="submit">
+            {copy.logout}
+          </button>
         </form>
       </div>
       <div className="account-identity">
@@ -39,7 +41,9 @@ export function AccountWorkspace({ locale, copy, privacyLabel, user }: Props) {
           <a href={`/${locale}/account?view=forgot`}>{copy.forgot}</a>
         </section>
       </div>
-      <a className="text-link" href={`/${locale}/account?view=privacy`}>{privacyLabel} →</a>
+      <a className="text-link" href={`/${locale}/account?view=privacy`}>
+        {privacyLabel} →
+      </a>
     </section>
   );
 }

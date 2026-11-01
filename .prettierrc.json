@@ -1,0 +1,9 @@
+{
+  "printWidth": 100,
+  "overrides": [
+    {
+      "files": "*.code-workspace",
+      "options": { "trailingComma": "none" }
+    }
+  ]
+}

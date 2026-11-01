@@ -18,15 +18,15 @@ behind them.
 
 ## Colour
 
-| Token | Dark (default) | Use |
-| --- | --- | --- |
-| ground | `#181c18` | Page background |
-| surface | `#242a24` | Raised panels |
-| ink | `#f8f8f0` | Text |
-| muted | `#c2c8bd` | Secondary text |
-| line | `#485145` | Dividers |
-| primary | `#d6fb79` | Mark, actions, second headline line, FIRE panel, about band |
-| positive / negative | `#a9e5ad` / `#ffb4b4` | Status, always with text |
+| Token               | Dark (default)        | Use                                                         |
+| ------------------- | --------------------- | ----------------------------------------------------------- |
+| ground              | `#181c18`             | Page background                                             |
+| surface             | `#242a24`             | Raised panels                                               |
+| ink                 | `#f8f8f0`             | Text                                                        |
+| muted               | `#c2c8bd`             | Secondary text                                              |
+| line                | `#485145`             | Dividers                                                    |
+| primary             | `#d6fb79`             | Mark, actions, second headline line, FIRE panel, about band |
+| positive / negative | `#a9e5ad` / `#ffb4b4` | Status, always with text                                    |
 
 Light mode uses ivory `#f8f8f0`, charcoal text, a dark action and green
 `#3f7f14` headline accent. The crypto panel is ivory in both. Colours are

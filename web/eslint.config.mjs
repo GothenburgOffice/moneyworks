@@ -1,21 +1,44 @@
 import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
+import prettier from "eslint-config-prettier/flat";
 
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
   {
-    files: ["src/components/**/*.{ts,tsx}", "src/content/**/*.{ts,tsx}", "src/features/**/*.{ts,tsx}", "src/i18n/**/*.{ts,tsx}"],
+    files: [
+      "src/components/**/*.{ts,tsx}",
+      "src/content/**/*.{ts,tsx}",
+      "src/features/**/*.{ts,tsx}",
+      "src/i18n/**/*.{ts,tsx}",
+    ],
     rules: {
-      "no-restricted-imports": ["error", {
-        patterns: [{
-          group: ["@/lib/db", "@/lib/auth", "@/lib/auth-*", "**/lib/db", "**/lib/auth", "**/lib/auth-*", "@/generated/**", "**/generated/**"],
-          message: "Presentation, content and pure features must not import server persistence or auth. Resolve server data in the route and pass minimal props.",
-        }],
-      }],
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: [
+                "@/lib/db",
+                "@/lib/auth",
+                "@/lib/auth-*",
+                "**/lib/db",
+                "**/lib/auth",
+                "**/lib/auth-*",
+                "@/generated/**",
+                "**/generated/**",
+              ],
+              message:
+                "Presentation, content and pure features must not import server persistence or auth. Resolve server data in the route and pass minimal props.",
+            },
+          ],
+        },
+      ],
     },
   },
+  // Formatting belongs to Prettier; turn off ESLint rules that conflict with it.
+  prettier,
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:

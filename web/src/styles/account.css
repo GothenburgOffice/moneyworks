@@ -1,4 +1,7 @@
-.account-page { padding-block: 64px 88px; min-height: 65vh; }
+.account-page {
+  padding-block: 64px 88px;
+  min-height: 65vh;
+}
 .account-entry {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -11,9 +14,10 @@
   font-weight: 700;
   margin-bottom: 16px;
 }
-.account-intro h1, .account-workspace h1 {
+.account-intro h1,
+.account-workspace h1 {
   font-size: clamp(34px, 4vw, 54px);
-  letter-spacing: -.05em;
+  letter-spacing: -0.05em;
   line-height: 1.08;
   max-width: 13ch;
   font-weight: 800;
@@ -40,20 +44,26 @@
   font-size: 14px;
   color: var(--muted);
 }
-.account-tabs a[aria-current=page] {
+.account-tabs a[aria-current="page"] {
   border-bottom: 2px solid var(--accent);
   color: var(--ink);
   font-weight: 700;
 }
-.account-form-panel fieldset { padding: 0; border: 0; min-width: 0; }
-.account-form-panel fieldset:disabled { opacity: .6; }
+.account-form-panel fieldset {
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.account-form-panel fieldset:disabled {
+  opacity: 0.6;
+}
 .account-form-panel label {
   display: block;
   font-size: 14px;
   font-weight: 600;
   margin-block: 18px 8px;
 }
-.account-form-panel input:not([type=hidden]) {
+.account-form-panel input:not([type="hidden"]) {
   display: block;
   width: 100%;
   background: var(--ground);
@@ -72,12 +82,21 @@
   color: var(--muted);
   margin-top: 14px;
 }
-.account-help a, .account-workspace-grid a {
+.account-help a,
+.account-workspace-grid a {
   text-decoration: underline;
   text-underline-offset: 4px;
 }
-.account-submit { width: 100%; border: 0; font-family: inherit; cursor: pointer; }
-.account-submit:disabled, fieldset:disabled .account-submit { cursor: not-allowed; }
+.account-submit {
+  width: 100%;
+  border: 0;
+  font-family: inherit;
+  cursor: pointer;
+}
+.account-submit:disabled,
+fieldset:disabled .account-submit {
+  cursor: not-allowed;
+}
 .account-form-links {
   display: flex;
   flex-wrap: wrap;
@@ -113,10 +132,24 @@
   border-block: 1px solid var(--line);
   overflow-wrap: anywhere;
 }
-.account-identity p { font-size: 12px; color: var(--muted); }
-.account-identity strong { display: block; font-size: 22px; margin-block: 5px; }
-.account-identity span { font-size: 12px; color: var(--positive); }
-.account-empty-state { padding: 26px; background: var(--raised); max-width: 70ch; }
+.account-identity p {
+  font-size: 12px;
+  color: var(--muted);
+}
+.account-identity strong {
+  display: block;
+  font-size: 22px;
+  margin-block: 5px;
+}
+.account-identity span {
+  font-size: 12px;
+  color: var(--positive);
+}
+.account-empty-state {
+  padding: 26px;
+  background: var(--raised);
+  max-width: 70ch;
+}
 .account-workspace-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -125,24 +158,55 @@
 }
 .account-workspace h2 {
   font-size: 23px;
-  letter-spacing: -.035em;
+  letter-spacing: -0.035em;
   margin-bottom: 15px;
 }
-.account-muted { color: var(--muted); margin-top: 12px; font-size: 14px; }
+.account-muted {
+  color: var(--muted);
+  margin-top: 12px;
+  font-size: 14px;
+}
 
 @media (max-width: 1000px) {
-  .account-entry { gap: 44px; }
-  .account-form-panel { padding: 25px; }
+  .account-entry {
+    gap: 44px;
+  }
+  .account-form-panel {
+    padding: 25px;
+  }
 }
 @media (max-width: 740px) {
-  .account-page { padding-block: 34px 48px; }
-  .account-entry { grid-template-columns: 1fr; gap: 30px; }
-  .account-intro h1, .account-workspace h1 { font-size: 36px; }
-  .account-intro > p:not(.account-kicker) { margin-block: 18px; }
-  .account-form-panel { padding: 22px; }
-  .account-tabs { gap: 22px; }
-  .account-tabs a { font-size: 13px; }
-  .account-workspace-grid { grid-template-columns: 1fr; gap: 30px; }
-  .account-workspace-heading { flex-direction: column; }
-  .account-empty-state { padding: 22px; }
+  .account-page {
+    padding-block: 34px 48px;
+  }
+  .account-entry {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+  .account-intro h1,
+  .account-workspace h1 {
+    font-size: 36px;
+  }
+  .account-intro > p:not(.account-kicker) {
+    margin-block: 18px;
+  }
+  .account-form-panel {
+    padding: 22px;
+  }
+  .account-tabs {
+    gap: 22px;
+  }
+  .account-tabs a {
+    font-size: 13px;
+  }
+  .account-workspace-grid {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+  .account-workspace-heading {
+    flex-direction: column;
+  }
+  .account-empty-state {
+    padding: 22px;
+  }
 }

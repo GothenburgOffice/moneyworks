@@ -14,12 +14,27 @@
   font-weight: 700;
   list-style: none;
 }
-.tool-demo > summary::-webkit-details-marker { display: none; }
-.tool-demo > summary svg { color: var(--accent); flex-shrink: 0; }
-.tool-demo > summary::after { content: "+"; margin-left: 8px; font-size: 20px; }
-.tool-demo[open] > summary::after { content: "−"; }
-.tool-demo-body { padding-bottom: 24px; }
-.tool-demo-body > p, .tool-demo-links, .tool-demo-transcript {
+.tool-demo > summary::-webkit-details-marker {
+  display: none;
+}
+.tool-demo > summary svg {
+  color: var(--accent);
+  flex-shrink: 0;
+}
+.tool-demo > summary::after {
+  content: "+";
+  margin-left: 8px;
+  font-size: 20px;
+}
+.tool-demo[open] > summary::after {
+  content: "−";
+}
+.tool-demo-body {
+  padding-bottom: 24px;
+}
+.tool-demo-body > p,
+.tool-demo-links,
+.tool-demo-transcript {
   color: var(--muted);
   font-size: 13px;
   line-height: 1.65;
@@ -39,16 +54,39 @@
   justify-content: space-between;
   gap: 12px 24px;
 }
-.tool-demo-links p { max-width: 75ch; }
-.tool-demo-links a { min-height: 44px; display: inline-flex; align-items: center; text-decoration: underline; }
-.tool-demo-transcript { margin-top: 12px; }
-.tool-demo-transcript > summary { width: fit-content; cursor: pointer; min-height: 44px; padding-block: 10px; }
-.tool-demo-transcript ol { padding-left: 24px; max-width: 80ch; }
-.tool-demo-transcript li + li { margin-top: 8px; }
-.tool-demo summary:focus-visible, .tool-demo video:focus-visible, .tool-demo a:focus-visible {
+.tool-demo-links p {
+  max-width: 75ch;
+}
+.tool-demo-links a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  text-decoration: underline;
+}
+.tool-demo-transcript {
+  margin-top: 12px;
+}
+.tool-demo-transcript > summary {
+  width: fit-content;
+  cursor: pointer;
+  min-height: 44px;
+  padding-block: 10px;
+}
+.tool-demo-transcript ol {
+  padding-left: 24px;
+  max-width: 80ch;
+}
+.tool-demo-transcript li + li {
+  margin-top: 8px;
+}
+.tool-demo summary:focus-visible,
+.tool-demo video:focus-visible,
+.tool-demo a:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 4px;
 }
 @media (max-width: 480px) {
-  .tool-demo-links { gap: 0; }
+  .tool-demo-links {
+    gap: 0;
+  }
 }
