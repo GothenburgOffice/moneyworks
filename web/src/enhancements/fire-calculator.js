@@ -347,8 +347,7 @@ function initializeFire() {
       event.preventDefault();
       runCalculation();
     });
-    // A sandbox may forbid native form submission before it dispatches submit.
-    // Calculate locally on Enter rather than requiring the allow-forms capability.
+    // Enter saves the payout row being edited, or calculates from anywhere else.
     form.addEventListener('keydown', event => {
       if (event.key === 'Enter' && event.target instanceof HTMLInputElement
         && !['checkbox', 'radio'].includes(event.target.type)) {

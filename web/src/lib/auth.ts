@@ -59,8 +59,8 @@ function createAuth() {
       },
     },
     advanced: {
-      // Prefix ourselves: automatic __Secure- would precede __Host- and break
-      // the preview/publish gateway. Secure is still mandatory on HTTPS.
+      // Set the prefix ourselves: Better Auth's automatic __Secure- would be put
+      // in front of __Host- and make the name invalid. Secure stays mandatory on HTTPS.
       ...authCookieOptions(config),
       ipAddress: { ipAddressHeaders: ['x-moneyworks-client-ip'] },
     },

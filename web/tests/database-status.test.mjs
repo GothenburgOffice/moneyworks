@@ -27,7 +27,7 @@ for (const [locale, connected, unavailable] of [
   });
 }
 
-test('a failed preview/network request cannot show fake database success', async () => {
+test('a failed network request cannot show fake database success', async () => {
   const element = {
     textContent: 'checking',
     dataset: { connected: 'Database connection: OK', unavailable: 'Database connection: unavailable' },

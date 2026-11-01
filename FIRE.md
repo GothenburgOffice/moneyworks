@@ -178,7 +178,7 @@ Native account forms remain unaffected.
 
 Financial values have no form field names, avoiding accidental URL submission.
 The enhancement uses a local button/Enter handler, also intercepts submission,
-and makes no network requests. It works without sandbox form permission. Inputs stay
+and makes no network requests. Inputs stay
 in the current page: no cookies, browser storage, account saving or schema changes.
 Changing language/reloading starts another page. No real pension entitlement is
 invented or retrieved.
