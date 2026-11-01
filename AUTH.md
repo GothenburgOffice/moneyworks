@@ -58,11 +58,12 @@ split from global tokens/site styles without changing the C design.
 
 ## Operator configuration
 
-Set account values in the root `.env` (copied from `.env.example`); there is
-no generator. They are optional: without them, accounts stay disabled.
-Compose passes account settings only to the app service. Launch prerequisites are tracked in #12.
+Origins and secrets live in the root `.env` (copied from `.env.example`); mail,
+privacy and registration are site settings stored in the database and edited
+at `/admin`. All are optional: without them, accounts stay disabled. Compose
+passes account settings only to the app service. Launch prerequisites are tracked in #12.
 
-Required before registration is available:
+In `.env`, required before accounts work:
 
 - `APP_ORIGIN`: exact origin, HTTPS except explicit loopback development.
 - `APP_ORIGIN_ALIASES` (optional): comma-separated extra exact origins, such as
@@ -73,12 +74,33 @@ Required before registration is available:
   on HTTPS, the development names on loopback HTTP.
 - `AUTH_SECRET`: a private, independently maintained random value of at least
   32 characters. The template's replacement marker is rejected.
-- `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASSWORD`, `MAIL_FROM`.
-  External SMTP must use TLS; both credential fields must be present or absent.
-- `PRIVACY_CONTROLLER_NAME`, `PRIVACY_CONTACT_EMAIL`: real publishable details,
-  not a fictitious operator or an inferred personal email.
-- `ALLOW_REGISTRATION=true`: public self-registration after the above is ready.
-  Set false to suspend registration without deleting existing accounts.
+- `SETTINGS_ENCRYPTION_KEY`: 32 random bytes, base64 (`openssl rand -base64 32`).
+  Encrypts the stored SMTP password (AES-256-GCM, as in vocabulary-training), so
+  a database dump alone does not reveal it. Changing it makes the stored
+  password unreadable; `/admin` then says so and asks for it again.
+- `ADMIN_EMAIL`, `ADMIN_PASSWORD`: the first admin. While no admin exists, the
+  first sign-in at `/admin` creates that verified account (password of at least
+  15 characters), or promotes an existing account with that email without
+  changing its password. Once an admin exists, both are ignored. Others can be
+  made admin with `UPDATE "User" SET "isAdmin" = true`.
+
+At `/admin` (direct URL only, never linked, `noindex`; signed-out visitors see
+only the sign-in form and everyone but an admin gets 404 from its API):
+
+- Mail: SMTP host, port, implicit TLS, user, password and from address. External
+  SMTP must use TLS; user and password must be present or absent together. The
+  password is write-only: the page shows only whether it is set and readable.
+- Privacy controller name and contact email: real publishable details, not a
+  fictitious operator or an inferred personal email.
+- Allow public registration: off by default. It can be switched on only once
+  mail works and the privacy details are real; contact addresses on reserved
+  example domains (`example.com`, `.test`, `.invalid` and similar) never count.
+  Switch it off to suspend registration without deleting existing accounts.
+
+The devcontainer forces registration on and seeds clearly fake privacy details
+(`Local development, not a real operator`, `dev-privacy@example.test`) into its
+own database while none are stored; the account test fixture does the same.
+Neither value is ever read from `.env`, and no production stack sets them.
 
 Test delivery through the configured SMTP service before enabling public signup.
 The local fixture captures mail only; no real verification/recovery emails were

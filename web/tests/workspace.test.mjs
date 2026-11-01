@@ -53,13 +53,7 @@ test("the dev stack leaves NODE_ENV to Next so builds work in the container", ()
 
 test("the dev stack reads account and origin settings only from DEV_ variables", () => {
   const compose = readFileSync(new URL("../../compose.dev.yaml", import.meta.url), "utf8");
-  for (const name of [
-    "APP_ORIGIN",
-    "APP_ORIGIN_ALIASES",
-    "AUTH_SECRET",
-    "SMTP_HOST",
-    "SMTP_PASSWORD",
-  ])
+  for (const name of ["APP_ORIGIN", "APP_ORIGIN_ALIASES", "AUTH_SECRET", "SETTINGS_ENCRYPTION_KEY"])
     assert.match(
       compose,
       new RegExp(String.raw`^\s+${name}: \$\{DEV_${name}:-`, "m"),
@@ -73,4 +67,21 @@ test("the devcontainer always allows registration, whatever .env says", () => {
     "utf8",
   );
   assert.match(compose, /^\s+ALLOW_REGISTRATION: "true"/m);
+});
+
+test("only the devcontainer seeds fake privacy and forces registration; stacks pass neither", () => {
+  const devcontainer = readFileSync(
+    new URL("../../.devcontainer/compose.yaml", import.meta.url),
+    "utf8",
+  );
+  assert.match(devcontainer, /PRIVACY_CONTROLLER_NAME: Local development, not a real operator/);
+  assert.match(devcontainer, /PRIVACY_CONTACT_EMAIL: dev-privacy@example\.test/);
+  for (const file of ["compose.yaml", "compose.images.yaml", "compose.dev.yaml", ".env.example"]) {
+    const source = readFileSync(new URL(`../../${file}`, import.meta.url), "utf8");
+    assert.doesNotMatch(
+      source,
+      /^\s*(DEV_)?(PRIVACY_|SMTP_(HOST|PORT|SECURE|USER|PASSWORD)\b|MAIL_FROM|ALLOW_REGISTRATION)/m,
+      file,
+    );
+  }
 });

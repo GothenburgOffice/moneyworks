@@ -49,16 +49,11 @@ services:
       DATABASE_URL: *database-url
       APP_ORIGIN: ${APP_ORIGIN:-http://localhost:${APP_PORT:-3410}}
       APP_ORIGIN_ALIASES: ${APP_ORIGIN_ALIASES:-}
-      ALLOW_REGISTRATION: ${ALLOW_REGISTRATION:-false}
       AUTH_SECRET: ${AUTH_SECRET:-}
-      PRIVACY_CONTROLLER_NAME: ${PRIVACY_CONTROLLER_NAME:-}
-      PRIVACY_CONTACT_EMAIL: ${PRIVACY_CONTACT_EMAIL:-}
-      SMTP_HOST: ${SMTP_HOST:-}
-      SMTP_PORT: ${SMTP_PORT:-587}
-      SMTP_SECURE: ${SMTP_SECURE:-false}
-      SMTP_USER: ${SMTP_USER:-}
-      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
-      MAIL_FROM: ${MAIL_FROM:-}
+      # Privacy and SMTP settings are edited at /admin and stored in the database.
+      SETTINGS_ENCRYPTION_KEY: ${SETTINGS_ENCRYPTION_KEY:-}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
       AUTH_TRUSTED_IP_HEADER: ${AUTH_TRUSTED_IP_HEADER:-}
     depends_on:
       migrate:

@@ -5,9 +5,12 @@ import { getDatabase } from "./db";
 import { accountConfig, authCookieOptions } from "./auth-config";
 import { queueAccountEmail } from "./auth-mail";
 
+// The instance needs only the origin and secret, so the admin can sign in before
+// mail is set up. Mail and privacy settings change at runtime: the routes check
+// them (loadAccountConfig) before registration, and mail reads them when sending.
 function createAuth(secure: boolean) {
   const config = accountConfig();
-  if (!config.configured) throw new Error(config.problem);
+  if (!config.ready) throw new Error(config.problem);
   return betterAuth({
     appName: "MoneyWorks",
     baseURL: config.baseURL,
@@ -17,7 +20,9 @@ function createAuth(secure: boolean) {
     telemetry: { enabled: false },
     emailAndPassword: {
       enabled: true,
-      disableSignUp: !config.registrationEnabled,
+      // Registration is a site setting that changes at runtime, so the only routes that
+      // reach sign-up (api/auth and api/account) check registrationEnabled themselves.
+      disableSignUp: false,
       minPasswordLength: 15,
       maxPasswordLength: 128,
       requireEmailVerification: true,

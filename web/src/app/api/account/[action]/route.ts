@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { boundedBody, handleAuthRequest } from "@/lib/auth-http";
-import { accountConfig } from "@/lib/auth-config";
+import { loadAccountConfig } from "@/lib/site-settings";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -13,7 +13,7 @@ const operations: Record<string, string> = {
   resend: "send-verification-email",
 };
 export async function POST(request: Request, { params }: { params: Promise<{ action: string }> }) {
-  const config = accountConfig();
+  const config = await loadAccountConfig();
   const { action } = await params;
   if (!operations[action]) return new Response(null, { status: 404 });
   if (!config.configured) return new Response(config.problem, { status: 503 });

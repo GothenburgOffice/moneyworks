@@ -13,16 +13,30 @@ Object.assign(process.env, {
   APP_ORIGIN_ALIASES: "http://localhost:3302",
   AUTH_SECRET: "private-test-fixture-only-not-a-deployment-secret-2026",
   ALLOW_REGISTRATION: "true",
+  SMTP_ALLOW_LOCAL_PLAINTEXT: "true",
+  SETTINGS_ENCRYPTION_KEY: Buffer.alloc(32, 7).toString("base64"),
   PRIVACY_CONTROLLER_NAME: "Automated test controller, not a public operator",
   PRIVACY_CONTACT_EMAIL: "test-controller@example.invalid",
-  SMTP_HOST: "127.0.0.1",
-  SMTP_PORT: "10252",
-  SMTP_SECURE: "false",
-  SMTP_ALLOW_LOCAL_PLAINTEXT: "true",
-  MAIL_FROM: "test-mail@example.invalid",
+  ADMIN_EMAIL: "mw-admin-qa@example.invalid",
+  ADMIN_PASSWORD: "an automated admin test passphrase",
   AUTH_TRUSTED_IP_HEADER: "x-test-client-ip",
   NEXT_TELEMETRY_DISABLED: "1",
 });
+// Mail is a site setting (edited at /admin), stored before the app starts. The privacy
+// details above go through the app's own seed, like the devcontainer's fake ones.
+const { Pool } = require("pg");
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+for (const [key, value] of [
+  ["smtp.host", "127.0.0.1"],
+  ["smtp.port", "10252"],
+  ["mail.from", "test-mail@example.invalid"],
+])
+  await pool.query(
+    `INSERT INTO "SiteSetting" (key, value, "updatedAt") VALUES ($1, $2, now())
+     ON CONFLICT (key) DO UPDATE SET value = $2, "updatedAt" = now()`,
+    [key, value],
+  );
+await pool.end();
 const messages = [];
 const smtp = tcpServer((socket) => {
   socket.setEncoding("utf8");

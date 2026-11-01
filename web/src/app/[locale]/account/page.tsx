@@ -6,7 +6,8 @@ import { getBrand } from "@/content/brand";
 import { getAccountCopy } from "@/content/account";
 import { getPrivacyCopy } from "@/content/privacy";
 import { parseAccountQuery } from "@/features/account/view";
-import { accountConfig, requestOrigin } from "@/lib/auth-config";
+import { requestOrigin } from "@/lib/auth-config";
+import { loadAccountConfig } from "@/lib/site-settings";
 import { getAuth } from "@/lib/auth";
 import { AccountEntry } from "@/components/account/account-entry";
 import { AccountWorkspace } from "@/components/account/account-workspace";
@@ -41,7 +42,7 @@ export default async function AccountPage({ params, searchParams }: Props) {
   const copy = getAccountCopy(language);
   const privacy = getPrivacyCopy(language);
   const { view, message, token, hasError } = parseAccountQuery(await searchParams);
-  const config = accountConfig();
+  const config = await loadAccountConfig();
   const requestHeaders = await headers();
   const session =
     view !== "privacy" && config.configured
