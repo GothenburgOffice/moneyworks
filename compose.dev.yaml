@@ -13,8 +13,8 @@ services:
       - sh
       - -c
       - >-
-        cmp -s package-lock.json node_modules/.installed-lock ||
-        (npm ci && cp package-lock.json node_modules/.installed-lock);
+        (cmp -s package-lock.json node_modules/.installed-lock ||
+        (npm ci && cp package-lock.json node_modules/.installed-lock)) &&
         exec npm run dev
     environment:
       ALLOW_REGISTRATION: ${ALLOW_REGISTRATION:-true}

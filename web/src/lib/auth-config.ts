@@ -30,8 +30,14 @@ export function accountConfig() {
     .map((entry) => entry.trim())
     .filter(Boolean);
   const aliases = aliasEntries.map(parseOrigin);
-  const aliasesValid = aliases.every(Boolean);
-  const origins = baseURL && aliasesValid ? [...new Set([baseURL, ...aliases])] : [];
+  const aliasesWellFormed = aliases.every(Boolean);
+  const candidates = [...new Set([baseURL, ...aliases])].filter(Boolean);
+  // A request without an Origin header is matched by host, so one host may not
+  // appear with two schemes: the cookie mode would then be ambiguous.
+  const hostsUnique =
+    new Set(candidates.map((origin) => new URL(origin).host)).size === candidates.length;
+  const aliasesValid = aliasesWellFormed && hostsUnique;
+  const origins = baseURL && aliasesValid ? candidates : [];
   const secret = process.env.AUTH_SECRET || "";
   const mailHost = process.env.SMTP_HOST || "";
   const localMail = ["localhost", "127.0.0.1", "::1"].includes(mailHost);
@@ -59,9 +65,11 @@ export function accountConfig() {
     baseURL,
     origins,
     // Shown in the 503 so an operator can tell a malformed alias from missing setup.
-    problem: aliasesValid
-      ? "Account service is not configured."
-      : "Account service is misconfigured: APP_ORIGIN_ALIASES contains a malformed origin.",
+    problem: !aliasesWellFormed
+      ? "Account service is misconfigured: APP_ORIGIN_ALIASES contains a malformed origin."
+      : !hostsUnique
+        ? "Account service is misconfigured: APP_ORIGIN and APP_ORIGIN_ALIASES list the same host with different schemes."
+        : "Account service is not configured.",
     secure,
     secret,
     configured,

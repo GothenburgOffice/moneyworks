@@ -101,6 +101,9 @@ test("APP_ORIGIN_ALIASES adds exact origins and a malformed entry disables accou
     assert.deepEqual(broken.origins, []);
     assert.match(broken.problem, /APP_ORIGIN_ALIASES contains a malformed origin/);
   }
+  const mixed = config({ APP_ORIGIN_ALIASES: "http://localhost", APP_ORIGIN: "https://localhost" });
+  assert.equal(mixed.configured, false);
+  assert.match(mixed.problem, /same host with different schemes/);
   assert.equal(config().problem, "Account service is not configured.");
 });
 test("request origin is an allowed exact origin; the scheme comes from configuration", () => {
