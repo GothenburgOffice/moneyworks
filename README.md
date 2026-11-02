@@ -71,6 +71,15 @@ memory lives in `~/.claude-memory/moneyworks` on the host (override with
 `CLAUDE_MEMORY_DIR`), so all of these survive rebuilds. After pulling changes to
 Docker or devcontainer files, run **Dev Containers: Rebuild Container**.
 
+File changes do not raise events inside the container when the checkout is on a
+Windows drive, so the dev server (`next dev --webpack`) polls for them by default.
+Turbopack ignores polling, which is why development uses webpack. For faster
+reloads on Windows, clone the repository inside WSL2 (for example
+`~/src/moneyworks` in Ubuntu), open that folder in VS Code through WSL, reopen it
+in the container and set `WATCHPACK_POLLING=false` in `.env`. Then `~` is the WSL2
+home, so Claude Code's memory folder is `~/.claude-memory/moneyworks` there unless
+`CLAUDE_MEMORY_DIR` points elsewhere.
+
 #### Sharing Claude Code memory with the host (optional, Windows)
 
 The container always uses the folder above. Claude Code running directly on
