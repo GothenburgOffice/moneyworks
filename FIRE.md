@@ -168,7 +168,8 @@ tax schedules. Stress-test lower returns, higher spending and longer horizons.
   model/enhancement source during development, rerun this generator before reload.
 - **Tests:** `npm run test:fire` covers independent annuity/backward calculations,
   pension boundaries/overlaps, bridging, reserves, preservation, zero/negative
-  returns and age search. Architecture, browser and account checks still apply.
+  returns and age search. `npm run test:e2e` drives the real page in Chromium and
+  compares its results with the same engine. Architecture and account checks still apply.
 
 Main content remains SSG, not a client-rendered app. Without JavaScript, labels,
 explanations and method remain HTML; calculation/pension controls are disabled.

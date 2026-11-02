@@ -27,6 +27,7 @@ That includes unsolicited fixes, refactors, dependency bumps and typo-only chang
   `npm run test:ui`, `npm run test:architecture`, `npm run test:fire` and
   `npm run build` in `web/`.
   Run `npm run test:smoke` too if you changed pages, routing or the database,
+  `npm run test:e2e` if you changed what happens in the browser,
   and `npm run test:auth-config` if you changed account code. The
   [devcontainer](README.md#option-a-vs-code-devcontainer-recommended) has
   everything set up; no host Node.js is needed.
