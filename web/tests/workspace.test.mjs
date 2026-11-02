@@ -94,3 +94,11 @@ test("the devcontainer's Playwright browsers match the locked test runner", () =
     pkg.devDependencies["@playwright/test"],
   );
 });
+
+test("the dev server uses webpack so polling sees edits from a Windows drive", () => {
+  const pkg = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
+  const compose = readFileSync(new URL("../../compose.dev.yaml", import.meta.url), "utf8");
+  // Turbopack ignores WATCHPACK_POLLING, so dropping --webpack silently stops reloads.
+  assert.match(pkg.scripts.dev, /^next dev --webpack\b/);
+  assert.match(compose, /^\s+WATCHPACK_POLLING: \$\{WATCHPACK_POLLING:-true\}$/m);
+});
