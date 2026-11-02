@@ -3,6 +3,9 @@
 # with the container.
 services:
   app:
+    # The development image plus git, gh, psql 18 and other tools (see the Dockerfile).
+    build:
+      target: devcontainer
     environment:
       # Local development only: always allow registering throwaway accounts here,
       # whatever is saved at /admin (as in vocabulary-training). Never set in .env.
