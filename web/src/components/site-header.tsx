@@ -22,7 +22,8 @@ export function SiteHeader({
     ["about", copy.nav.about],
   ];
   return (
-    <div className="site-header-slot" data-sticky-header>
+    // site-ui.js sets data-compact, which can happen before hydration.
+    <div className="site-header-slot" data-sticky-header suppressHydrationWarning>
       <header className="site-header">
         <div className="page-width header-inner">
           <BrandLogo locale={locale} label={copy.home} href={`${homeHref}#top`} />

@@ -11,14 +11,15 @@ export function PensionEditor({ copy }: { copy: FireCopy }) {
       <p className="fire-help" data-pension-empty>
         {copy.emptyPensions}
       </p>
+      {/* fire-calculator.js enables these after load, which can precede hydration. */}
       <div className="fire-pension-actions">
-        <button type="button" data-add-pension="government" disabled>
+        <button type="button" data-add-pension="government" disabled suppressHydrationWarning>
           {copy.addGovernment}
         </button>
-        <button type="button" data-add-pension="employer" disabled>
+        <button type="button" data-add-pension="employer" disabled suppressHydrationWarning>
           {copy.addEmployer}
         </button>
-        <button type="button" data-add-pension="other" disabled>
+        <button type="button" data-add-pension="other" disabled suppressHydrationWarning>
           {copy.addOther}
         </button>
       </div>

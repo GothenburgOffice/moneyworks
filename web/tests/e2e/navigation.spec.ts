@@ -23,6 +23,22 @@ for (const locale of locales) {
   const fire = getFireCopy(locale);
 
   test.describe(`${locale}`, () => {
+    // The enhancement scripts change attributes before React hydrates (in development
+    // usually after load), so a missing suppressHydrationWarning shows up here.
+    for (const hash of ["", "#fire-calculator"]) {
+      test(`loads${hash ? " the tool view" : ""} without console errors`, async ({ page }) => {
+        const errors: string[] = [];
+        page.on("console", (message) => {
+          if (message.type() === "error") errors.push(message.text());
+        });
+        page.on("pageerror", (error) => errors.push(error.message));
+        await page.goto(`/${locale}${hash}`, { waitUntil: "networkidle" });
+        await expect(page.locator("[data-fire-calculate]")).toBeEnabled();
+        await page.waitForTimeout(500);
+        expect(errors).toEqual([]);
+      });
+    }
+
     test("hash tool view opens, survives Back/Forward and returns to the tools", async ({
       page,
     }) => {
