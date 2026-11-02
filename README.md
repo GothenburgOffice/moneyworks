@@ -58,9 +58,11 @@ cp .env.example .env    # PowerShell: Copy-Item .env.example .env
    Prisma extensions.
 3. Open <http://localhost:3410/en>.
 
-Claude Code's sign-in is kept in a Docker volume, and its project memory in
-`~/.claude-memory/moneyworks` on the host (override with `CLAUDE_MEMORY_DIR`),
-so both survive rebuilds. After pulling changes to Docker or devcontainer
+The development image includes `git`, the GitHub CLI (`gh`), `curl`, `jq`,
+`less`, `ps` and `psql`. Run `gh auth login` once inside the container; like
+Claude Code's sign-in, it is kept in a Docker volume. Claude Code's project
+memory lives in `~/.claude-memory/moneyworks` on the host (override with
+`CLAUDE_MEMORY_DIR`), so all of these survive rebuilds. After pulling changes to Docker or devcontainer
 files, run **Dev Containers: Rebuild Container**.
 
 #### Sharing Claude Code memory with the host (optional, Windows)

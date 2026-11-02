@@ -13,9 +13,12 @@ COPY package.json package-lock.json ./
 RUN npm ci
 
 # compose.dev.yaml mounts the repository at /workspace and works in web/.
+# Command-line tools for working in the container (git, GitHub CLI, HTTP
+# checks, JSON, processes, the dev database); the release image has none of them.
 FROM dependencies AS development
 RUN apt-get update \
-    && apt-get install --yes --no-install-recommends git \
+    && apt-get install --yes --no-install-recommends \
+        curl gh git jq less postgresql-client procps \
     && rm -rf /var/lib/apt/lists/*
 WORKDIR /workspace/web
 RUN mv /app/node_modules ./
