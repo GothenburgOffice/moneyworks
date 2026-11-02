@@ -58,10 +58,17 @@ cp .env.example .env    # PowerShell: Copy-Item .env.example .env
    Prisma extensions.
 3. Open <http://localhost:3410/en>.
 
-Claude Code's sign-in is kept in a Docker volume, and its project memory in
-`~/.claude-memory/moneyworks` on the host (override with `CLAUDE_MEMORY_DIR`),
-so both survive rebuilds. After pulling changes to Docker or devcontainer
-files, run **Dev Containers: Rebuild Container**.
+The devcontainer builds the Dockerfile's `devcontainer` stage: the development
+image plus `git`, the GitHub CLI (`gh`), `curl`, `jq`, `ripgrep` (`rg`), `less`,
+`ps`, `ssh` and `psql`. psql 18 (matching the database) comes from the
+PostgreSQL apt repository and `gh` from GitHub's, both checked against their
+published signing-key fingerprints and pinned with the `POSTGRESQL_CLIENT_VERSION`
+and `GH_VERSION` build arguments. The plain development stack and the release
+image do not include these tools. Run `gh auth login` once inside the container;
+like Claude Code's sign-in, it is kept in a Docker volume. Claude Code's project
+memory lives in `~/.claude-memory/moneyworks` on the host (override with
+`CLAUDE_MEMORY_DIR`), so all of these survive rebuilds. After pulling changes to
+Docker or devcontainer files, run **Dev Containers: Rebuild Container**.
 
 #### Sharing Claude Code memory with the host (optional, Windows)
 
@@ -189,7 +196,7 @@ moneyworks/
 ├── web/                       # Next.js app, Prisma schema, tests
 ├── .devcontainer/             # VS Code devcontainer on top of the dev Compose stack
 ├── .github/                   # CI, Dependabot, contributor/agent instructions
-├── Dockerfile                 # development, migration and production targets
+├── Dockerfile                 # development, devcontainer, migration and production targets
 ├── compose.yaml               # PostgreSQL, migrations and the app built from source
 ├── compose.dev.yaml           # Development override: dev target and source mounts
 ├── compose.images.yaml        # Published release image with PostgreSQL

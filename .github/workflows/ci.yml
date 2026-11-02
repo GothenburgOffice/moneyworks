@@ -95,6 +95,9 @@ jobs:
           docker compose -f compose.images.yaml config --quiet
       - name: Build and start development stack
         run: docker compose up --build --detach --wait --wait-timeout 240
+      # Only the devcontainer uses this target; build it so it cannot break unnoticed.
+      - name: Build devcontainer image
+        run: docker build --file Dockerfile --target devcontainer --output type=cacheonly web
       - name: Smoke test English and Swedish pages and database access
         run: |
           curl --fail --silent --show-error --retry 60 --retry-all-errors --retry-delay 2 --connect-timeout 2 --max-time 15 "$BASE_URL/api/health" | grep -F '"status":"ok"'

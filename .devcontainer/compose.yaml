@@ -3,6 +3,9 @@
 # with the container.
 services:
   app:
+    # The development image plus git, gh, psql 18 and other tools (see the Dockerfile).
+    build:
+      target: devcontainer
     environment:
       # Local development only: always allow registering throwaway accounts here,
       # whatever is saved at /admin (as in vocabulary-training). Never set in .env.
@@ -15,9 +18,12 @@ services:
       CLAUDE_CONFIG_DIR: /root/.claude
     volumes:
       - claude-config:/root/.claude
+      # GitHub CLI sign-in (`gh auth login` once) survives rebuilds the same way.
+      - gh-config:/root/.config/gh
       # Claude Code's project memory lives outside the repo, so `git clean` or a fresh
       # clone never removes it. /workspace maps to the "-workspace" project folder.
       - ${CLAUDE_MEMORY_DIR:-${HOME:-${USERPROFILE}}/.claude-memory/moneyworks}:/root/.claude/projects/-workspace/memory
 
 volumes:
   claude-config:
+  gh-config:
