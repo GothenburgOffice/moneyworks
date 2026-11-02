@@ -85,3 +85,12 @@ test("only the devcontainer seeds fake privacy and forces registration; stacks p
     );
   }
 });
+
+test("the devcontainer's Playwright browsers match the locked test runner", () => {
+  const dockerfile = readFileSync(new URL("../../Dockerfile", import.meta.url), "utf8");
+  const pkg = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
+  assert.equal(
+    dockerfile.match(/^ARG PLAYWRIGHT_VERSION=(\S+)$/m)?.[1],
+    pkg.devDependencies["@playwright/test"],
+  );
+});

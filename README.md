@@ -60,7 +60,8 @@ cp .env.example .env    # PowerShell: Copy-Item .env.example .env
 
 The devcontainer builds the Dockerfile's `devcontainer` stage: the development
 image plus `git`, the GitHub CLI (`gh`), `curl`, `jq`, `ripgrep` (`rg`), `less`,
-`ps`, `ssh` and `psql`. psql 18 (matching the database) comes from the
+`ps`, `ssh`, `psql` and Playwright's headless Chromium for `npm run test:e2e`.
+psql 18 (matching the database) comes from the
 PostgreSQL apt repository and `gh` from GitHub's, both checked against their
 published signing-key fingerprints and pinned with the `POSTGRESQL_CLIENT_VERSION`
 and `GH_VERSION` build arguments. The plain development stack and the release
@@ -121,6 +122,7 @@ Run inside the devcontainer from `/workspace/web`, or from the host with
 | `npm run test:ui` / `npm run test:architecture` | Enhancement scripts and import boundaries           |
 | `npm run test:auth-config`                      | Auth configuration and cookie attributes            |
 | `npm run test:smoke`                            | Live pages and health check (app must be running)   |
+| `npm run test:e2e`                              | Playwright browser tests (app must be running)      |
 | `npm run build`                                 | Production build                                    |
 | `npm run db:migrate -- --name <name>`           | Create a migration after a schema change            |
 | `npm run db:setup`                              | Generate the Prisma client and apply migrations     |
