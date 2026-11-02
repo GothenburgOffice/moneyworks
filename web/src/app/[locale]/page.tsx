@@ -35,7 +35,8 @@ export default async function HomePage({ params }: Props) {
 
   return (
     <div id="top">
-      <a className="skip-link" href="#main-content">
+      {/* site-ui.js points the skip link at the open tool view. */}
+      <a className="skip-link" href="#main-content" suppressHydrationWarning>
         {copy.skip}
       </a>
       <SiteHeader copy={copy} locale={language} />

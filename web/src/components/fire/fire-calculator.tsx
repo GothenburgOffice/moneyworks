@@ -69,11 +69,18 @@ export function FireCalculator({ locale }: { locale: Locale }) {
           <p className="fire-help">{copy.strategyHelp}</p>
           <FireFields copy={copy} />
           <PensionEditor copy={copy} />
+          {/* fire-calculator.js enables these after load, which can precede hydration. */}
           <div className="fire-actions">
-            <button type="button" className="button-primary" data-fire-calculate disabled>
+            <button
+              type="button"
+              className="button-primary"
+              data-fire-calculate
+              disabled
+              suppressHydrationWarning
+            >
               {copy.calculate}
             </button>
-            <button type="button" data-fire-reset disabled>
+            <button type="button" data-fire-reset disabled suppressHydrationWarning>
               {copy.reset}
             </button>
           </div>
