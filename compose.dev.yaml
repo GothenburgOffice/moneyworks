@@ -30,8 +30,11 @@ services:
       SETTINGS_ENCRYPTION_KEY: ${DEV_SETTINGS_ENCRYPTION_KEY:-}
       # Only for a local capture server such as Mailpit on 127.0.0.1.
       SMTP_ALLOW_LOCAL_PLAINTEXT: ${DEV_SMTP_ALLOW_LOCAL_PLAINTEXT:-false}
-      CHOKIDAR_USEPOLLING: "true"
-      WATCHPACK_POLLING: "true"
+      # File events don't cross into the container from a Windows drive, so `next dev`
+      # polls for changes. That needs webpack (`npm run dev` uses --webpack): Turbopack
+      # ignores this and never sees the edits. Set WATCHPACK_POLLING=false in .env when
+      # the checkout is on a Linux filesystem (WSL2, Linux, macOS) to save CPU.
+      WATCHPACK_POLLING: ${WATCHPACK_POLLING:-true}
     volumes:
       - .:/workspace
       - web_node_modules:/workspace/web/node_modules
