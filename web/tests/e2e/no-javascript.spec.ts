@@ -38,9 +38,13 @@ for (const locale of locales) {
       await page.goto(`/${locale}#fire-calculator`);
       const calculator = page.locator("[data-fire]");
       await expect(calculator.getByRole("heading", { name: fire.title })).toBeVisible();
-      // Chromium stops scripts here but still parses <noscript> as raw text, so check
-      // the notice is in the markup rather than that it renders.
-      expect(await calculator.locator("noscript").innerHTML()).toContain(fire.noJS);
+      // Chromium stops scripts here but still parses <noscript> as one raw text node.
+      // Swap in its parsed content, as a browser with scripting off would, so the
+      // check covers the page's CSS too.
+      await calculator.locator("noscript").evaluate((noscript) => {
+        noscript.outerHTML = noscript.textContent ?? "";
+      });
+      await expect(calculator.getByText(fire.noJS)).toBeVisible();
       await expect(calculator.getByRole("button", { name: fire.calculate })).toBeDisabled();
       await expect(calculator.getByRole("button", { name: fire.addGovernment })).toBeDisabled();
 
