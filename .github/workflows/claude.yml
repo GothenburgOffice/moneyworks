@@ -26,8 +26,10 @@ jobs:
     # The repo is public: the action refuses anyone whose event it is without write access
     # before calling Claude. Review events run the PR's copy of this workflow, so they are
     # limited to branches in this repository (fork PRs get no secrets anyway); pushing such a
-    # branch already needs write access.
+    # branch already needs write access. GitHub Apps are skipped outright: the action's write
+    # check waves `[bot]` actors through and only its later human-actor check stops them.
     if: |
+      !endsWith(github.actor, '[bot]') && (
       (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
       (github.event_name == 'pull_request_review_comment' &&
         github.event.pull_request.head.repo.full_name == github.repository &&
@@ -37,6 +39,7 @@ jobs:
         contains(github.event.review.body, '@claude')) ||
       (github.event_name == 'issues' &&
         (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude')))
+      )
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
