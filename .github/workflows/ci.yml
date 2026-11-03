@@ -3,7 +3,9 @@ name: CI
 on:
   push:
     branches: [main]
+  # Draft pull requests run nothing; marking one ready for review starts CI.
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
   workflow_dispatch:
 
 # Superseded pull request runs are cancelled; main runs finish so every merge
@@ -18,6 +20,7 @@ permissions:
 jobs:
   # Node 22 is the oldest supported line and matches the dev and release images.
   unit:
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     runs-on: ubuntu-latest
     timeout-minutes: 15
     services:
@@ -46,10 +49,15 @@ jobs:
       - uses: actions/setup-node@v7.1.0
         with:
           node-version: 22.23.4
-          cache: npm
-          cache-dependency-path: web/package-lock.json
       - run: npm install --global npm@12.2.1
-      - run: npm ci
+      - name: Restore node_modules
+        id: node-modules
+        uses: actions/cache@v6.1.0
+        with:
+          path: web/node_modules
+          key: node-modules-${{ runner.os }}-node22.23.4-${{ hashFiles('web/package-lock.json') }}
+      - if: steps.node-modules.outputs.cache-hit != 'true'
+        run: npm ci
       - run: npm run test:line-endings
       - run: npm run format:check
       - run: npm run lint
@@ -86,6 +94,7 @@ jobs:
       - run: npm audit --audit-level=high
 
   containers:
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     runs-on: ubuntu-latest
     timeout-minutes: 25
     defaults:
@@ -97,7 +106,10 @@ jobs:
       COMPOSE_FILE: compose.yaml:compose.dev.yaml
       BASE_URL: http://localhost:3410
     steps:
+      # Full history so a pull request can be compared with its base branch.
       - uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0
       - name: Exercise Windows-style Git checkout settings
         run: git -c core.autocrlf=true checkout-index --force --all
       - uses: docker/setup-buildx-action@v4.4.1
@@ -112,8 +124,24 @@ jobs:
           docker compose -f compose.images.yaml config --quiet
       - name: Build and start development stack
         run: docker compose up --build --detach --wait --wait-timeout 240
-      # Only the devcontainer uses this target; build it so it cannot break unnoticed.
+      # Only the devcontainer uses this target. Its tools live in the Dockerfile and
+      # the Compose files, so pull requests that do not touch them skip this build;
+      # pushes to main and manual runs always build it.
+      - name: Decide whether the devcontainer image must be built
+        id: devcontainer
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          if [ "$GITHUB_EVENT_NAME" != pull_request ]; then
+            build=true
+          elif git diff --quiet "$BASE_SHA" HEAD -- Dockerfile .devcontainer compose.yaml compose.dev.yaml compose.images.yaml .github/workflows/ci.yml; then
+            build=false
+          else
+            build=true
+          fi
+          echo "build=$build" >> "$GITHUB_OUTPUT"
       - name: Build devcontainer image
+        if: steps.devcontainer.outputs.build == 'true'
         run: docker build --file Dockerfile --target devcontainer --output type=cacheonly web
       - name: Smoke test English and Swedish pages and database access
         run: |
@@ -126,17 +154,26 @@ jobs:
       - uses: actions/setup-node@v7.1.0
         with:
           node-version: 22.23.4
-          cache: npm
-          cache-dependency-path: web/package-lock.json
-      - name: Install browser test dependencies
+      # Docker created the empty node_modules mount point as root; the container's
+      # volume keeps its own copy, so the runner takes this directory over before
+      # the cache is restored into it.
+      - name: Take over the node_modules mount point
         working-directory: web
-        # Docker created the empty node_modules mount point as root; the container's
-        # volume keeps its own copy, so the runner can take this directory over.
         run: |
           sudo chown "$(id -u):$(id -g)" node_modules
           npm install --global npm@12.2.1
-          npm ci
-          npx playwright install --with-deps --only-shell chromium
+      - name: Restore node_modules
+        id: node-modules
+        uses: actions/cache@v6.1.0
+        with:
+          path: web/node_modules
+          key: node-modules-${{ runner.os }}-node22.23.4-${{ hashFiles('web/package-lock.json') }}
+      - if: steps.node-modules.outputs.cache-hit != 'true'
+        working-directory: web
+        run: npm ci
+      - name: Install browser test dependencies
+        working-directory: web
+        run: npx playwright install --with-deps --only-shell chromium
       - name: Browser tests in English and Swedish, desktop and mobile
         working-directory: web
         run: TEST_BASE_URL="$BASE_URL" npm run test:e2e
@@ -176,16 +213,18 @@ jobs:
   # mounts, and on main publishes it to GHCR.
   release:
     name: release image
+    # The containers job already builds and tests the same code from source, so
+    # PRs skip this job: the image-only Compose file and the push are checked on
+    # main, before anything is published.
+    if: github.event_name != 'pull_request'
     needs: [unit, containers]
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
       contents: read
       packages: write
-    # Only main publishes, so only main shares one lock (never cancelled);
-    # pull requests and other refs test the image in their own group.
     concurrency:
-      group: release-image-${{ github.ref == 'refs/heads/main' && 'publish' || github.ref }}
+      group: release-image-${{ github.repository }}
       cancel-in-progress: false
     defaults:
       run:
@@ -220,14 +259,14 @@ jobs:
           curl --fail --silent --show-error --retry 30 --retry-all-errors --retry-delay 2 --max-time 15 "$BASE_URL/api/health" | grep -F '"status":"ok"'
           docker compose exec -T db psql -U moneyworks -d moneyworks -tAc "SELECT value FROM ci_restart_check;" | grep -Fx 'Release image restart check'
       - name: Sign in to GHCR
-        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        if: github.ref == 'refs/heads/main'
         uses: docker/login-action@v4.8.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Publish the exact tested image
-        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        if: github.ref == 'refs/heads/main'
         env:
           REPOSITORY: ${{ github.repository }}
         run: |
@@ -243,7 +282,7 @@ jobs:
             echo 'This exact linux/amd64 image passed the image-only stack, smoke, runtime and restart checks before publishing.'
           } >> "$GITHUB_STEP_SUMMARY"
       - name: Verify anonymous pull
-        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        if: github.ref == 'refs/heads/main'
         run: |
           mkdir -p "$RUNNER_TEMP/anonymous-docker"
           if ! docker --config "$RUNNER_TEMP/anonymous-docker" pull "$PUBLISHED_IMAGE"; then
