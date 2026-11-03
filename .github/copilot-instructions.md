@@ -37,6 +37,7 @@ moneyworks/
 ├── .editorconfig / .gitattributes # LF rules
 ├── .env.example                  # Template for the required, gitignored root .env
 ├── CLAUDE.md                     # Claude Code entry point; imports this file
+├── SECURITY.md                   # Supported versions and private vulnerability reporting
 ├── Dockerfile                    # development, devcontainer, migration and production targets (Node 22, trixie-slim)
 ├── compose.yaml                  # Base stack: db, migrate, app (production build from source)
 ├── compose.dev.yaml              # Development override: dev target and source mounts
