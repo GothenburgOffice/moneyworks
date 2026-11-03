@@ -7,7 +7,7 @@ import { getDatabase } from "./db";
 import { accountConfig, authCookieOptions } from "./auth-config";
 import { queueAccountEmail } from "./auth-mail";
 import { loadAccountConfig, loadAccountSettings } from "./site-settings";
-import { prepareGoogleLink, usesGoogleOnly } from "./sign-in-methods";
+import { endUnverifiedSessions, removePassword, usesGoogleOnly } from "./sign-in-methods";
 
 type GoogleClient = { clientId: string; clientSecret: string } | null;
 const locale = (request?: Request) => request?.headers.get("x-moneyworks-locale") || "en";
@@ -124,8 +124,7 @@ function createAuth(secure: boolean, google: GoogleClient) {
       account: {
         create: {
           before: async (account) => {
-            if (account.providerId === "google") {
-              await prepareGoogleLink(account.userId);
+            if (account.providerId === "google")
               return {
                 data: {
                   ...account,
@@ -137,7 +136,6 @@ function createAuth(secure: boolean, google: GoogleClient) {
                   scope: null,
                 },
               };
-            }
             // Recovery would otherwise give a Google member a password again.
             else if (
               account.providerId === "credential" &&
@@ -148,6 +146,21 @@ function createAuth(secure: boolean, google: GoogleClient) {
                 code: "use_google",
                 message: "This account signs in with Google.",
               });
+          },
+          // Google just proved the address: if nobody had verified it before, the
+          // existing sessions were a stranger's (Better Auth marks it verified next).
+          after: async (account) => {
+            if (account.providerId === "google") await endUnverifiedSessions(account.userId);
+          },
+        },
+      },
+      // One sign-in method per member: every Google sign-in, first or later, removes a
+      // password (also one recovery added while Google was switched off). Only once the
+      // sign-in has succeeded, so a failed link never costs the password.
+      session: {
+        create: {
+          after: async (session, context) => {
+            if (context?.path?.startsWith("/callback/")) await removePassword(session.userId);
           },
         },
       },

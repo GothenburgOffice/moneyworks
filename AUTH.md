@@ -135,7 +135,8 @@ switches it off. Saving another client takes effect at once in that app process.
   recovery mails a "sign in with Google" note instead of a reset link, and a
   database hook refuses a new password record (`use_google`). If the operator
   switches Google off, recovery works again and gives the member a password, so
-  nobody is locked out. Admins are no exception: they reach `/admin` through
+  nobody is locked out; their next Google sign-in removes that password again. The
+  password is removed only after a Google sign-in has succeeded. Admins are no exception: they reach `/admin` through
   any sign-in.
 - **Unverified squatters.** If someone registered the address with a password but
   never verified it, Google signing in proves the real owner: that password and

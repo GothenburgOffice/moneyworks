@@ -111,6 +111,14 @@ const control = createServer((request, response) => {
       googleIdentity = JSON.parse(body);
       response.end("ok");
     });
+  } else if (request.method === "POST" && request.url === "/registration") {
+    // "true" or "false": the forced registration switch, read on every check.
+    let body = "";
+    request.on("data", (chunk) => (body += chunk));
+    request.on("end", () => {
+      process.env.ALLOW_REGISTRATION = body === "true" ? "true" : "false";
+      response.end("ok");
+    });
   } else if (request.method === "POST" && request.url === "/shutdown") {
     response.end("Stopping test fixture");
     web.close();

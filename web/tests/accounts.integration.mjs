@@ -563,6 +563,23 @@ try {
   );
   checks.push("an address Google has not verified is refused");
 
+  // Registration closed: Google signs existing members in but creates nobody.
+  const registration = (open) =>
+    fetch("http://127.0.0.1:3304/registration", { method: "POST", body: String(open) });
+  await registration(false);
+  const closedEmail = "mw-google-closed-qa@example.invalid";
+  result = await googleSignIn({ sub: "google-closed", email: closedEmail, email_verified: true });
+  assert.equal(result.location.searchParams.get("error"), "signup_disabled");
+  assert.equal(result.session, null);
+  assert.equal(
+    (await pool.query('SELECT 1 FROM "User" WHERE email=$1', [closedEmail])).rowCount,
+    0,
+  );
+  result = await googleSignIn({ sub: "google-new", email: googleEmail, email_verified: true });
+  assert.equal(result.session?.user.email, googleEmail);
+  await registration(true);
+  checks.push("with registration closed, Google signs members in but creates no user");
+
   // A verified password member who signs in with Google switches to Google: same user,
   // password removed. Recovery then sends sign-in help instead of a reset token.
   const memberEmail = "mw-google-member-qa@example.invalid";
@@ -598,6 +615,39 @@ try {
   checks.push(
     "a password member switching to Google loses the password; recovery sends sign-in help",
   );
+
+  // Google switched off: recovery works again and gives the member a password. Once
+  // Google is back, the next Google sign-in removes that password again.
+  await adminForm("admin/settings", { ...settingsFields, clearGoogleClientSecret: "on" });
+  response = await call("/api/auth/request-password-reset", {
+    email: memberEmail,
+    redirectTo: `${base}/en/account?view=reset`,
+  });
+  assert.equal(response.status, 200);
+  const resetMail = await (async () => {
+    const end = Date.now() + 6000;
+    while (Date.now() < end) {
+      const messages = await (await fetch("http://127.0.0.1:3304/messages")).json();
+      const text = messages.findLast(
+        (item) => item.includes(memberEmail) && item.includes("Reset your MoneyWorks password"),
+      );
+      if (text) return text;
+      await new Promise((resolve) => setTimeout(resolve, 25));
+    }
+    throw new Error("Expected a reset email once Google is off.");
+  })();
+  const resetToken = new URL(
+    (await fetch(link(resetMail), { redirect: "manual" })).headers.get("location"),
+    base,
+  ).searchParams.get("token");
+  response = await call("/api/auth/reset-password", { newPassword: password, token: resetToken });
+  assert.equal(response.status, 200, await response.text());
+  assert.deepEqual(await methods(memberEmail), ["credential", "google"]);
+  assert.equal(message(await adminForm("admin/settings", googleFields)), "saved");
+  result = await googleSignIn({ sub: "google-member", email: memberEmail, email_verified: true });
+  assert.equal(result.session?.user.id, "google-member-qa");
+  assert.deepEqual(await methods(memberEmail), ["google"]);
+  checks.push("Google off: recovery restores a password; the next Google sign-in removes it");
 
   // Someone registered this address but never verified it: Google proves the real
   // owner, so the stranger's password and sessions go.

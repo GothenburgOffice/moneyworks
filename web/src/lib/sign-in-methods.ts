@@ -15,18 +15,19 @@ export async function usesGoogleOnly(userId: string) {
   return Boolean(google);
 }
 
-// Before Google is linked to an existing user. An unverified account never proved
-// anyone owned the address (Google just did), so its sessions go too, as in the admin
-// bootstrap; a verified member keeps theirs. A user Better Auth is creating in the
-// same step is not visible yet and is skipped.
-export async function prepareGoogleLink(userId: string) {
+// Right after Google is linked to an existing user. An unverified account never
+// proved anyone owned the address (Google just did), so its sessions were a
+// stranger's and go, as in the admin bootstrap; its password goes with the next step.
+// A user Better Auth is creating in the same step is not visible yet and is skipped.
+export async function endUnverifiedSessions(userId: string) {
   const db = getDatabase();
   const user = await db.user.findUnique({ where: { id: userId }, select: { emailVerified: true } });
-  if (!user) return;
-  await db.$transaction([
-    ...(user.emailVerified ? [] : [db.session.deleteMany({ where: { userId } })]),
-    db.account.deleteMany({ where: { userId, providerId: "credential" } }),
-  ]);
+  if (user && !user.emailVerified) await db.session.deleteMany({ where: { userId } });
+}
+
+// After a successful Google sign-in: the member signs in with Google only.
+export async function removePassword(userId: string) {
+  await getDatabase().account.deleteMany({ where: { userId, providerId: "credential" } });
 }
 
 // What the account page shows: the sign-in methods and whether to link /admin.
