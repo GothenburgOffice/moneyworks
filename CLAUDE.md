@@ -30,3 +30,10 @@ The shared project reference for coding agents (also read by Copilot):
   (`gh issue list --label decision`). Check them before starting feature work.
 - Put session logs, verification notes and scratch decisions in the gitignored
   `notes/` folder or `CLAUDE.local.md`, not in tracked docs.
+- On GitHub, a `@claude` mention in an issue runs `.github/workflows/claude.yml`,
+  which is read-only. Only when running in that workflow (the prompt says you
+  are helping with a GitHub issue, and Bash/Edit/Write are denied): review the
+  issue against the code on `main`; if it's already done or no longer applies,
+  say so and suggest closing it; otherwise reply with a concrete plan (files,
+  steps, tests owed, open questions). Don't try to change files or push there.
+  Every other session, wherever it runs, works on issues as usual.
