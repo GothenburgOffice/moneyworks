@@ -35,7 +35,7 @@ moneyworks/
 │   ├── dependabot.yml            # Weekly updates and compatibility holds
 │   └── workflows/
 │       ├── ci.yml                # Checks and disposable container integration tests
-│       └── claude.yml            # Answers @claude mentions (writers only) via claude-code-action
+│       └── claude.yml            # Read-only issue review on @claude mentions (writers only)
 ├── .editorconfig / .gitattributes # LF rules
 ├── .env.example                  # Template for the required, gitignored root .env
 ├── CLAUDE.md                     # Claude Code entry point; imports this file
