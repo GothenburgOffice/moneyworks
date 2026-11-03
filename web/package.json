@@ -19,6 +19,7 @@
     "test:line-endings": "node --test tests/line-endings.test.mjs",
     "test:smoke": "node --test tests/smoke.test.mjs",
     "test:e2e": "playwright test",
+    "test:e2e:accounts": "playwright test --config playwright.accounts.config.ts",
     "test:ui": "node --test tests/site-ui.test.mjs",
     "test:architecture": "node --test tests/architecture.test.mjs tests/features.test.mjs tests/workspace.test.mjs",
     "test:fire": "node scripts/build-fire.mjs && node --test tests/fire.test.mjs",

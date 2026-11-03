@@ -6,7 +6,7 @@ This file is the shared reference for coding agents (Copilot reads it directly; 
 
 ## Working rules
 
-- **Workflow:** Work on a branch and open a pull request. While iterating, run only `npm run typecheck` and `npm run lint`, and keep a note of which tests the changes call for. Run the rest before a commit or a PR, or when asked: lint, format check (`format:check`), typecheck and the unit tests (`test:line-endings`, `test:ui`, `test:architecture`, `test:fire`, `test:auth-config`), plus integration tests (`test:accounts`, `test:smoke`) when API, auth or database code changed and the browser/E2E tests (`test:e2e`) covering any changed UI. CI runs the full suite on every PR. Report the checks that actually ran; never claim a pass that was not observed.
+- **Workflow:** Work on a branch and open a pull request. While iterating, run only `npm run typecheck` and `npm run lint`, and keep a note of which tests the changes call for. Run the rest before a commit or a PR, or when asked: lint, format check (`format:check`), typecheck and the unit tests (`test:line-endings`, `test:ui`, `test:architecture`, `test:fire`, `test:auth-config`), plus integration tests (`test:accounts`, `test:smoke`) when API, auth or database code changed and the browser/E2E tests (`test:e2e`, `test:e2e:accounts` for account pages) covering any changed UI. CI runs the full suite on every PR. Report the checks that actually ran; never claim a pass that was not observed.
 - **Decisions:** Product and architecture questions are GitHub issues labelled `decision`. Do not build features that depend on an open one. Once decided, write the outcome as a closing comment, update the affected rules here or in a topic doc, and close the issue. Closed `decision` issues are the decision log.
 - **Issue labels:** Never apply `good first issue` or `help wanted` when creating or editing issues; the maintainer sets those manually to invite outside help. Use `decision`, `enhancement`, `bug`, `documentation` or `dependencies`. `CONTRIBUTING.md` only accepts outside pull requests for `help wanted` issues or plans a maintainer approved in the issue.
 - **Product principles:** Make tool purposes clear without financial marketing claims; distinguish planned from working; stay readable, accessible and static-first; keep the same meaning and hierarchy in English and Swedish.
@@ -23,7 +23,7 @@ This file is the shared reference for coding agents (Copilot reads it directly; 
 - **Database:** PostgreSQL 18 via Prisma 7 and `@prisma/adapter-pg`. Models: `User` (with `isAdmin`), `Account`, `Session`, `Verification` and `RateLimit` for accounts, `SiteSetting` (key/value site settings edited at `/admin`; secrets encrypted), plus `Scenario` for saved tool work (`userId`, `toolId`, `name`, `schemaVersion`, JSON `data`, created/updated times; deleted with its user). Nothing writes scenarios yet: saving is decision #8.
 - **Toolchain:** Node.js and npm run only inside the Debian-based development container; the host needs Docker, not Node. CI installs its own matching toolchain.
 - **Node support:** `engines.node` is `>=22.12.0` for hosting flexibility. The Dockerfile and `@types/node` track Node 22 so newer-only APIs fail locally; CI runs a single unit job on Node 22, like vocabulary-training. Raise the floor in `package.json`, `Dockerfile`, `@types/node`, the CI `node-version` and the Dependabot holds together.
-- **Dependency policy:** Compatible stable releases, exact direct versions, committed lockfile. No forced peer overrides or prereleases. TypeScript and ESLint majors are held in Dependabot until lint-plugin peers support them. Prettier and `eslint-config-prettier` are dev-only, for one shared formatting standard across GothenburgOffice repositories. `@playwright/test` is dev-only: real-browser checks of navigation, the FIRE calculator and no-JS rendering that the mocked-DOM unit tests cannot cover.
+- **Dependency policy:** Compatible stable releases, exact direct versions, committed lockfile. No forced peer overrides or prereleases. TypeScript and ESLint majors are held in Dependabot until lint-plugin peers support them. Prettier and `eslint-config-prettier` are dev-only, for one shared formatting standard across GothenburgOffice repositories. `@playwright/test` is dev-only: real-browser checks of navigation, the FIRE calculator, account pages and no-JS rendering that the mocked-DOM unit tests cannot cover.
 
 ## Repository layout
 
@@ -60,7 +60,7 @@ moneyworks/
     │   ├── lib/                  # Server-only DB/auth/HTTP/mail
     │   ├── styles/               # Feature CSS
     │   └── proxy.ts              # Locale routing proxy
-    └── tests/                    # Architecture, unit, LF, smoke, account integration and e2e/ (Playwright)
+    └── tests/                    # Architecture, unit, LF, smoke, account integration, e2e/ and e2e-accounts/ (Playwright)
 ```
 
 ## Component boundaries
@@ -118,7 +118,7 @@ moneyworks/
 - **Configuration:** Missing origin/secret disables accounts (and `/admin`); missing mail disables registration and recovery but not sign-in (the first admin must reach `/admin` to set mail up); registration needs mail, real privacy details (reserved example domains never count) and the `/admin` switch. Do not invent operator details or enable public signup with fixture values.
 - **Admin:** Admins are ordinary members with `User.isAdmin`; they sign in on the account page, which links them to `/admin`. There is no separate admin sign-in. `/admin` is English-only and `noindex`; the page and its API answer 404 to everyone but a signed-in admin and uses the account forms' origin/size/type checks. Never display stored secrets; show only whether they are set and readable.
 - **Necessary-only storage:** No analytics, advertising or locale cookies. Keep the native footer cookie/privacy notice; no accept-all banner or consent cookie. Any optional tracking needs a privacy review and a decided issue first.
-- **Testing:** Real flows are tested against a disposable database and a loopback capture mailbox. Account pages send anti-framing headers; do not weaken cookie/origin/framing protections. `AUTH.md` has setup and verification details.
+- **Testing:** Real flows are tested against a disposable database and a loopback capture mailbox, over HTTP (`test:accounts`) and in a browser (`test:e2e:accounts`). Account pages send anti-framing headers; do not weaken cookie/origin/framing protections. `AUTH.md` has setup and verification details.
 
 ## Commands
 
@@ -135,6 +135,7 @@ npm run test:auth-config
 npm run test:line-endings
 npm run test:smoke          # needs the running app and database
 npm run test:e2e            # Playwright; needs the running app (TEST_BASE_URL, default 127.0.0.1:3000)
+npm run test:e2e:accounts   # Account pages in Playwright; needs npm run build and a disposable AUTH_TEST_DATABASE_URL
 npm run db:validate
 npm run build
 npm audit --audit-level=high
@@ -156,7 +157,7 @@ Rebuild the devcontainer after infrastructure changes. Never run `down -v`, `dow
 
 - **Triggers:** CI runs on pushes to `main`, pull requests and manual dispatch.
 - **Branch protection:** `main` requires a pull request (0 approvals), resolved conversations, and the `unit`, `containers` and `release image` checks passing on a branch up to date with `main`; force pushes and deletion are blocked, admins included. Keep those job names stable; renaming one requires updating branch protection.
-- **Unit job:** Line endings, Prettier check, ESLint, UI/architecture/FIRE/auth-config tests, type checking, Prisma validation, production build, migrations and account lifecycle against a disposable database, and a high-severity audit.
+- **Unit job:** Line endings, Prettier check, ESLint, UI/architecture/FIRE/auth-config tests, type checking, Prisma validation, production build, migrations, account lifecycle and account-page browser tests (Chromium, desktop and mobile, both locales, also without JavaScript) against a disposable database, and a high-severity audit.
 - **Container job:** Exercises `core.autocrlf=true`, builds the app and starts disposable app/PostgreSQL containers, runs smoke tests, runs the Playwright browser tests from the runner against that stack (Chromium, desktop and mobile, both locales; report and traces uploaded on failure), checks that a database outage turns the health endpoint to 503 while static pages keep working, then recovery.
 - **Release image job:** After `unit` and `containers`, builds the release image once, runs it through `compose.images.yaml` (migrations, smoke tests, non-root/no-source checks, auth cleanup dry run, restart persistence) and, on `main` only, pushes that exact image to GHCR and verifies an anonymous pull. Workflow runs on `main` are never cancelled; only `main` shares the publish concurrency group, so pull requests test their images in parallel.
 - **Isolation and cleanup:** `COMPOSE_PROJECT_NAME=moneyworks-ci` (and `moneyworks-release-ci`) with disposable credentials. Keep the `if: always()` cleanup and its verification; never copy that destructive cleanup into normal commands. Preserve failure logs, finite retries and job timeouts.
