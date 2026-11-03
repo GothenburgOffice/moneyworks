@@ -1,21 +1,50 @@
+import type { FocusEvent } from "react";
 import type { FireCopy } from "@/content/fire";
 
+export const fireFieldDefaults = {
+  currentAge: "35",
+  retirementAge: "55",
+  endAge: "95",
+  endBalance: "",
+  spending: "",
+  portfolio: "",
+  contribution: "",
+  currency: "",
+  annualReturn: "5",
+  inflation: "2",
+  fee: "0.3",
+};
+export type FireFieldKey = keyof typeof fireFieldDefaults;
+export type FireFieldValues = Record<FireFieldKey, string>;
+
+// Leave in-progress decimals alone. On blur, remove only redundant integer zeros,
+// preserving signs, decimal precision and exponent syntax.
+export function normalizedNumber(event: FocusEvent<HTMLInputElement>): string | null {
+  const input = event.currentTarget;
+  if (input.validity.badInput) return null;
+  const normalized = input.value.replace(/^(-?)0+(?=\d)/, "$1");
+  return normalized === input.value ? null : normalized;
+}
+
 type NumberFieldProps = {
-  field: string;
+  field: FireFieldKey;
   label: string;
-  value?: number | string;
-  placeholder?: string;
-  required?: boolean;
+  values: FireFieldValues;
+  onChange: (field: FireFieldKey, value: string, normalized?: boolean) => void;
+  optional?: boolean;
+  disabled?: boolean;
   min?: number;
   max?: number | null;
   step?: number;
 };
-export function FireNumberField({
+
+function FireNumberField({
   field,
   label,
-  value = "",
-  placeholder,
-  required = true,
+  values,
+  onChange,
+  optional = false,
+  disabled,
   min = 0,
   max = 1e12,
   step = 0.01,
@@ -26,68 +55,75 @@ export function FireNumberField({
       <input
         data-field={field}
         type="number"
-        defaultValue={value}
-        placeholder={placeholder}
+        value={values[field]}
+        onChange={(event) => onChange(field, event.currentTarget.value)}
+        onBlur={(event) => {
+          const normalized = normalizedNumber(event);
+          if (normalized !== null) onChange(field, normalized, true);
+        }}
+        placeholder={optional ? "0" : undefined}
         min={min}
         max={max ?? undefined}
         step={step}
-        required={required}
+        required={!optional}
+        disabled={disabled}
       />
     </label>
   );
 }
 
-export function FireFields({ copy }: { copy: FireCopy }) {
+type Props = {
+  copy: FireCopy;
+  values: FireFieldValues;
+  onChange: (field: FireFieldKey, value: string, normalized?: boolean) => void;
+  ageGoal: boolean;
+  preserve: boolean;
+};
+
+export function FireFields({ copy, values, onChange, ageGoal, preserve }: Props) {
+  const shared = { values, onChange };
   return (
     <>
       <fieldset className="fire-fieldset">
         <legend>{copy.inputs}</legend>
         <div className="fire-fields">
           <FireNumberField
+            {...shared}
             field="currentAge"
             label={copy.currentAge}
-            value={35}
             max={null}
             step={1}
           />
-          <div data-retirement-field>
+          <div hidden={ageGoal}>
             <FireNumberField
+              {...shared}
               field="retirementAge"
               label={copy.retirementAge}
-              value={55}
               max={null}
               step={1}
+              disabled={ageGoal}
             />
           </div>
           <FireNumberField
+            {...shared}
             field="endAge"
             label={copy.endAge}
-            value={95}
             min={1}
             max={null}
             step={1}
           />
-          <div data-end-balance-field>
+          <div hidden={preserve}>
             <FireNumberField
+              {...shared}
               field="endBalance"
               label={copy.endBalance}
-              placeholder="0"
-              required={false}
+              optional
+              disabled={preserve}
             />
           </div>
-          <FireNumberField field="spending" label={copy.spending} />
-          <FireNumberField
-            field="portfolio"
-            label={copy.portfolio}
-            placeholder="0"
-            required={false}
-          />
-          <FireNumberField
-            field="contribution"
-            label={copy.contribution}
-            placeholder="0"
-            required={false}
-          />
+          <FireNumberField {...shared} field="spending" label={copy.spending} />
+          <FireNumberField {...shared} field="portfolio" label={copy.portfolio} optional />
+          <FireNumberField {...shared} field="contribution" label={copy.contribution} optional />
           <label className="fire-field">
             <span>{copy.currency}</span>
             <input
@@ -96,6 +132,8 @@ export function FireFields({ copy }: { copy: FireCopy }) {
               maxLength={12}
               placeholder={copy.currencyPlaceholder}
               autoComplete="off"
+              value={values.currency}
+              onChange={(event) => onChange("currency", event.currentTarget.value)}
             />
           </label>
         </div>
@@ -105,14 +143,14 @@ export function FireFields({ copy }: { copy: FireCopy }) {
         <legend>{copy.returns}</legend>
         <div className="fire-fields fire-fields--rates">
           <FireNumberField
+            {...shared}
             field="annualReturn"
             label={copy.annualReturn}
-            value={5}
             min={-50}
             max={30}
           />
-          <FireNumberField field="inflation" label={copy.inflation} value={2} min={-5} max={30} />
-          <FireNumberField field="fee" label={copy.fee} value={0.3} max={10} />
+          <FireNumberField {...shared} field="inflation" label={copy.inflation} min={-5} max={30} />
+          <FireNumberField {...shared} field="fee" label={copy.fee} max={10} />
         </div>
         <p className="fire-help">{copy.returnHelp}</p>
       </fieldset>

@@ -7,9 +7,6 @@
 # Ignore database data
 postgres_data/
 
-# Generated progressive enhancement; built from the tested FIRE model.
-web/public/fire-calculator.js
-
 # Private working notes, session logs and local agent instructions (not published).
 /notes/
 CLAUDE.local.md

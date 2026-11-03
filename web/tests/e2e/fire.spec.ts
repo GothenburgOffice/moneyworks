@@ -22,7 +22,7 @@ const defaults: FirePlan = {
   pensions: [],
 };
 
-// Same whole-unit formatting as the enhancement, for amounts in the normal range.
+// Same whole-unit formatting as the calculator, for amounts in the normal range.
 function money(locale: Locale, value: number, units: string) {
   const format = new Intl.NumberFormat(locale === "sv" ? "sv-SE" : "en-GB", {
     maximumFractionDigits: 0,
@@ -34,7 +34,7 @@ for (const locale of locales) {
   const copy = getFireCopy(locale);
 
   test.describe(`${locale}`, () => {
-    // The calculator enables its controls once the enhancement has initialized.
+    // The calculator enables its controls once React has hydrated it.
     async function openCalculator(page: Page) {
       await page.goto(`/${locale}#fire-calculator`);
       const calculator = page.locator("[data-fire]");

@@ -56,7 +56,6 @@ moneyworks/
     │   ├── app/api/              # account and admin form adapters, auth endpoints, DB health
     │   ├── components/           # Site, fire/, account/ and privacy/ components
     │   ├── content/              # Typed site, brand, FIRE, account and privacy copy
-    │   ├── enhancements/         # Browser DOM enhancement sources
     │   ├── features/             # Pure models: FIRE engine, account queries, tool catalogue
     │   ├── generated/prisma/     # Generated client; gitignored
     │   ├── i18n/                 # Routing, navigation and translation loading
@@ -73,14 +72,15 @@ moneyworks/
 - **Presentation:** Reuse `components/account/` for entry, form, tabs and workspace, and `components/privacy/` for privacy rendering. Privacy copy lives in `content/privacy.ts`, independent of account messages.
 - **Pure features:** `features/account/view.ts` parses allowlisted view/feedback queries; `features/tools/catalog.ts` defines tool IDs/status and a neutral card-content contract. Add tools through the catalogue and both translations, not duplicated card calls.
 - **Server boundary:** DB/auth/HTTP/mail modules are server-only. ESLint and `test:architecture` reject persistence/auth imports or environment reads from presentation/content/pure-feature modules.
-- **Styles and tests:** Shared tokens/site rules live in `app/globals.css`; feature CSS in `styles/`. Preserve no-JS behavior, both locales/themes and responsive layouts.
+- **Styles and tests:** Shared tokens/site rules live in `app/globals.css`; feature CSS in `styles/`. Keep content readable without JavaScript (tool workspaces and account pages may require it), both locales/themes and responsive layouts.
 - **Shared navigation:** Keep the sticky header's reserved slot independent of its compact bar height to prevent scroll/layout oscillation. Preserve hash/skip/result clearance, 44px controls, both mobile-menu modes and the full-size no-JS fallback. The header logo replaces footer back-to-top links.
+- **Interactive tools:** Each tool's workspace is a React client component (an island) inside the pre-rendered page; the server renders the tool's heading, description, walkthrough and method, and passes typed copy and the locale as props. Keep tool state in component memory: no browser storage, URLs or telemetry. Tools import their pure model from `features/` directly; no separate browser bundle. Decided in #4.
 - **Icon-only actions:** Use shared local SVG icons, native buttons, localized contextual accessible names, decorative SVGs hidden from assistive technology, visible focus and at least 44px targets.
 
 ## FIRE calculator
 
-- **Separation:** `features/fire/model.ts` is the dependency-free, independently tested engine. `components/fire/` render fields, pensions, result scaffold and method; copy lives in `content/fire.ts`. `enhancements/fire-calculator.js` handles only the DOM. `scripts/build-fire.mjs` combines it with the engine into gitignored `public/fire-calculator.js` during prebuild/predev. Do not duplicate the model. (The client-side approach for future tools is open: see the `decision` issues.)
-- **Truth and privacy:** Preserve both questions/strategies, monthly non-borrowing checks, pension age boundaries and real-money conventions in `FIRE.md`. No guaranteed returns, financial input persistence, URLs, telemetry or account saving. Without JavaScript, explanations stay readable and calculation controls are honestly unavailable.
+- **Separation:** `features/fire/model.ts` is the dependency-free, independently tested engine. `components/fire/fire-calculator.tsx` is the server shell (heading, walkthrough, method); `fire-workspace.tsx` is the client component that owns form, payout and result state and imports the model directly, with `fire-fields`, `pension-editor`, `fire-results` and `fire-chart` rendering from that state. Copy lives in `content/fire.ts`. Do not duplicate the model.
+- **Truth and privacy:** Preserve both questions/strategies, monthly non-borrowing checks, pension age boundaries and real-money conventions in `FIRE.md`. No guaranteed returns, financial input persistence, URLs, telemetry or account saving. Calculation needs JavaScript; without it, explanations stay readable, controls stay disabled and a notice says why.
 - **Ages:** No fixed lifespan bounds. Use only numeric representability, whole non-negative ages and chronological ordering; do not silently truncate long horizons.
 - **Payout editing:** No payout-count ceiling. Save validates that row with the shared model validator, accepts it in page memory and collapses it into an Edit/Remove summary. Cancel restores accepted values or discards a new draft. Calculate from accepted records; open edits must be saved/cancelled first. Enter saves a payout input or calculates elsewhere.
 - **Number entry:** Optional zero-based amounts (portfolio, contributions, end reserve, payout amount) start empty with a `0` placeholder; blank means zero. Spending and ages remain required. Normalize redundant leading zeros on blur only, preserving in-progress decimals.

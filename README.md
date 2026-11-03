@@ -15,8 +15,9 @@ Issues labelled [`decision`](https://github.com/GothenburgOffice/moneyworks/issu
 are the decision log: open ones need answering before dependent work starts,
 closed ones record what was decided.
 
-Pages are pre-rendered by Next.js and readable without JavaScript; small
-scripts add theme switching and FIRE calculations.
+Pages are pre-rendered by Next.js and their content is readable without
+JavaScript; a small script adds theme switching, and tools such as the FIRE
+calculator run as React client components that need JavaScript.
 Financial inputs never leave the browser.
 
 ## Documentation

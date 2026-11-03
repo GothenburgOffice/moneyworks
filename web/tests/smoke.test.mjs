@@ -61,9 +61,7 @@ for (const [locale, title, fire, crypto, planned] of [
     assert.ok(!main.includes("från PostgreSQL"));
     assert.ok(html.includes('name="description"'));
     assert.ok(html.includes('src="/site-ui.js"'));
-    assert.ok(html.includes('src="/fire-calculator.js"'));
     assert.ok(main.includes("data-fire-form"));
-    assert.ok(main.includes("data-pension-template"));
     assert.ok(main.includes("data-tool-demo"));
     assert.ok(main.includes("/media/fire-demo.mp4"));
     assert.ok(main.includes('controls=""') && main.includes('preload="none"'));
