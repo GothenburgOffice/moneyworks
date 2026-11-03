@@ -26,6 +26,7 @@ Financial inputs never leave the browser.
 | [DESIGN.md](DESIGN.md)                                             | Visual system (direction C, "Bright works")                                               |
 | [FIRE.md](FIRE.md)                                                 | FIRE model semantics, assumptions and how to add a tool                                   |
 | [AUTH.md](AUTH.md)                                                 | Accounts, privacy, operator configuration and security boundaries                         |
+| [SECURITY.md](SECURITY.md)                                         | Supported versions and how to report a vulnerability privately                            |
 | [.github/copilot-instructions.md](.github/copilot-instructions.md) | Engineering rules for contributors and coding agents (imported by [CLAUDE.md](CLAUDE.md)) |
 
 ## Stack
