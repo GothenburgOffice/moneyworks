@@ -132,6 +132,7 @@ Run inside the devcontainer from `/workspace/web`, or from the host with
 | `npm run test:auth-config`                      | Auth configuration and cookie attributes            |
 | `npm run test:smoke`                            | Live pages and health check (app must be running)   |
 | `npm run test:e2e`                              | Playwright browser tests (app must be running)      |
+| `npm run test:e2e:accounts`                     | Account pages in Chromium (disposable DB, AUTH.md)  |
 | `npm run build`                                 | Production build                                    |
 | `npm run db:migrate -- --name <name>`           | Create a migration after a schema change            |
 | `npm run db:setup`                              | Generate the Prisma client and apply migrations     |
