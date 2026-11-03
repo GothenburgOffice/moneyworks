@@ -175,7 +175,13 @@ self-service deletion screen.
   `AUTH_TEST_DATABASE_URL` pointing to a migrated disposable database.
   It starts a loopback Next instance and capture-only SMTP service, creates its
   own test user, verifies/reset/logs in/out and removes its own fixtures.
-  Never target a production database. Browser tests are tracked in #14.
+  Never target a production database.
+- `npm run test:e2e:accounts`: the account pages in Chromium (desktop and phone,
+  English and Swedish) against the same fixture, after `npm run build` and with
+  the same `AUTH_TEST_DATABASE_URL`: registration, the mailed verification and
+  recovery links, sign-in, language switching while signed in, sign-out, form
+  messages, the disabled reset form, the privacy page and the whole flow without
+  JavaScript. It deletes the users and rate-limit rows it created.
 - Existing lint, typecheck, Prisma, SSG, line-ending and audit checks remain.
 
 Account pages send anti-framing headers. Do not weaken cookie/origin or framing
