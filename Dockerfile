@@ -54,12 +54,12 @@ RUN apt-get update \
             case " $2 " in *" $key "*) ;; *) echo "Unexpected key $key in $1" >&2; return 1 ;; esac; \
         done; \
     } \
-    && curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc \
+    && curl -fsSL --retry 5 --retry-all-errors --retry-delay 3 https://www.postgresql.org/media/keys/ACCC4CF8.asc \
         -o /etc/apt/keyrings/postgresql.asc \
     && check_keys /etc/apt/keyrings/postgresql.asc "$POSTGRESQL_FINGERPRINT" \
     && echo "deb [signed-by=/etc/apt/keyrings/postgresql.asc] https://apt.postgresql.org/pub/repos/apt trixie-pgdg main" \
         > /etc/apt/sources.list.d/pgdg.list \
-    && curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+    && curl -fsSL --retry 5 --retry-all-errors --retry-delay 3 https://cli.github.com/packages/githubcli-archive-keyring.gpg \
         -o /etc/apt/keyrings/githubcli.gpg \
     && check_keys /etc/apt/keyrings/githubcli.gpg "$GH_FINGERPRINTS" \
     && echo "deb [signed-by=/etc/apt/keyrings/githubcli.gpg] https://cli.github.com/packages stable main" \
