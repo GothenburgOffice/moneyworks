@@ -64,6 +64,22 @@ test("unknown and repeated query parameters cannot select arbitrary views or cop
   }
 });
 
+test("provider callback errors map to their own messages; others to the generic one", () => {
+  assert.deepEqual(
+    [
+      parseAccountQuery({ error: "signup_disabled" }).message,
+      parseAccountQuery({ error: "signup_disabled" }).hasError,
+    ],
+    ["googleSignupClosed", false],
+  );
+  assert.equal(parseAccountQuery({ error: "email_not_verified" }).message, "googleUnverified");
+  for (const error of ["state_not_found", "constructor", "toString"]) {
+    const parsed = parseAccountQuery({ error, message: "passwordChanged" });
+    assert.equal(parsed.hasError, true);
+    assert.equal(parsed.message, "passwordChanged");
+  }
+});
+
 test("reset tokens preserve valid links and reject oversized or repeated values", () => {
   const token = "url-token_123";
   assert.equal(parseAccountQuery({ view: "reset", token }).token, token);

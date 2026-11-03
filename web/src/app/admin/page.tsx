@@ -1,4 +1,6 @@
 import { headers } from "next/headers";
+import Link from "next/link";
+import { notFound } from "next/navigation";
 import { accountConfig, requestOrigin } from "@/lib/auth-config";
 import { currentAdmin } from "@/lib/admin";
 import { loadAccountConfig, readSettingsView } from "@/lib/site-settings";
@@ -6,13 +8,10 @@ import { loadAccountConfig, readSettingsView } from "@/lib/site-settings";
 export const dynamic = "force-dynamic";
 
 const messages: Record<string, string> = {
-  failed: "Sign-in failed.",
-  tooMany: "Too many attempts. Wait a minute and try again.",
-  signedOut: "Signed out.",
   saved: "Settings saved.",
-  invalid: "Not saved: check the email addresses and the port.",
+  invalid: "Not saved: check the email addresses, the port and the Google client ID.",
   noEncryptionKey:
-    "Not saved: set SETTINGS_ENCRYPTION_KEY (32 random bytes, base64) in .env and restart to store the SMTP password.",
+    "Not saved: set SETTINGS_ENCRYPTION_KEY (32 random bytes, base64) in .env and restart to store the SMTP password or Google client secret.",
   registrationBlocked:
     "Not saved: public registration needs working mail and real privacy details first.",
 };
@@ -38,24 +37,9 @@ export default async function AdminPage({
     requestHeaders,
   );
 
-  if (!admin)
-    return (
-      <>
-        <h1>Admin sign-in</h1>
-        {notice && <p role="status">{notice}</p>}
-        <form method="post" action="/api/admin/login" className="admin-form">
-          <label>
-            Email
-            <input name="email" type="email" autoComplete="username" required />
-          </label>
-          <label>
-            Password
-            <input name="password" type="password" autoComplete="current-password" required />
-          </label>
-          <button type="submit">Sign in</button>
-        </form>
-      </>
-    );
+  // Admins sign in on the normal account page (the first one with ADMIN_EMAIL and
+  // ADMIN_PASSWORD); to everyone else this page does not exist.
+  if (!admin) notFound();
 
   const [settings, account] = await Promise.all([readSettingsView(), loadAccountConfig()]);
   const missing = [
@@ -65,16 +49,19 @@ export default async function AdminPage({
       account.placeholderPrivacy &&
       "real privacy details instead of the example ones",
   ].filter(Boolean);
-  const password = {
+  const secretState = {
     unset: "not set",
     set: "set (leave blank to keep it)",
     unreadable: "stored, but unreadable with the current SETTINGS_ENCRYPTION_KEY",
-  }[settings.smtpPassword];
+  };
+  const password = secretState[settings.smtpPassword];
   return (
     <>
       <h1>Site settings</h1>
-      <form method="post" action="/api/admin/logout" className="admin-inline">
-        Signed in as {admin.email}. <button type="submit">Sign out</button>
+      <form method="post" action="/api/account/logout" className="admin-inline">
+        <input type="hidden" name="locale" value="en" />
+        Signed in as {admin.email}. <Link href="/en/account">Account</Link>{" "}
+        <button type="submit">Sign out</button>
       </form>
       {notice && <p role="status">{notice}</p>}
       <form method="post" action="/api/admin/settings" className="admin-form">
@@ -134,6 +121,41 @@ export default async function AdminPage({
             From address
             <input name="mailFrom" type="email" defaultValue={settings.mailFrom} />
           </label>
+        </fieldset>
+        <fieldset>
+          <legend>Google sign-in (optional)</legend>
+          <p>
+            Create an OAuth client of type &ldquo;Web application&rdquo; in the Google Cloud console
+            with the authorized redirect URI{" "}
+            <code>{`${account.baseURL}/api/auth/callback/google`}</code>. Google sign-in is on while
+            both values are saved and mail works. A member who signs in with Google loses their
+            password and signs in with Google only; admins keep theirs. New Google members also need
+            public registration.
+          </p>
+          <label>
+            Client ID
+            <input
+              name="googleClientId"
+              autoComplete="off"
+              placeholder="….apps.googleusercontent.com"
+              defaultValue={settings.googleClientId}
+            />
+          </label>
+          <label>
+            Client secret: {secretState[settings.googleClientSecret]}
+            <input
+              name="googleClientSecret"
+              type="password"
+              autoComplete="new-password"
+              disabled={!settings.encryptionReady}
+            />
+          </label>
+          {settings.googleClientSecret !== "unset" && (
+            <label className="admin-check">
+              <input name="clearGoogleClientSecret" type="checkbox" />
+              Remove the stored client secret (switches Google sign-in off)
+            </label>
+          )}
         </fieldset>
         <fieldset>
           <legend>Registration</legend>

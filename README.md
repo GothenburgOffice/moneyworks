@@ -6,8 +6,8 @@ A self-hosted, country-neutral personal-finance tool hub in English
 - **Working:** a pension-aware FIRE calculator (portfolio needed or earliest
   retirement age, planned drawdown or capital preservation, manual pension
   streams), with a narrated walkthrough video.
-- **Foundation:** email/password accounts with verification and recovery, and
-  an intentionally empty private area.
+- **Foundation:** email/password accounts with verification and recovery,
+  optional Google sign-in, and an intentionally empty private area.
 - **Planned:** a crypto-tax tool, production hosting and more.
 
 Work is tracked in [GitHub issues](https://github.com/GothenburgOffice/moneyworks/issues).
@@ -157,9 +157,10 @@ Copy `.env.example` to the gitignored root `.env` before starting any stack.
   default. The dev server allows its scripts and hot reload on these origins'
   hosts (Next.js `allowedDevOrigins`); other hosts get a 403 for dev resources.
 - Everything else is optional and off by default. Account and mail settings
-  are described in [AUTH.md](AUTH.md). Mail, the privacy controller and public
-  registration are not in `.env`: an admin sets them at `/admin` (sign in with
-  `ADMIN_EMAIL` and `ADMIN_PASSWORD`), and they are stored in the database.
+  are described in [AUTH.md](AUTH.md). Mail, the privacy controller, Google sign-in and public
+  registration are not in `.env`: an admin sets them at `/admin` (first sign in
+  on the account page with `ADMIN_EMAIL` and `ADMIN_PASSWORD`; sign-in works before
+  mail does), and they are stored in the database.
   Registration stays off until mail and real privacy details are saved there;
   the devcontainer always allows it and fills in clearly fake privacy details.
 - Development ignores the production `APP_ORIGIN`, `APP_ORIGIN_ALIASES`,

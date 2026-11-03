@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { ensureAdmin, isBootstrapLogin } from "@/lib/admin";
 import { boundedBody, handleAuthRequest } from "@/lib/auth-http";
 import { loadAccountConfig } from "@/lib/site-settings";
 
@@ -11,13 +12,17 @@ const operations: Record<string, string> = {
   forgot: "request-password-reset",
   reset: "reset-password",
   resend: "send-verification-email",
+  google: "sign-in/social",
 };
 export async function POST(request: Request, { params }: { params: Promise<{ action: string }> }) {
   const { action } = await params;
   if (!operations[action]) return new Response(null, { status: 404 });
   // Registrations read the settings fresh, so a registration switch-off applies at once.
   const config = await loadAccountConfig(action === "register");
-  if (!config.configured) return new Response(config.problem, { status: 503 });
+  // Signing in and out needs only the origin and secret: the first admin must get in
+  // to set up mail at /admin. Everything else sends mail or creates accounts.
+  const ready = ["login", "logout"].includes(action) ? config.ready : config.configured;
+  if (!ready) return new Response(config.problem, { status: 503 });
   // Fail closed: only exact allowed origins; no null/absent origins, wildcards,
   // forwarded-host guesses or GET mutations.
   const origin = request.headers.get("origin") || "";
@@ -47,7 +52,12 @@ export async function POST(request: Request, { params }: { params: Promise<{ act
   const password = String(form.get("password") || "");
   const callbackURL = page.href;
   let body: Record<string, unknown> = {};
-  if (action === "login") body = { email, password, rememberMe: false };
+  if (action === "login") {
+    body = { email, password, rememberMe: false };
+    // While no admin exists, signing in with ADMIN_EMAIL and ADMIN_PASSWORD creates
+    // (or takes over) that account first. Only someone who knows both can trigger it.
+    if (isBootstrapLogin(email.toLowerCase(), password)) await ensureAdmin();
+  }
   if (action === "register") {
     if (!config.registrationEnabled) return redirect("register", "unavailable");
     if (password !== form.get("confirmPassword")) return redirect("register", "passwordMismatch");
@@ -55,6 +65,19 @@ export async function POST(request: Request, { params }: { params: Promise<{ act
   }
   if (action === "forgot") body = { email, redirectTo: `${page.href}?view=reset` };
   if (action === "resend") body = { email, callbackURL };
+  if (action === "google") {
+    // Google returns to APP_ORIGIN (the redirect URI registered with Google), so the
+    // flow must start there too: its state cookie is set on this origin.
+    if (!config.google || origin !== config.baseURL) return redirect("login", "unavailable");
+    const back = `${page.href}?view=login`;
+    body = {
+      provider: "google",
+      callbackURL: back,
+      newUserCallbackURL: back,
+      errorCallbackURL: back,
+      disableRedirect: true,
+    };
+  }
   if (action === "reset") {
     if (password !== form.get("confirmPassword"))
       return redirect("reset", "passwordMismatch", String(form.get("token") || ""));
@@ -73,6 +96,18 @@ export async function POST(request: Request, { params }: { params: Promise<{ act
     }),
     origin,
   );
+  if (action === "google") {
+    const target = result.ok ? ((await result.json()) as { url?: string }).url : "";
+    // Only ever hand the browser on to Google's own sign-in page.
+    if (!target || new URL(target).origin !== "https://accounts.google.com")
+      return redirect("login", result.status === 429 ? "tooMany" : "failed");
+    const response = NextResponse.redirect(target, 303);
+    response.headers.set("Cache-Control", "no-store");
+    response.headers.set("Referrer-Policy", "no-referrer");
+    for (const cookie of result.headers.getSetCookie())
+      response.headers.append("Set-Cookie", cookie);
+    return response;
+  }
   const view = action === "register" ? "register" : action === "forgot" ? "forgot" : "login";
   const message =
     result.status === 429

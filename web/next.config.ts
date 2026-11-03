@@ -15,7 +15,9 @@ const contentSecurityPolicy = [
   "connect-src 'self'",
   "object-src 'none'",
   "base-uri 'self'",
-  "form-action 'self'",
+  // The Google sign-in form posts here and is redirected on to Google's sign-in page;
+  // Chromium applies form-action to that redirect too.
+  "form-action 'self' https://accounts.google.com",
   "frame-ancestors 'none'",
 ].join("; ");
 

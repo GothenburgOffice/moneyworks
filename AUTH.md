@@ -1,8 +1,7 @@
 # Accounts and privacy foundation
 
 The account foundation provides public email/password registration, email verification,
-login/logout, recovery and a private empty account area. Google is planned next
-(#13); it is not enabled or represented by a non-working button.
+login/logout, recovery, optional Google sign-in and a private empty account area.
 No saved portfolios or tax records have been implemented. The separate FIRE
 calculator is client-local and does not save inputs to an account.
 
@@ -16,10 +15,9 @@ calculator is client-local and does not save inputs to an account.
   verification, recovery, origin checks and rate limiting instead of new
   application-designed crypto. See its [email/password guide](https://www.better-auth.com/docs/authentication/email-password)
   and [Next integration](https://www.better-auth.com/docs/integrations/next).
-- Linking is configured for explicit authenticated action, matching emails,
-  no unverified trusted-provider override and no implicit email-based merging.
-  No social providers are configured. Preserve these safeguards when adding
-  Google; see [account-linking semantics](https://better-auth.com/docs/concepts/users-accounts).
+- One user per email address, and one sign-in method per member. See
+  [Google sign-in](#google-sign-in) and Better Auth's
+  [account-linking semantics](https://better-auth.com/docs/concepts/users-accounts).
 - Nodemailer handles SMTP/TLS without a hosted email SDK. No consent manager,
   form library, UI package or client authentication SDK was added.
 - Dependency versions and integrity are pinned in `web/package-lock.json`.
@@ -78,25 +76,28 @@ In `.env`, required before accounts work:
   Encrypts the stored SMTP password (AES-256-GCM, as in vocabulary-training), so
   a database dump alone does not reveal it. Changing it makes the stored
   password unreadable; `/admin` then says so and asks for it again.
-- `ADMIN_EMAIL`, `ADMIN_PASSWORD`: the first admin. While no admin exists, a
-  sign-in at `/admin` with exactly these values creates that verified account
+- `ADMIN_EMAIL`, `ADMIN_PASSWORD`: the first admin. While no admin exists, signing
+  in on the account page with exactly these values creates that verified account
   (password of at least 15 characters). A verified account with that email is
   promoted and keeps its own password; an unverified one proves nobody's
   ownership, so it is taken over: verified, given `ADMIN_PASSWORD`, its sessions
   ended. Once an admin exists, both are ignored. Others can be
   made admin with `UPDATE "User" SET "isAdmin" = true`.
 
-At `/admin` (direct URL only, never linked, `noindex`; signed-out visitors see
-only the sign-in form and everyone but an admin gets 404 from its API). Every
-sign-in attempt goes through Better Auth's rate-limited sign-in, so responses
-do not reveal which emails are admins; a non-admin who signs in there has that
-session ended at once and sees the same failure:
+Admins are ordinary members with `User.isAdmin` set: they sign in on the account
+page (password or Google, under the same rules as everyone) and their account page
+links to `/admin`. Signing in needs only `APP_ORIGIN` and `AUTH_SECRET`, not mail,
+so the first admin can get in to set mail up; registration and recovery wait for
+mail. `/admin` (English, `noindex`) and its API answer 404 to everyone but a
+signed-in admin. It holds:
 
 - Mail: SMTP host, port, implicit TLS, user, password and from address. External
   SMTP must use TLS; user and password must be present or absent together. The
   password is write-only: the page shows only whether it is set and readable.
 - Privacy controller name and contact email: real publishable details, not a
   fictitious operator or an inferred personal email.
+- Google sign-in: the OAuth client ID and secret (see [Google sign-in](#google-sign-in)).
+  The secret is encrypted like the SMTP password and is write-only.
 - Allow public registration: off by default. It can be switched on only once
   mail works and the privacy details are real; contact addresses on reserved
   example domains (`example.com`, `.test`, `.invalid` and similar) never count.
@@ -115,6 +116,42 @@ this is not a durable queued-mail implementation or a serverless delivery guaran
 Next development request-URL logging is disabled because email-link URLs contain
 tokens. Independently redact auth/account query paths from proxy/hosting logs;
 this repository cannot configure those external logs or their retention.
+
+## Google sign-in
+
+Optional. In the Google Cloud console, create an OAuth client of type "Web
+application" with the authorized redirect URI `<APP_ORIGIN>/api/auth/callback/google`
+(`/admin` shows the exact value), then save its client ID and secret at `/admin`.
+Google sign-in is on while both are saved and mail works; removing the secret
+switches it off. Saving another client takes effect at once in that app process.
+
+- **One user per email.** Signing in with Google joins the existing user with that
+  address, because Google has proved the address. A Google address Google has not
+  verified is refused (`email_not_verified`); no provider is "trusted" to skip that.
+- **New members** can sign up with Google only while registration is open at
+  `/admin` (otherwise `signup_disabled`, with its own message).
+- **One sign-in method per member.** When a member signs in with Google, their
+  password is removed, and no new one can be created while Google is on: password
+  recovery mails a "sign in with Google" note instead of a reset link, and a
+  database hook refuses a new password record (`use_google`). If the operator
+  switches Google off, recovery works again and gives the member a password, so
+  nobody is locked out; their next Google sign-in removes that password again. The
+  password is removed only after a Google sign-in has succeeded. Admins are no exception: they reach `/admin` through
+  any sign-in.
+- **Unverified squatters.** If someone registered the address with a password but
+  never verified it, Google signing in proves the real owner: that password and
+  its sessions are deleted (as in the admin bootstrap) and the address is verified.
+- **Registering an existing address** changes nothing and answers like a new
+  registration, so the form never reveals which addresses have accounts. The
+  mailbox gets "You already have a MoneyWorks account" (or, for a Google member,
+  "Sign in with Google") instead.
+- **Data kept:** the address and Google's account ID. The name and photo are not
+  copied, and Google's access, refresh and ID tokens are not stored. The privacy
+  page describes Google sign-in while it is on.
+- The flow starts from a native form (`/api/account/google`, origin-checked like the
+  other account forms) that redirects to `accounts.google.com`; the CSP's
+  `form-action` allows that origin for this redirect. Google returns to
+  `APP_ORIGIN`, so the button is shown only there, not on `APP_ORIGIN_ALIASES`.
 
 ## Sessions and abuse protection
 

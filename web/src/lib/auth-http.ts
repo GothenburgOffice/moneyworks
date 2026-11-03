@@ -33,7 +33,9 @@ export async function handleAuthRequest(request: Request, origin: string) {
     request.method === "GET" || request.method === "HEAD" ? undefined : await boundedBody(request);
   if (body === null) return new Response(null, { status: 413 });
   headers.delete("content-length");
-  const result = await getAuth(origin).handler(
+  const result = await (
+    await getAuth(origin)
+  ).handler(
     new Request(request.url, {
       method: request.method,
       headers,

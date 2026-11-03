@@ -19,7 +19,7 @@ export function parseOrigin(raw: string) {
   return "";
 }
 
-// Mail and privacy settings are edited at /admin and stored in SiteSetting
+// Mail, privacy and sign-in provider settings are edited at /admin and stored in SiteSetting
 // (lib/site-settings.ts loads them); everything else comes from the environment.
 export type AccountSettings = {
   controllerName: string;
@@ -31,6 +31,8 @@ export type AccountSettings = {
   smtpPassword: string;
   mailFrom: string;
   allowRegistration: boolean;
+  googleClientId: string;
+  googleClientSecret: string;
 };
 // No trailing dot: "user@example.com." would otherwise slip past the placeholder check.
 const emailPattern = /^[^\s<>@]+@[^\s<>@]+\.[^\s<>@]*[^\s<>@.]$/;
@@ -67,6 +69,8 @@ export function accountConfig(settings: Partial<AccountSettings> = {}) {
   const mailPassword = settings.smtpPassword || "";
   const controller = settings.controllerName || "";
   const contact = settings.contactEmail || "";
+  const googleClientId = settings.googleClientId?.trim() || "";
+  const googleClientSecret = settings.googleClientSecret || "";
   const ready = Boolean(
     baseURL && aliasesValid && secret.length >= 32 && !secret.startsWith("replace-"),
   );
@@ -119,6 +123,12 @@ export function accountConfig(settings: Partial<AccountSettings> = {}) {
     mailUser,
     mailPassword,
     plainLocalMail,
+    // Google sign-in needs both halves of the operator's OAuth client and working
+    // accounts; new Google users still need registrationEnabled.
+    google:
+      configured && googleClientId && googleClientSecret
+        ? { clientId: googleClientId, clientSecret: googleClientSecret }
+        : null,
   };
 }
 

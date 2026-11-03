@@ -3,7 +3,7 @@ import { accountConfig, validEmail, type AccountSettings } from "./auth-config";
 import { getDatabase } from "./db";
 import { decryptSecret, encryptionReady, encryptSecret } from "./secrets";
 
-// SiteSetting keys. Only the SMTP password is a secret; it is stored encrypted.
+// SiteSetting keys. The secrets (SMTP password, Google client secret) are stored encrypted.
 const keys = {
   controllerName: "privacy.controller_name",
   contactEmail: "privacy.contact_email",
@@ -14,6 +14,8 @@ const keys = {
   smtpPassword: "smtp.password",
   mailFrom: "mail.from",
   allowRegistration: "registration.allowed",
+  googleClientId: "google.client_id",
+  googleClientSecret: "google.client_secret",
 } as const satisfies Record<keyof AccountSettings, string>;
 
 // The devcontainer and CI pass clearly fake privacy details (never .env, never a
@@ -43,8 +45,17 @@ async function readSettingsMap() {
   return new Map(rows.map((row) => [row.key, row.value]));
 }
 
+// Settings saved encrypted, and what /admin shows instead of their values.
+const secretNames = ["smtpPassword", "googleClientSecret"] as const;
+type SecretName = (typeof secretNames)[number];
+type SecretState = "unset" | "set" | "unreadable";
+
 function fromMap(settings: Map<string, string>): AccountSettings {
-  const stored = settings.get(keys.smtpPassword);
+  // An unreadable secret (another or no key) counts as missing, so that feature stays off.
+  const secret = (name: SecretName) => {
+    const stored = settings.get(keys[name]);
+    return (stored && decryptSecret(stored)) || "";
+  };
   return {
     controllerName: settings.get(keys.controllerName) ?? "",
     contactEmail: settings.get(keys.contactEmail) ?? "",
@@ -52,25 +63,30 @@ function fromMap(settings: Map<string, string>): AccountSettings {
     smtpPort: settings.get(keys.smtpPort) ?? "",
     smtpSecure: settings.get(keys.smtpSecure) === "true",
     smtpUser: settings.get(keys.smtpUser) ?? "",
-    // An unreadable password (another or no key) counts as missing, so mail stays off.
-    smtpPassword: (stored && decryptSecret(stored)) || "",
+    smtpPassword: secret("smtpPassword"),
     mailFrom: settings.get(keys.mailFrom) ?? "",
     allowRegistration: settings.get(keys.allowRegistration) === "true",
+    googleClientId: settings.get(keys.googleClientId) ?? "",
+    googleClientSecret: secret("googleClientSecret"),
   };
 }
 
 // Read on every account request, so cached briefly. Saves clear this process's
-// cache at once; other processes pick changes up within CACHE_MS.
+// cache at once; other processes pick changes up within CACHE_MS. The cache lives on
+// globalThis because Next.js gives each route its own copy of this module, and a save
+// at /admin must reach the account pages and the auth routes too.
 const CACHE_MS = 30_000;
-let cache: { at: number; value: Promise<AccountSettings> } | null = null;
+type Cache = { at: number; value: Promise<AccountSettings> } | null;
+const shared = globalThis as unknown as { moneyworksSettingsCache?: Cache };
 // `fresh` skips the cache: sign-ups use it, so switching registration off at /admin
 // applies at once in every app process.
 export function loadAccountSettings(fresh = false): Promise<AccountSettings> {
+  const cache = shared.moneyworksSettingsCache;
   if (!fresh && cache && Date.now() - cache.at < CACHE_MS) return cache.value;
   const value = readSettingsMap().then(fromMap);
-  cache = { at: Date.now(), value };
+  shared.moneyworksSettingsCache = { at: Date.now(), value };
   value.catch(() => {
-    cache = null;
+    shared.moneyworksSettingsCache = null;
   });
   return value;
 }
@@ -81,41 +97,46 @@ export async function loadAccountConfig(fresh = false) {
   return accountConfig(await loadAccountSettings(fresh).catch(() => ({})));
 }
 
-export type SettingsView = Omit<AccountSettings, "smtpPassword"> & {
-  smtpPassword: "unset" | "set" | "unreadable";
-  encryptionReady: boolean;
-};
+export type SettingsView = Omit<AccountSettings, SecretName> &
+  Record<SecretName, SecretState> & { encryptionReady: boolean };
 
-// For the admin page: never the password itself, only whether it's set and readable.
+// For the admin page: never the secrets themselves, only whether they're set and readable.
 export async function readSettingsView(): Promise<SettingsView> {
   const settings = await readSettingsMap();
-  const stored = settings.get(keys.smtpPassword);
+  const state = (name: SecretName): SecretState => {
+    const stored = settings.get(keys[name]);
+    return !stored ? "unset" : decryptSecret(stored) ? "set" : "unreadable";
+  };
   return {
     ...fromMap(settings),
-    smtpPassword: !stored ? "unset" : decryptSecret(stored) ? "set" : "unreadable",
+    smtpPassword: state("smtpPassword"),
+    googleClientSecret: state("googleClientSecret"),
     encryptionReady: encryptionReady(),
   };
 }
 
 // Blank values are stored blank, so a cleared privacy detail is never seeded
-// again. `smtpPassword`: a new value, null to delete it, undefined to keep it.
+// again. Each secret: a new value, null to delete it, undefined to keep it.
 export async function saveSettings(
-  update: Omit<AccountSettings, "smtpPassword"> & { smtpPassword?: string | null },
+  update: Omit<AccountSettings, SecretName> & Partial<Record<SecretName, string | null>>,
 ) {
-  const { smtpPassword, ...plain } = update;
+  const { smtpPassword, googleClientSecret, ...plain } = update;
+  const secrets = { smtpPassword, googleClientSecret };
   const values: [string, string][] = Object.entries(plain).map(([name, value]) => [
     keys[name as keyof typeof plain],
     typeof value === "boolean" ? (value ? "true" : "") : value.trim(),
   ]);
-  if (smtpPassword) values.push([keys.smtpPassword, encryptSecret(smtpPassword)]);
+  for (const name of secretNames) {
+    const value = secrets[name];
+    if (value) values.push([keys[name], encryptSecret(value)]);
+  }
+  const removed = secretNames.filter((name) => secrets[name] === null).map((name) => keys[name]);
   const db = getDatabase();
   await db.$transaction([
     ...values.map(([key, value]) =>
       db.siteSetting.upsert({ where: { key }, create: { key, value }, update: { value } }),
     ),
-    ...(smtpPassword === null
-      ? [db.siteSetting.deleteMany({ where: { key: keys.smtpPassword } })]
-      : []),
+    ...(removed.length ? [db.siteSetting.deleteMany({ where: { key: { in: removed } } })] : []),
   ]);
-  cache = null;
+  shared.moneyworksSettingsCache = null;
 }
