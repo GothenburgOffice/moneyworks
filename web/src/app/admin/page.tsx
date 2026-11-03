@@ -10,9 +10,9 @@ const messages: Record<string, string> = {
   tooMany: "Too many attempts. Wait a minute and try again.",
   signedOut: "Signed out.",
   saved: "Settings saved.",
-  invalid: "Not saved: check the email addresses and the port.",
+  invalid: "Not saved: check the email addresses, the port and the Google client ID.",
   noEncryptionKey:
-    "Not saved: set SETTINGS_ENCRYPTION_KEY (32 random bytes, base64) in .env and restart to store the SMTP password.",
+    "Not saved: set SETTINGS_ENCRYPTION_KEY (32 random bytes, base64) in .env and restart to store the SMTP password or Google client secret.",
   registrationBlocked:
     "Not saved: public registration needs working mail and real privacy details first.",
 };
@@ -65,11 +65,12 @@ export default async function AdminPage({
       account.placeholderPrivacy &&
       "real privacy details instead of the example ones",
   ].filter(Boolean);
-  const password = {
+  const secretState = {
     unset: "not set",
     set: "set (leave blank to keep it)",
     unreadable: "stored, but unreadable with the current SETTINGS_ENCRYPTION_KEY",
-  }[settings.smtpPassword];
+  };
+  const password = secretState[settings.smtpPassword];
   return (
     <>
       <h1>Site settings</h1>
@@ -134,6 +135,41 @@ export default async function AdminPage({
             From address
             <input name="mailFrom" type="email" defaultValue={settings.mailFrom} />
           </label>
+        </fieldset>
+        <fieldset>
+          <legend>Google sign-in (optional)</legend>
+          <p>
+            Create an OAuth client of type &ldquo;Web application&rdquo; in the Google Cloud console
+            with the authorized redirect URI{" "}
+            <code>{`${account.baseURL}/api/auth/callback/google`}</code>. Google sign-in is on while
+            both values are saved and mail works. A member who signs in with Google loses their
+            password and signs in with Google only; admins keep theirs. New Google members also need
+            public registration.
+          </p>
+          <label>
+            Client ID
+            <input
+              name="googleClientId"
+              autoComplete="off"
+              placeholder="….apps.googleusercontent.com"
+              defaultValue={settings.googleClientId}
+            />
+          </label>
+          <label>
+            Client secret: {secretState[settings.googleClientSecret]}
+            <input
+              name="googleClientSecret"
+              type="password"
+              autoComplete="new-password"
+              disabled={!settings.encryptionReady}
+            />
+          </label>
+          {settings.googleClientSecret !== "unset" && (
+            <label className="admin-check">
+              <input name="clearGoogleClientSecret" type="checkbox" />
+              Remove the stored client secret (switches Google sign-in off)
+            </label>
+          )}
         </fieldset>
         <fieldset>
           <legend>Registration</legend>

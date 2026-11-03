@@ -4,12 +4,44 @@ import { loadAccountConfig } from "./site-settings";
 
 // SMTP is deliberately the only delivery integration. No hosted mail SDK,
 // templates package, tracking pixels, analytics or log containing recovery URLs.
-export function queueAccountEmail(
-  to: string,
-  url: string,
-  kind: "verify" | "reset",
-  locale: string,
-) {
+// verify/reset carry a token link; existing (someone tried to register this address
+// again) and google (recovery asked for a Google account) carry the sign-in page.
+export type AccountEmailKind = "verify" | "reset" | "existing" | "google";
+const texts: Record<AccountEmailKind, { en: [string, string]; sv: [string, string] }> = {
+  verify: {
+    en: ["Verify your MoneyWorks email", "Verify your email address using the link below."],
+    sv: ["Bekräfta din e-post för MoneyWorks", "Bekräfta din e-postadress med länken nedan."],
+  },
+  reset: {
+    en: ["Reset your MoneyWorks password", "Use the link below to choose a new password."],
+    sv: [
+      "Återställ ditt MoneyWorks-lösenord",
+      "Använd länken nedan för att välja ett nytt lösenord.",
+    ],
+  },
+  existing: {
+    en: [
+      "You already have a MoneyWorks account",
+      "Someone tried to create an account with this address, but it already has one. Sign in on the page below. Forgot your password? Choose \u201cForgot your password?\u201d there.",
+    ],
+    sv: [
+      "Du har redan ett konto hos MoneyWorks",
+      "Någon försökte skapa ett konto med den här adressen, men den har redan ett. Logga in på sidan nedan. Glömt lösenordet? Välj \u201dGlömt lösenordet?\u201d där.",
+    ],
+  },
+  google: {
+    en: [
+      "Sign in to MoneyWorks with Google",
+      "Your account signs in with Google and has no password to reset. Choose \u201cContinue with Google\u201d on the page below.",
+    ],
+    sv: [
+      "Logga in hos MoneyWorks med Google",
+      "Ditt konto loggar in med Google och har inget lösenord att återställa. Välj \u201dFortsätt med Google\u201d på sidan nedan.",
+    ],
+  },
+};
+
+export function queueAccountEmail(to: string, url: string, kind: AccountEmailKind, locale: string) {
   // Do not make public reset/registration response time depend on whether an
   // email exists. The owner-hosted process stays alive; delivery errors are safe.
   void loadAccountConfig()
@@ -21,27 +53,12 @@ async function sendAccountEmail(
   config: Awaited<ReturnType<typeof loadAccountConfig>>,
   to: string,
   url: string,
-  kind: "verify" | "reset",
+  kind: AccountEmailKind,
   locale: string,
 ) {
   if (!config.configured) throw new Error("Mail is not configured.");
   const sv = locale === "sv";
-  const subject =
-    kind === "verify"
-      ? sv
-        ? "Bekräfta din e-post för MoneyWorks"
-        : "Verify your MoneyWorks email"
-      : sv
-        ? "Återställ ditt MoneyWorks-lösenord"
-        : "Reset your MoneyWorks password";
-  const intro =
-    kind === "verify"
-      ? sv
-        ? "Bekräfta din e-postadress med länken nedan."
-        : "Verify your email address using the link below."
-      : sv
-        ? "Använd länken nedan för att välja ett nytt lösenord."
-        : "Use the link below to choose a new password.";
+  const [subject, intro] = texts[kind][sv ? "sv" : "en"];
   const transport = nodemailer.createTransport({
     host: config.mailHost,
     port: config.mailPort,

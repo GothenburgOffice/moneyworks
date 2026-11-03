@@ -33,8 +33,18 @@ const en = {
   verified: "Email verified",
   methods: "Sign-in methods",
   emailMethod: "Email and password",
-  laterProviders:
-    "Google is planned next. Future providers will be linked explicitly to this same user, not silently merged by matching an email.",
+  googleMethod: "Google",
+  or: "or",
+  continueGoogle: "Continue with Google",
+  addGoogle: "Sign in with Google instead",
+  addGoogleHint:
+    "Use the Google account with this same email address. Your password is then removed, and you sign in with Google from then on.",
+  googleSecurity:
+    "You sign in with Google, so there is no password here. Your Google account's security settings protect this account too.",
+  googleSignupClosed:
+    "No account uses this Google address yet, and new accounts cannot be created right now.",
+  googleUnverified:
+    "Google has not verified this email address, so it cannot be used to sign in here.",
   security: "Account security",
   securityBody:
     "Use a unique password. Log out on shared devices. Password resets revoke existing sessions.",
@@ -84,8 +94,18 @@ const sv: AccountCopy = {
   verified: "E-post bekräftad",
   methods: "Inloggningsmetoder",
   emailMethod: "E-post och lösenord",
-  laterProviders:
-    "Google planeras härnäst. Framtida leverantörer länkas uttryckligen till samma användare, inte genom tyst sammanslagning av e-postadresser.",
+  googleMethod: "Google",
+  or: "eller",
+  continueGoogle: "Fortsätt med Google",
+  addGoogle: "Logga in med Google i stället",
+  addGoogleHint:
+    "Använd Google-kontot med samma e-postadress. Lösenordet tas då bort och du loggar in med Google från och med nu.",
+  googleSecurity:
+    "Du loggar in med Google, så det finns inget lösenord här. Säkerhetsinställningarna i ditt Google-konto skyddar även detta konto.",
+  googleSignupClosed:
+    "Inget konto använder den här Google-adressen ännu, och nya konton kan inte skapas just nu.",
+  googleUnverified:
+    "Google har inte bekräftat den här e-postadressen, så den kan inte användas för att logga in här.",
   security: "Kontosäkerhet",
   securityBody:
     "Använd ett unikt lösenord. Logga ut på delade enheter. Återställning av lösenord återkallar befintliga sessioner.",

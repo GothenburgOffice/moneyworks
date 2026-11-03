@@ -87,17 +87,22 @@ export async function POST(request: Request, { params }: { params: Promise<{ act
     smtpUser: field("smtpUser"),
     mailFrom: field("mailFrom"),
     allowRegistration: form.get("allowRegistration") === "on",
+    googleClientId: field("googleClientId"),
   };
   const port = Number(settings.smtpPort);
   if (
     (settings.contactEmail && !validEmail(settings.contactEmail)) ||
     (settings.mailFrom && !validEmail(settings.mailFrom)) ||
-    (settings.smtpPort && !(Number.isInteger(port) && port > 0 && port <= 65535))
+    (settings.smtpPort && !(Number.isInteger(port) && port > 0 && port <= 65535)) ||
+    (settings.googleClientId &&
+      !/^[\w.-]{1,200}\.apps\.googleusercontent\.com$/.test(settings.googleClientId))
   )
     return redirect("invalid");
   const password = String(form.get("smtpPassword") || "");
-  if (password && !encryptionReady()) return redirect("noEncryptionKey");
+  const googleSecret = field("googleClientSecret");
+  if ((password || googleSecret) && !encryptionReady()) return redirect("noEncryptionKey");
   const clear = form.get("clearSmtpPassword") === "on";
+  const clearGoogle = form.get("clearGoogleClientSecret") === "on";
   // Registration can be switched on only together with working mail and real
   // (not placeholder) privacy details, judged on the values being saved.
   if (settings.allowRegistration) {
@@ -105,6 +110,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ act
     if (!accountConfig({ ...settings, smtpPassword: stored }).registrationPossible)
       return redirect("registrationBlocked");
   }
-  await saveSettings({ ...settings, smtpPassword: clear ? null : password || undefined });
+  await saveSettings({
+    ...settings,
+    smtpPassword: clear ? null : password || undefined,
+    googleClientSecret: clearGoogle ? null : googleSecret || undefined,
+  });
   return redirect("saved");
 }

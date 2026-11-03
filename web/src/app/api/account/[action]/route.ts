@@ -11,6 +11,7 @@ const operations: Record<string, string> = {
   forgot: "request-password-reset",
   reset: "reset-password",
   resend: "send-verification-email",
+  google: "sign-in/social",
 };
 export async function POST(request: Request, { params }: { params: Promise<{ action: string }> }) {
   const { action } = await params;
@@ -55,6 +56,19 @@ export async function POST(request: Request, { params }: { params: Promise<{ act
   }
   if (action === "forgot") body = { email, redirectTo: `${page.href}?view=reset` };
   if (action === "resend") body = { email, callbackURL };
+  if (action === "google") {
+    // Google returns to APP_ORIGIN (the redirect URI registered with Google), so the
+    // flow must start there too: its state cookie is set on this origin.
+    if (!config.google || origin !== config.baseURL) return redirect("login", "unavailable");
+    const back = `${page.href}?view=login`;
+    body = {
+      provider: "google",
+      callbackURL: back,
+      newUserCallbackURL: back,
+      errorCallbackURL: back,
+      disableRedirect: true,
+    };
+  }
   if (action === "reset") {
     if (password !== form.get("confirmPassword"))
       return redirect("reset", "passwordMismatch", String(form.get("token") || ""));
@@ -73,6 +87,18 @@ export async function POST(request: Request, { params }: { params: Promise<{ act
     }),
     origin,
   );
+  if (action === "google") {
+    const target = result.ok ? ((await result.json()) as { url?: string }).url : "";
+    // Only ever hand the browser on to Google's own sign-in page.
+    if (!target || new URL(target).origin !== "https://accounts.google.com")
+      return redirect("login", result.status === 429 ? "tooMany" : "failed");
+    const response = NextResponse.redirect(target, 303);
+    response.headers.set("Cache-Control", "no-store");
+    response.headers.set("Referrer-Policy", "no-referrer");
+    for (const cookie of result.headers.getSetCookie())
+      response.headers.append("Set-Cookie", cookie);
+    return response;
+  }
   const view = action === "register" ? "register" : action === "forgot" ? "forgot" : "login";
   const message =
     result.status === 429

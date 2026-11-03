@@ -17,11 +17,15 @@ const paths = new Set([
 async function handle(request: Request) {
   const path = new URL(request.url).pathname.replace(/^\/api\/auth\//, "");
   const recoveryRedirect = request.method === "GET" && /^reset-password\/[^/]{1,256}$/.test(path);
-  if (!paths.has(path) && !recoveryRedirect) return new Response(null, { status: 404 });
+  // Google sends the browser back here; starting the flow goes through /api/account/google.
+  const googleCallback = request.method === "GET" && path === "callback/google";
+  if (!paths.has(path) && !recoveryRedirect && !googleCallback)
+    return new Response(null, { status: 404 });
   if (
     request.method === "GET" &&
     !["get-session", "verify-email"].includes(path) &&
-    !recoveryRedirect
+    !recoveryRedirect &&
+    !googleCallback
   )
     return new Response(null, { status: 405 });
   // Sign-ups read the settings fresh, so a registration switch-off applies at once.

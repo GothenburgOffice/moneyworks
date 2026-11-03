@@ -226,6 +226,9 @@ try {
   checks.push("short passwords and oversized request bodies rejected");
   response = await call("/api/auth/sign-up/email", { name: "Test member", email, password });
   assert.equal(response.status, 200, "existing-account registration must not enumerate");
+  assert.ok(
+    link(await mail("You already have a MoneyWorks account")).endsWith("/en/account?view=login"),
+  );
   response = await call("/api/auth/request-password-reset", {
     email: email.replace("@", "-missing@"),
     redirectTo: `${base}/en/account?view=reset`,
@@ -379,6 +382,214 @@ try {
   assert.equal(await setting("smtp.user"), "");
   checks.push("admin settings: SMTP password stored encrypted, never shown; bad input rejected");
 
+  // Google sign-in: client saved at /admin (secret encrypted), then the form starts
+  // Google's flow. The callback itself needs Google, so it is tested by hand.
+  const googleFields = {
+    ...settingsFields,
+    googleClientId: "1234-test.apps.googleusercontent.com",
+    googleClientSecret: "a google test-only client secret",
+  };
+  response = await adminForm("settings", { ...googleFields, googleClientId: "not-a-client-id" });
+  assert.equal(message(response), "invalid");
+  assert.equal(message(await adminForm("settings", googleFields)), "saved");
+  assert.equal(await setting("google.client_id"), "1234-test.apps.googleusercontent.com");
+  assert.match(await setting("google.client_secret"), /^v1:/);
+  page = await (await fetch(`${base}/admin`, { headers: { cookie: cookieHeader() } })).text();
+  assert.ok(!page.includes("google test-only client secret"));
+  assert.ok(page.includes(`${base}/api/auth/callback/google`));
+  assert.ok(
+    (await (await fetch(`${base}/en/account?view=privacy`)).text()).includes(
+      "If you sign in with Google",
+    ),
+  );
+  checks.push("Google client saved at /admin, secret encrypted and never shown");
+
+  const startGoogle = (origin) =>
+    fetch(`${base}/api/account/google`, {
+      method: "POST",
+      redirect: "manual",
+      headers: {
+        origin,
+        "content-type": "application/x-www-form-urlencoded",
+        "x-test-client-ip": `198.51.100.${counter++}`,
+      },
+      body: "locale=sv",
+    });
+  assert.ok((await (await fetch(`${base}/sv/account`)).text()).includes("Fortsätt med Google"));
+  response = await startGoogle(base);
+  assert.equal(response.status, 303);
+  const google = new URL(response.headers.get("location"));
+  assert.equal(google.origin, "https://accounts.google.com");
+  assert.equal(google.searchParams.get("client_id"), "1234-test.apps.googleusercontent.com");
+  assert.equal(google.searchParams.get("redirect_uri"), `${base}/api/auth/callback/google`);
+  assert.ok(google.searchParams.get("state"));
+  assert.ok(response.headers.getSetCookie().length, "the flow's state cookie is set");
+  response = await startGoogle("http://localhost:3302");
+  assert.match(response.headers.get("location"), /view=login&message=unavailable/);
+  assert.equal((await startGoogle("https://attacker.invalid")).status, 403);
+  checks.push("Google sign-in starts only from APP_ORIGIN and only goes to Google");
+
+  // The whole Google callback, with the fixture's fake token endpoint choosing who
+  // Google says the person is. Each flow uses its own cookie jar (a fresh browser).
+  const googleSignIn = async (identity) => {
+    const cookies = new Map();
+    const keep = (result) => {
+      for (const set of result.headers.getSetCookie()) {
+        const [first] = set.split(";");
+        const [key, value] = [
+          first.slice(0, first.indexOf("=")),
+          first.slice(first.indexOf("=") + 1),
+        ];
+        if (!value || /Max-Age=0/i.test(set)) cookies.delete(key);
+        else cookies.set(key, value);
+      }
+      return result;
+    };
+    const cookie = () => [...cookies].map(([key, value]) => `${key}=${value}`).join("; ");
+    const start = keep(await startGoogle(base));
+    const state = new URL(start.headers.get("location")).searchParams.get("state");
+    await fetch("http://127.0.0.1:3304/google-identity", {
+      method: "POST",
+      body: JSON.stringify({ aud: "1234-test.apps.googleusercontent.com", ...identity }),
+    });
+    const back = keep(
+      await fetch(`${base}/api/auth/callback/google?code=test-code&state=${state}`, {
+        redirect: "manual",
+        headers: { cookie: cookie(), "x-test-client-ip": `198.51.100.${counter++}` },
+      }),
+    );
+    const location = new URL(back.headers.get("location"), base);
+    const session = await (
+      await fetch(`${base}/api/auth/get-session`, { headers: { cookie: cookie() } })
+    ).json();
+    return { location, session };
+  };
+  const methods = async (address) =>
+    (
+      await pool.query(
+        `SELECT a."providerId" FROM "Account" a JOIN "User" u ON u.id = a."userId"
+         WHERE u.email = $1 ORDER BY 1`,
+        [address],
+      )
+    ).rows.map((row) => row.providerId);
+
+  // A new address registers (registration is open in the fixture), verified by Google,
+  // without Google's name or photo.
+  const googleEmail = "mw-google-qa@example.invalid";
+  let result = await googleSignIn({ sub: "google-new", email: googleEmail, email_verified: true });
+  assert.equal(result.location.href, `${base}/sv/account?view=login`);
+  assert.equal(result.session?.user.email, googleEmail);
+  assert.deepEqual(
+    (
+      await pool.query('SELECT name, image, "emailVerified" FROM "User" WHERE email=$1', [
+        googleEmail,
+      ])
+    ).rows[0],
+    { name: "MoneyWorks member", image: null, emailVerified: true },
+  );
+  assert.deepEqual(await methods(googleEmail), ["google"]);
+  assert.deepEqual(
+    (
+      await pool.query(
+        `SELECT a."accessToken", a."refreshToken", a."idToken" FROM "Account" a
+         JOIN "User" u ON u.id = a."userId" WHERE u.email = $1`,
+        [googleEmail],
+      )
+    ).rows[0],
+    { accessToken: null, refreshToken: null, idToken: null },
+    "no Google tokens are stored",
+  );
+  result = await googleSignIn({ sub: "google-new", email: googleEmail, email_verified: true });
+  assert.equal(result.session?.user.email, googleEmail, "the same Google account signs in again");
+  checks.push("Google registers a new verified address and signs it in again");
+
+  // Google has not verified the address: no account, a specific message.
+  const unverifiedEmail = "mw-google-unverified-qa@example.invalid";
+  result = await googleSignIn({
+    sub: "google-unverified",
+    email: unverifiedEmail,
+    email_verified: false,
+  });
+  assert.equal(result.location.searchParams.get("error"), "email_not_verified");
+  assert.equal(result.session, null);
+  assert.equal(
+    (await pool.query('SELECT 1 FROM "User" WHERE email=$1', [unverifiedEmail])).rowCount,
+    0,
+  );
+  checks.push("an address Google has not verified is refused");
+
+  // A verified password member who signs in with Google switches to Google: same user,
+  // password removed. Recovery then sends sign-in help instead of a reset token.
+  const memberEmail = "mw-google-member-qa@example.invalid";
+  await pool.query(
+    `INSERT INTO "User" (id, name, email, "emailVerified", "updatedAt")
+     VALUES ('google-member-qa', 'MoneyWorks member', $1, true, now())`,
+    [memberEmail],
+  );
+  await pool.query(
+    `INSERT INTO "Account" (id, "accountId", "providerId", "userId", password, "updatedAt")
+     VALUES ('google-member-qa-credential', 'google-member-qa', 'credential', 'google-member-qa', 'test-hash', now())`,
+  );
+  result = await googleSignIn({ sub: "google-member", email: memberEmail, email_verified: true });
+  assert.equal(result.session?.user.id, "google-member-qa", "joined to the existing user");
+  assert.deepEqual(await methods(memberEmail), ["google"]);
+  response = await call("/api/auth/request-password-reset", {
+    email: memberEmail,
+    redirectTo: `${base}/en/account?view=reset`,
+  });
+  assert.equal(response.status, 200);
+  const googleMail = await (async () => {
+    const end = Date.now() + 6000;
+    while (Date.now() < end) {
+      const messages = await (await fetch("http://127.0.0.1:3304/messages")).json();
+      const text = messages.findLast((item) => item.includes(memberEmail));
+      if (text) return text;
+      await new Promise((resolve) => setTimeout(resolve, 25));
+    }
+    throw new Error("Expected the Google sign-in email.");
+  })();
+  assert.ok(googleMail.includes("Sign in to MoneyWorks with Google"));
+  assert.ok(!googleMail.includes("reset-password"), "no recovery token for a Google member");
+  checks.push(
+    "a password member switching to Google loses the password; recovery sends sign-in help",
+  );
+
+  // Someone registered this address but never verified it: Google proves the real
+  // owner, so the stranger's password and sessions go.
+  const squattedEmail = "mw-google-squatted-qa@example.invalid";
+  await pool.query(
+    `INSERT INTO "User" (id, name, email, "emailVerified", "updatedAt")
+     VALUES ('google-squatted-qa', 'Squatter', $1, false, now())`,
+    [squattedEmail],
+  );
+  await pool.query(
+    `INSERT INTO "Account" (id, "accountId", "providerId", "userId", password, "updatedAt")
+     VALUES ('google-squatted-qa-credential', 'google-squatted-qa', 'credential', 'google-squatted-qa', 'test-hash', now())`,
+  );
+  await pool.query(
+    `INSERT INTO "Session" (id, token, "userId", "expiresAt", "updatedAt")
+     VALUES ('google-squatted-qa-session', 'google-squatted-qa-token', 'google-squatted-qa', now() + interval '1 day', now())`,
+  );
+  result = await googleSignIn({ sub: "google-owner", email: squattedEmail, email_verified: true });
+  assert.equal(result.session?.user.id, "google-squatted-qa");
+  assert.deepEqual(await methods(squattedEmail), ["google"]);
+  assert.equal(
+    (await pool.query(`SELECT 1 FROM "Session" WHERE id='google-squatted-qa-session'`)).rowCount,
+    0,
+  );
+  assert.equal(
+    (await pool.query('SELECT "emailVerified" FROM "User" WHERE email=$1', [squattedEmail])).rows[0]
+      .emailVerified,
+    true,
+  );
+  checks.push("Google takes over an unverified squatter: its password and sessions go");
+
+  // Admins keep their password: /admin has only password sign-in.
+  result = await googleSignIn({ sub: "google-admin", email: adminEmail, email_verified: true });
+  assert.equal(result.session?.user.email, adminEmail);
+  assert.deepEqual(await methods(adminEmail), ["credential", "google"]);
+  checks.push("an admin who signs in with Google keeps the password");
+
   await adminForm("logout", {});
   assert.equal((await adminForm("settings", settingsFields)).status, 404);
   checks.push("admin sign-out ends access");
@@ -397,7 +608,13 @@ try {
 } finally {
   try {
     await pool.query('DELETE FROM "User" WHERE email = ANY($1)', [
-      [email, "mw-admin-qa@example.invalid"],
+      [
+        email,
+        "mw-admin-qa@example.invalid",
+        "mw-google-qa@example.invalid",
+        "mw-google-member-qa@example.invalid",
+        "mw-google-squatted-qa@example.invalid",
+      ],
     ]);
     await pool.query('DELETE FROM "SiteSetting"');
     await pool.query('DELETE FROM "RateLimit" WHERE key LIKE $1 OR key LIKE $2', [

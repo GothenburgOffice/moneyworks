@@ -6,10 +6,12 @@ type Props = {
   copy: PrivacyCopy;
   backLabel: string;
   controller?: { name: string; contact: string };
+  /** Google sign-in is switched on, so its data handling is described. */
+  google?: boolean;
 };
 
 // Public presentation only. Never receive the full secret-bearing auth config.
-export function PrivacyContent({ locale, copy, backLabel, controller }: Props) {
+export function PrivacyContent({ locale, copy, backLabel, controller, google }: Props) {
   return (
     <section className="privacy-page">
       <h1>{copy.privacyTitle}</h1>
@@ -29,6 +31,7 @@ export function PrivacyContent({ locale, copy, backLabel, controller }: Props) {
       )}
       <p>{copy.privacyLead}</p>
       <p>{copy.privacyPurpose}</p>
+      {google && <p>{copy.privacyGoogle}</p>}
       <p>{copy.privacyRetention}</p>
       <p>{copy.privacyRights}</p>
       <a className="text-link" href={`/${locale}`}>

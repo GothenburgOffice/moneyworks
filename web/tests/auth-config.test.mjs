@@ -25,6 +25,8 @@ const settingNames = {
   SMTP_PASSWORD: "smtpPassword",
   MAIL_FROM: "mailFrom",
   STORED_REGISTRATION: "allowRegistration",
+  GOOGLE_CLIENT_ID: "googleClientId",
+  GOOGLE_CLIENT_SECRET: "googleClientSecret",
 };
 function config(extra = {}) {
   const previous = Object.fromEntries(fields.map((key) => [key, process.env[key]]));
@@ -85,6 +87,22 @@ test("stored registration counts only with mail and real privacy details", () =>
     true,
   );
 });
+test("Google sign-in needs both halves of the client and working accounts", () => {
+  const client = {
+    GOOGLE_CLIENT_ID: "123-test.apps.googleusercontent.com",
+    GOOGLE_CLIENT_SECRET: "unit-test-only-client-secret",
+  };
+  assert.equal(config().google, null);
+  assert.deepEqual(config(client).google, {
+    clientId: "123-test.apps.googleusercontent.com",
+    clientSecret: "unit-test-only-client-secret",
+  });
+  assert.equal(config({ ...client, GOOGLE_CLIENT_SECRET: "" }).google, null);
+  assert.equal(config({ ...client, GOOGLE_CLIENT_ID: " " }).google, null);
+  assert.equal(config({ ...client, SMTP_HOST: "" }).google, null, "no mail, no accounts");
+  assert.equal(config({ ...client, AUTH_SECRET: "" }).google, null);
+});
+
 test("signing in (the admin login) needs only the origin and secret, not mail", () => {
   const setup = config({ SMTP_HOST: "", MAIL_FROM: "", PRIVACY_CONTROLLER_NAME: "" });
   assert.equal(setup.ready, true);

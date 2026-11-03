@@ -14,6 +14,8 @@ type Props = {
   token: string;
   message?: AccountMessage;
   hasError: boolean;
+  /** Offer "Continue with Google" (login, and register while registration is open). */
+  google: boolean;
 };
 
 export function AccountForm({
@@ -26,6 +28,7 @@ export function AccountForm({
   token,
   message,
   hasError,
+  google,
 }: Props) {
   const submit: Record<AccountFormView, string> = {
     login: copy.login,
@@ -109,6 +112,15 @@ export function AccountForm({
           </button>
         </fieldset>
       </form>
+      {google && (view === "login" || view === "register") && !disabled && (
+        <form action="/api/account/google" method="post" className="account-provider">
+          <p className="account-divider">{copy.or}</p>
+          <input type="hidden" name="locale" value={locale} />
+          <button className="account-secondary account-submit" type="submit">
+            {copy.continueGoogle}
+          </button>
+        </form>
+      )}
       <div className="account-form-links">
         <a href={`/${locale}/account?view=forgot`}>{copy.forgot}</a>
         <a href={`/${locale}/account?view=resend`}>{copy.resend}</a>

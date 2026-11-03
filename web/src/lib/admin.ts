@@ -86,7 +86,7 @@ export async function ensureAdmin(env: Env = process.env) {
 
 // The signed-in admin for this request, or null (signed out or not an admin).
 export async function currentAdmin(origin: string, headers: Headers) {
-  const session = await getAuth(origin).api.getSession({ headers });
+  const session = await (await getAuth(origin)).api.getSession({ headers });
   if (!session) return null;
   const user = await getDatabase().user.findUnique({
     where: { id: session.user.id },

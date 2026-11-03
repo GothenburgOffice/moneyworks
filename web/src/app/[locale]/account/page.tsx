@@ -9,6 +9,7 @@ import { parseAccountQuery } from "@/features/account/view";
 import { requestOrigin } from "@/lib/auth-config";
 import { loadAccountConfig } from "@/lib/site-settings";
 import { getAuth } from "@/lib/auth";
+import { signInMethods } from "@/lib/sign-in-methods";
 import { AccountEntry } from "@/components/account/account-entry";
 import { AccountWorkspace } from "@/components/account/account-workspace";
 import { PrivacyContent } from "@/components/privacy/privacy-content";
@@ -44,12 +45,13 @@ export default async function AccountPage({ params, searchParams }: Props) {
   const { view, message, token, hasError } = parseAccountQuery(await searchParams);
   const config = await loadAccountConfig();
   const requestHeaders = await headers();
+  const origin = requestOrigin(config, requestHeaders) || config.baseURL;
   const session =
     view !== "privacy" && config.configured
-      ? await getAuth(requestOrigin(config, requestHeaders) || config.baseURL).api.getSession({
-          headers: requestHeaders,
-        })
+      ? await (await getAuth(origin)).api.getSession({ headers: requestHeaders })
       : null;
+  // Google returns to APP_ORIGIN only, so the button shows only there.
+  const google = Boolean(config.google) && origin === config.baseURL;
   const disabled =
     !config.configured ||
     (view === "register" && !config.registrationEnabled) ||
@@ -62,6 +64,7 @@ export default async function AccountPage({ params, searchParams }: Props) {
         locale={language}
         copy={privacy}
         backLabel={copy.back}
+        google={Boolean(config.google)}
         controller={
           config.privacyReady ? { name: config.controller, contact: config.contact } : undefined
         }
@@ -74,6 +77,8 @@ export default async function AccountPage({ params, searchParams }: Props) {
         copy={copy}
         privacyLabel={privacy.privacy}
         user={{ email: session.user.email, emailVerified: session.user.emailVerified }}
+        methods={await signInMethods(session.user.id)}
+        googleAvailable={google}
       />
     );
   } else {
@@ -87,6 +92,7 @@ export default async function AccountPage({ params, searchParams }: Props) {
         token={token}
         message={message}
         hasError={hasError}
+        google={google}
       />
     );
   }

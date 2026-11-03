@@ -11,9 +11,11 @@ const en = {
   cookieLifetime:
     "Sign-in cookies are browser-session cookies by default. A server session expires after 24 hours unless renewed through activity. Logging out revokes the session. Secure deployments use __Host-moneyworks.session_token and __Host-moneyworks.dont_remember; loopback development uses moneyworks-dev equivalents.",
   privacyLead:
-    "An account stores your email, verification state, a password hash, sign-in identities and session/security records including IP and browser information. Passwords are not stored as readable text.",
+    "An account stores your email, verification state, a password hash or a Google account ID, sign-in identities and session/security records including IP and browser information. Passwords are not stored as readable text.",
   privacyPurpose:
     "The account service uses this information for sign-in, security, verification and recovery messages through the configured mail service. Portfolios and tax workspaces are not implemented yet. These forms do not collect financial records.",
+  privacyGoogle:
+    "If you sign in with Google, Google learns that you are signing in to this site, and we receive your email address, whether Google has verified it, and your Google account ID. We keep only the address and that ID, not your name, profile photo or Google's sign-in tokens. Your account then signs in with Google instead of a password. Google's own privacy policy covers what Google does with the sign-in.",
   privacyRetention:
     "Account data remains until deletion is requested. Sessions expire; expired session, verification and rate-limit records need the cleanup task. Before public launch, the operator must define backup and retention procedures.",
   privacyRights:
@@ -35,9 +37,11 @@ const sv: PrivacyCopy = {
   cookieLifetime:
     "Inloggningskakor är normalt sessionskakor. Serverns session löper ut efter 24 timmar om den inte förnyas vid aktivitet. Utloggning återkallar sessionen. Säkra installationer använder __Host-moneyworks.session_token och __Host-moneyworks.dont_remember; lokal utveckling använder motsvarigheter med moneyworks-dev.",
   privacyLead:
-    "Kontot lagrar e-postadress, bekräftelsestatus, lösenordshash, inloggningsidentiteter samt sessions- och säkerhetsuppgifter som IP-adress och webbläsarinformation. Lösenord lagras inte i läsbar klartext.",
+    "Kontot lagrar e-postadress, bekräftelsestatus, lösenordshash eller Google-konto-id, inloggningsidentiteter samt sessions- och säkerhetsuppgifter som IP-adress och webbläsarinformation. Lösenord lagras inte i läsbar klartext.",
   privacyPurpose:
     "Uppgifterna används för kontoåtkomst, säkerhet och bekräftelse- och återställningsmejl via den konfigurerade mejltjänsten. Portföljer och skattearbetsytor är inte implementerade. Dessa formulär samlar inte in ekonomiska underlag.",
+  privacyGoogle:
+    "Om du loggar in med Google får Google veta att du loggar in på den här webbplatsen, och vi får din e-postadress, uppgift om huruvida Google har bekräftat den och ditt Google-konto-id. Vi sparar bara adressen och id:t, inte ditt namn, din profilbild eller Googles inloggningstoken. Kontot loggar sedan in med Google i stället för med lösenord. Googles egen integritetspolicy gäller för vad Google gör med inloggningen.",
   privacyRetention:
     "Kontouppgifter finns kvar tills radering begärs. Sessioner löper ut; utgångna sessions-, bekräftelse- och begränsningsposter behöver rensas av rensningsuppgiften. Före publik lansering måste operatören fastställa rutiner för säkerhetskopiering och lagring.",
   privacyRights:

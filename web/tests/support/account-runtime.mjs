@@ -72,6 +72,24 @@ const smtp = tcpServer((socket) => {
   socket.on("error", () => {});
 });
 await new Promise((resolve) => smtp.listen(10252, "127.0.0.1", resolve));
+// Google's token endpoint, faked for this process only: the callback exchanges the
+// code server-to-server and reads the identity from the returned ID token, so tests
+// choose that identity through the control server (POST /google-identity).
+let googleIdentity = null;
+const realFetch = globalThis.fetch;
+globalThis.fetch = async (input, init) => {
+  const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
+  if (url !== "https://oauth2.googleapis.com/token") return realFetch(input, init);
+  if (!googleIdentity) return Response.json({ error: "invalid_grant" }, { status: 400 });
+  const part = (value) => Buffer.from(JSON.stringify(value)).toString("base64url");
+  const claims = { iss: "https://accounts.google.com", iat: Math.floor(Date.now() / 1000) };
+  return Response.json({
+    access_token: "test-only-google-access-token",
+    token_type: "Bearer",
+    expires_in: 3600,
+    id_token: `${part({ alg: "none" })}.${part({ ...claims, ...googleIdentity })}.`,
+  });
+};
 const next = require("next");
 const app = next({
   dev: false,
@@ -86,6 +104,13 @@ const control = createServer((request, response) => {
   if (request.method === "GET" && request.url === "/messages") {
     response.setHeader("Content-Type", "application/json");
     response.end(JSON.stringify(messages));
+  } else if (request.method === "POST" && request.url === "/google-identity") {
+    let body = "";
+    request.on("data", (chunk) => (body += chunk));
+    request.on("end", () => {
+      googleIdentity = JSON.parse(body);
+      response.end("ok");
+    });
   } else if (request.method === "POST" && request.url === "/shutdown") {
     response.end("Stopping test fixture");
     web.close();
