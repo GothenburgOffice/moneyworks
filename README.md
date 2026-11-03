@@ -141,7 +141,11 @@ Run inside the devcontainer from `/workspace/web`, or from the host with
 
 CI ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs all checks, the
 account lifecycle against a disposable database and a full container stack
-test on every pull request.
+test on every pull request. A second workflow
+([.github/workflows/claude.yml](.github/workflows/claude.yml)) lets members
+with write access mention `@claude` in an issue, a pull request comment or a
+review to have Claude Code answer in the thread or push a branch; it does not
+run for outside contributors or for pull requests from forks.
 
 ## Configuration
 
