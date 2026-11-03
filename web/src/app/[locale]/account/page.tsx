@@ -9,7 +9,7 @@ import { parseAccountQuery } from "@/features/account/view";
 import { requestOrigin } from "@/lib/auth-config";
 import { loadAccountConfig } from "@/lib/site-settings";
 import { getAuth } from "@/lib/auth";
-import { signInMethods } from "@/lib/sign-in-methods";
+import { accountSummary } from "@/lib/sign-in-methods";
 import { AccountEntry } from "@/components/account/account-entry";
 import { AccountWorkspace } from "@/components/account/account-workspace";
 import { PrivacyContent } from "@/components/privacy/privacy-content";
@@ -47,13 +47,14 @@ export default async function AccountPage({ params, searchParams }: Props) {
   const requestHeaders = await headers();
   const origin = requestOrigin(config, requestHeaders) || config.baseURL;
   const session =
-    view !== "privacy" && config.configured
+    view !== "privacy" && config.ready
       ? await (await getAuth(origin)).api.getSession({ headers: requestHeaders })
       : null;
   // Google returns to APP_ORIGIN only, so the button shows only there.
   const google = Boolean(config.google) && origin === config.baseURL;
+  // Sign-in works before mail does, so the first admin can set mail up at /admin.
   const disabled =
-    !config.configured ||
+    (view === "login" ? !config.ready : !config.configured) ||
     (view === "register" && !config.registrationEnabled) ||
     (view === "reset" && !token);
 
@@ -77,7 +78,7 @@ export default async function AccountPage({ params, searchParams }: Props) {
         copy={copy}
         privacyLabel={privacy.privacy}
         user={{ email: session.user.email, emailVerified: session.user.emailVerified }}
-        methods={await signInMethods(session.user.id)}
+        {...await accountSummary(session.user.id)}
         googleAvailable={google}
       />
     );

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { AccountCopy } from "@/content/account";
 import type { Locale } from "@/content/site";
 
@@ -7,6 +8,8 @@ type Props = {
   privacyLabel: string;
   user: { email: string; emailVerified: boolean };
   methods: { password: boolean; google: boolean };
+  /** Admins get a link to the site settings at /admin. */
+  isAdmin: boolean;
   /** Google sign-in is available, so a password member may switch to it. */
   googleAvailable: boolean;
 };
@@ -17,6 +20,7 @@ export function AccountWorkspace({
   privacyLabel,
   user,
   methods,
+  isAdmin,
   googleAvailable,
 }: Props) {
   return (
@@ -66,6 +70,13 @@ export function AccountWorkspace({
           )}
         </section>
       </div>
+      {isAdmin && (
+        <p>
+          <Link className="text-link" href="/admin">
+            {copy.siteSettings} →
+          </Link>
+        </p>
+      )}
       <a className="text-link" href={`/${locale}/account?view=privacy`}>
         {privacyLabel} →
       </a>

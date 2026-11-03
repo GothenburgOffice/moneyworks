@@ -157,8 +157,9 @@ Copy `.env.example` to the gitignored root `.env` before starting any stack.
   hosts (Next.js `allowedDevOrigins`); other hosts get a 403 for dev resources.
 - Everything else is optional and off by default. Account and mail settings
   are described in [AUTH.md](AUTH.md). Mail, the privacy controller, Google sign-in and public
-  registration are not in `.env`: an admin sets them at `/admin` (sign in with
-  `ADMIN_EMAIL` and `ADMIN_PASSWORD`), and they are stored in the database.
+  registration are not in `.env`: an admin sets them at `/admin` (first sign in
+  on the account page with `ADMIN_EMAIL` and `ADMIN_PASSWORD`; sign-in works before
+  mail does), and they are stored in the database.
   Registration stays off until mail and real privacy details are saved there;
   the devcontainer always allows it and fills in clearly fake privacy details.
 - Development ignores the production `APP_ORIGIN`, `APP_ORIGIN_ALIASES`,

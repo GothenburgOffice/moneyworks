@@ -246,10 +246,12 @@ try {
   }
   checks.push("anonymous bilingual pages set no cookies");
 
-  // /admin: native form posts, an admin bootstrapped from ADMIN_EMAIL/ADMIN_PASSWORD.
+  // /admin: admins sign in on the account form (the first one bootstrapped from
+  // ADMIN_EMAIL/ADMIN_PASSWORD); the settings form posts natively. `path` is
+  // "account/<action>" or "admin/settings".
   jar.clear();
-  const adminForm = (action, fields, headers = {}) =>
-    fetch(`${base}/api/admin/${action}`, {
+  const adminForm = (path, fields, headers = {}) =>
+    fetch(`${base}/api/${path}`, {
       method: "POST",
       redirect: "manual",
       headers: {
@@ -273,20 +275,20 @@ try {
       return response;
     });
   const message = (result) => new URL(result.headers.get("location")).searchParams.get("message");
-  // A member signing in at /admin fails like a wrong password and keeps no session.
-  const memberSessions = async () =>
-    (
-      await pool.query(
-        'SELECT count(*)::int AS n FROM "Session" s JOIN "User" u ON u.id = s."userId" WHERE u.email = $1',
-        [email],
-      )
-    ).rows[0].n;
-  const sessionsBefore = await memberSessions();
-  response = await adminForm("login", { email, password: newPassword });
-  assert.equal(message(response), "failed");
-  assert.equal(await memberSessions(), sessionsBefore);
-  assert.equal(jar.size, 0);
-  checks.push("a member signing in at /admin fails the same way and keeps no session");
+  // A signed-in member who is not an admin: /admin and its API do not exist for them.
+  response = await adminForm("account/login", { email, password: newPassword, locale: "en" });
+  assert.equal(message(response), "");
+  assert.ok(jar.size, "the member is signed in");
+  assert.equal((await fetch(`${base}/admin`, { headers: { cookie: cookieHeader() } })).status, 404);
+  assert.equal((await adminForm("admin/settings", {})).status, 404);
+  assert.ok(
+    !(
+      await (await fetch(`${base}/en/account`, { headers: { cookie: cookieHeader() } })).text()
+    ).includes('href="/admin"'),
+  );
+  await adminForm("account/logout", { locale: "en" });
+  jar.clear();
+  checks.push("a signed-in member gets 404 from /admin and no link to it");
 
   const insertScenario = (userId) =>
     pool.query(
@@ -315,8 +317,12 @@ try {
   };
   const setting = async (key) =>
     (await pool.query('SELECT value FROM "SiteSetting" WHERE key=$1', [key])).rows[0]?.value;
-  assert.equal((await adminForm("settings", settingsFields)).status, 404, "settings need an admin");
-  assert.ok(!(await (await fetch(`${base}/admin`)).text()).includes("Site settings"));
+  assert.equal(
+    (await adminForm("admin/settings", settingsFields)).status,
+    404,
+    "settings need an admin",
+  );
+  assert.equal((await fetch(`${base}/admin`)).status, 404, "signed out, /admin does not exist");
   // Someone registered the admin email first but never verified it: the bootstrap
   // takes that account over instead of keeping its stranger-chosen password.
   await pool.query(
@@ -328,12 +334,17 @@ try {
     `INSERT INTO "Account" (id, "accountId", "providerId", "userId", password, "updatedAt")
      VALUES ('squatter-qa-credential', 'squatter-qa', 'credential', 'squatter-qa', 'not-a-hash', now())`,
   );
-  response = await adminForm("login", { email: adminEmail, password: "not the admin password" });
+  response = await adminForm("account/login", {
+    email: adminEmail,
+    password: "not the admin password",
+    locale: "en",
+  });
   assert.equal(new URL(response.headers.get("location")).searchParams.get("message"), "failed");
   assert.equal(jar.size, 0);
-  response = await adminForm("login", {
+  response = await adminForm("account/login", {
     email: adminEmail,
     password: "an automated admin test passphrase",
+    locale: "en",
   });
   assert.equal(response.status, 303);
   assert.ok(jar.size, "admin sign-in sets a session cookie");
@@ -350,9 +361,15 @@ try {
   );
   let page = await (await fetch(`${base}/admin`, { headers: { cookie: cookieHeader() } })).text();
   assert.ok(page.includes("Site settings") && page.includes("test-controller@example.invalid"));
-  checks.push("admin bootstrap takes over an unverified squatter; others get 404");
+  assert.ok(
+    (
+      await (await fetch(`${base}/en/account`, { headers: { cookie: cookieHeader() } })).text()
+    ).includes('href="/admin"'),
+    "the admin's account page links to /admin",
+  );
+  checks.push("admin bootstrap on the account form takes over an unverified squatter");
 
-  response = await adminForm("settings", {
+  response = await adminForm("admin/settings", {
     ...settingsFields,
     smtpUser: "mailer",
     smtpPassword: "an smtp test-only password",
@@ -363,24 +380,49 @@ try {
   assert.ok(!storedPassword.includes("an smtp test-only password"));
   page = await (await fetch(`${base}/admin`, { headers: { cookie: cookieHeader() } })).text();
   assert.ok(page.includes("set (leave blank to keep it)") && !page.includes("test-only password"));
-  response = await adminForm("settings", { ...settingsFields, allowRegistration: "on" });
+  response = await adminForm("admin/settings", { ...settingsFields, allowRegistration: "on" });
   assert.equal(
     new URL(response.headers.get("location")).searchParams.get("message"),
     "registrationBlocked",
     "example privacy details cannot open public registration",
   );
   assert.equal(await setting("registration.allowed"), "");
-  response = await adminForm("settings", { ...settingsFields, smtpPort: "99999" });
+  response = await adminForm("admin/settings", { ...settingsFields, smtpPort: "99999" });
   assert.equal(new URL(response.headers.get("location")).searchParams.get("message"), "invalid");
   assert.equal(await setting("smtp.port"), "10252");
   assert.equal(
-    (await adminForm("settings", settingsFields, { origin: "https://attacker.invalid" })).status,
+    (await adminForm("admin/settings", settingsFields, { origin: "https://attacker.invalid" }))
+      .status,
     403,
   );
-  await adminForm("settings", { ...settingsFields, clearSmtpPassword: "on" });
+  await adminForm("admin/settings", { ...settingsFields, clearSmtpPassword: "on" });
   assert.equal(await setting("smtp.password"), undefined);
   assert.equal(await setting("smtp.user"), "");
   checks.push("admin settings: SMTP password stored encrypted, never shown; bad input rejected");
+
+  // Without mail, accounts cannot register or recover, but signing in still works:
+  // that is how the first admin gets to /admin to set mail up.
+  await adminForm("admin/settings", { ...settingsFields, smtpHost: "" });
+  await adminForm("account/logout", { locale: "en" });
+  jar.clear();
+  page = await (await fetch(`${base}/en/account?view=login`)).text();
+  assert.ok(!page.includes("<fieldset disabled"), "the sign-in form works without mail");
+  page = await (await fetch(`${base}/en/account?view=register`)).text();
+  assert.ok(page.includes("<fieldset disabled"), "registration needs mail");
+  response = await adminForm("account/login", {
+    email: adminEmail,
+    password: "an automated admin test passphrase",
+    locale: "en",
+  });
+  assert.equal(message(response), "");
+  assert.equal(
+    (await adminForm("account/forgot", { email: adminEmail, locale: "en" })).status,
+    503,
+  );
+  assert.equal(message(await adminForm("admin/settings", settingsFields)), "saved");
+  checks.push(
+    "without mail, sign-in (and so /admin) still works; registration and recovery do not",
+  );
 
   // Google sign-in: client saved at /admin (secret encrypted), then the form starts
   // Google's flow. The callback itself needs Google, so it is tested by hand.
@@ -389,9 +431,12 @@ try {
     googleClientId: "1234-test.apps.googleusercontent.com",
     googleClientSecret: "a google test-only client secret",
   };
-  response = await adminForm("settings", { ...googleFields, googleClientId: "not-a-client-id" });
+  response = await adminForm("admin/settings", {
+    ...googleFields,
+    googleClientId: "not-a-client-id",
+  });
   assert.equal(message(response), "invalid");
-  assert.equal(message(await adminForm("settings", googleFields)), "saved");
+  assert.equal(message(await adminForm("admin/settings", googleFields)), "saved");
   assert.equal(await setting("google.client_id"), "1234-test.apps.googleusercontent.com");
   assert.match(await setting("google.client_secret"), /^v1:/);
   page = await (await fetch(`${base}/admin`, { headers: { cookie: cookieHeader() } })).text();
@@ -462,7 +507,7 @@ try {
     const session = await (
       await fetch(`${base}/api/auth/get-session`, { headers: { cookie: cookie() } })
     ).json();
-    return { location, session };
+    return { location, session, cookie: cookie() };
   };
   const methods = async (address) =>
     (
@@ -584,14 +629,17 @@ try {
   );
   checks.push("Google takes over an unverified squatter: its password and sessions go");
 
-  // Admins keep their password: /admin has only password sign-in.
+  // Admins are members with a flag: Google replaces their password too, and the Google
+  // session opens /admin.
   result = await googleSignIn({ sub: "google-admin", email: adminEmail, email_verified: true });
   assert.equal(result.session?.user.email, adminEmail);
-  assert.deepEqual(await methods(adminEmail), ["credential", "google"]);
-  checks.push("an admin who signs in with Google keeps the password");
+  assert.deepEqual(await methods(adminEmail), ["google"]);
+  page = await (await fetch(`${base}/admin`, { headers: { cookie: result.cookie } })).text();
+  assert.ok(page.includes("Site settings"));
+  checks.push("an admin who signs in with Google switches too and still reaches /admin");
 
-  await adminForm("logout", {});
-  assert.equal((await adminForm("settings", settingsFields)).status, 404);
+  await adminForm("account/logout", { locale: "en" });
+  assert.equal((await adminForm("admin/settings", settingsFields)).status, 404);
   checks.push("admin sign-out ends access");
   console.log(
     JSON.stringify(

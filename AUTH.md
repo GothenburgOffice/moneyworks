@@ -76,19 +76,20 @@ In `.env`, required before accounts work:
   Encrypts the stored SMTP password (AES-256-GCM, as in vocabulary-training), so
   a database dump alone does not reveal it. Changing it makes the stored
   password unreadable; `/admin` then says so and asks for it again.
-- `ADMIN_EMAIL`, `ADMIN_PASSWORD`: the first admin. While no admin exists, a
-  sign-in at `/admin` with exactly these values creates that verified account
+- `ADMIN_EMAIL`, `ADMIN_PASSWORD`: the first admin. While no admin exists, signing
+  in on the account page with exactly these values creates that verified account
   (password of at least 15 characters). A verified account with that email is
   promoted and keeps its own password; an unverified one proves nobody's
   ownership, so it is taken over: verified, given `ADMIN_PASSWORD`, its sessions
   ended. Once an admin exists, both are ignored. Others can be
   made admin with `UPDATE "User" SET "isAdmin" = true`.
 
-At `/admin` (direct URL only, never linked, `noindex`; signed-out visitors see
-only the sign-in form and everyone but an admin gets 404 from its API). Every
-sign-in attempt goes through Better Auth's rate-limited sign-in, so responses
-do not reveal which emails are admins; a non-admin who signs in there has that
-session ended at once and sees the same failure:
+Admins are ordinary members with `User.isAdmin` set: they sign in on the account
+page (password or Google, under the same rules as everyone) and their account page
+links to `/admin`. Signing in needs only `APP_ORIGIN` and `AUTH_SECRET`, not mail,
+so the first admin can get in to set mail up; registration and recovery wait for
+mail. `/admin` (English, `noindex`) and its API answer 404 to everyone but a
+signed-in admin. It holds:
 
 - Mail: SMTP host, port, implicit TLS, user, password and from address. External
   SMTP must use TLS; user and password must be present or absent together. The
@@ -134,8 +135,8 @@ switches it off. Saving another client takes effect at once in that app process.
   recovery mails a "sign in with Google" note instead of a reset link, and a
   database hook refuses a new password record (`use_google`). If the operator
   switches Google off, recovery works again and gives the member a password, so
-  nobody is locked out. Admins keep their password, because `/admin` has only
-  password sign-in.
+  nobody is locked out. Admins are no exception: they reach `/admin` through
+  any sign-in.
 - **Unverified squatters.** If someone registered the address with a password but
   never verified it, Google signing in proves the real owner: that password and
   its sessions are deleted (as in the admin bootstrap) and the address is verified.

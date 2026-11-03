@@ -15,8 +15,8 @@ const signInPage = (baseURL: string, request?: Request) =>
   `${baseURL}/${locale(request) === "sv" ? "sv" : "en"}/account?view=login`;
 const googleOn = async () => Boolean((await loadAccountConfig()).google);
 
-// The instance needs the origin and secret, so the admin can sign in before mail is
-// set up, plus Google's OAuth client when one is saved at /admin. Mail, privacy and
+// The instance needs the origin and secret, so members (and the first admin) can sign
+// in before mail is set up, plus Google's OAuth client when one is saved at /admin. Mail, privacy and
 // registration change at runtime: the routes check them (loadAccountConfig) before
 // registration, mail reads them when sending, and the hooks below when Google signs in.
 function createAuth(secure: boolean, google: GoogleClient) {

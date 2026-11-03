@@ -1,4 +1,6 @@
 import { headers } from "next/headers";
+import Link from "next/link";
+import { notFound } from "next/navigation";
 import { accountConfig, requestOrigin } from "@/lib/auth-config";
 import { currentAdmin } from "@/lib/admin";
 import { loadAccountConfig, readSettingsView } from "@/lib/site-settings";
@@ -6,9 +8,6 @@ import { loadAccountConfig, readSettingsView } from "@/lib/site-settings";
 export const dynamic = "force-dynamic";
 
 const messages: Record<string, string> = {
-  failed: "Sign-in failed.",
-  tooMany: "Too many attempts. Wait a minute and try again.",
-  signedOut: "Signed out.",
   saved: "Settings saved.",
   invalid: "Not saved: check the email addresses, the port and the Google client ID.",
   noEncryptionKey:
@@ -38,24 +37,9 @@ export default async function AdminPage({
     requestHeaders,
   );
 
-  if (!admin)
-    return (
-      <>
-        <h1>Admin sign-in</h1>
-        {notice && <p role="status">{notice}</p>}
-        <form method="post" action="/api/admin/login" className="admin-form">
-          <label>
-            Email
-            <input name="email" type="email" autoComplete="username" required />
-          </label>
-          <label>
-            Password
-            <input name="password" type="password" autoComplete="current-password" required />
-          </label>
-          <button type="submit">Sign in</button>
-        </form>
-      </>
-    );
+  // Admins sign in on the normal account page (the first one with ADMIN_EMAIL and
+  // ADMIN_PASSWORD); to everyone else this page does not exist.
+  if (!admin) notFound();
 
   const [settings, account] = await Promise.all([readSettingsView(), loadAccountConfig()]);
   const missing = [
@@ -74,8 +58,10 @@ export default async function AdminPage({
   return (
     <>
       <h1>Site settings</h1>
-      <form method="post" action="/api/admin/logout" className="admin-inline">
-        Signed in as {admin.email}. <button type="submit">Sign out</button>
+      <form method="post" action="/api/account/logout" className="admin-inline">
+        <input type="hidden" name="locale" value="en" />
+        Signed in as {admin.email}. <Link href="/en/account">Account</Link>{" "}
+        <button type="submit">Sign out</button>
       </form>
       {notice && <p role="status">{notice}</p>}
       <form method="post" action="/api/admin/settings" className="admin-form">

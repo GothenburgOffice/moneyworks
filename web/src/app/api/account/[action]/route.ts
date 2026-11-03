@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { ensureAdmin, isBootstrapLogin } from "@/lib/admin";
 import { boundedBody, handleAuthRequest } from "@/lib/auth-http";
 import { loadAccountConfig } from "@/lib/site-settings";
 
@@ -18,7 +19,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ act
   if (!operations[action]) return new Response(null, { status: 404 });
   // Registrations read the settings fresh, so a registration switch-off applies at once.
   const config = await loadAccountConfig(action === "register");
-  if (!config.configured) return new Response(config.problem, { status: 503 });
+  // Signing in and out needs only the origin and secret: the first admin must get in
+  // to set up mail at /admin. Everything else sends mail or creates accounts.
+  const ready = ["login", "logout"].includes(action) ? config.ready : config.configured;
+  if (!ready) return new Response(config.problem, { status: 503 });
   // Fail closed: only exact allowed origins; no null/absent origins, wildcards,
   // forwarded-host guesses or GET mutations.
   const origin = request.headers.get("origin") || "";
@@ -48,7 +52,12 @@ export async function POST(request: Request, { params }: { params: Promise<{ act
   const password = String(form.get("password") || "");
   const callbackURL = page.href;
   let body: Record<string, unknown> = {};
-  if (action === "login") body = { email, password, rememberMe: false };
+  if (action === "login") {
+    body = { email, password, rememberMe: false };
+    // While no admin exists, signing in with ADMIN_EMAIL and ADMIN_PASSWORD creates
+    // (or takes over) that account first. Only someone who knows both can trigger it.
+    if (isBootstrapLogin(email.toLowerCase(), password)) await ensureAdmin();
+  }
   if (action === "register") {
     if (!config.registrationEnabled) return redirect("register", "unavailable");
     if (password !== form.get("confirmPassword")) return redirect("register", "passwordMismatch");
