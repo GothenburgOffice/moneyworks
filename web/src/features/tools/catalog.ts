@@ -30,3 +30,6 @@ export function toolPath(locale: string, id: AvailableToolId) {
 export function getTools(copy: Record<ToolId, ToolContent>) {
   return toolCatalog.map((tool) => ({ ...tool, content: copy[tool.id] }));
 }
+
+// Indexable public pages below a locale prefix: the hub and each tool page.
+export const publicPagePaths = ["", ...availableToolIds.map((id) => `/tools/${id}`)];

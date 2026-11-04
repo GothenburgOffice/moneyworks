@@ -26,6 +26,7 @@ services:
     environment:
       APP_ORIGIN: ${DEV_APP_ORIGIN:-http://localhost:${APP_PORT:-3410}}
       APP_ORIGIN_ALIASES: ${DEV_APP_ORIGIN_ALIASES:-http://127.0.0.1:${APP_PORT:-3410}}
+      LOCALE_ORIGINS: ${DEV_LOCALE_ORIGINS:-}
       AUTH_SECRET: ${DEV_AUTH_SECRET:-}
       SETTINGS_ENCRYPTION_KEY: ${DEV_SETTINGS_ENCRYPTION_KEY:-}
       # Only for a local capture server such as Mailpit on 127.0.0.1.

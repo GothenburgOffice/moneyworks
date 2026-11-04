@@ -85,6 +85,13 @@ for (const [locale, title, fire, crypto, planned] of [
   });
 }
 
+test("without LOCALE_ORIGINS, pages send no same-host hreflang links", async () => {
+  for (const path of ["/en", "/sv/tools/fire", "/en/account"]) {
+    const response = await fetch(`${base}${path}`);
+    assert.doesNotMatch(response.headers.get("link") ?? "", /hreflang/, path);
+  }
+});
+
 test("planned and unknown tools have no page", async () => {
   for (const tool of ["crypto", "missing"]) {
     const response = await fetch(`${base}/en/tools/${tool}`);

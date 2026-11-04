@@ -161,6 +161,12 @@ Copy `.env.example` to the gitignored root `.env` before starting any stack.
   example another domain); development accepts `http://127.0.0.1:<APP_PORT>` by
   default. The dev server allows its scripts and hot reload on these origins'
   hosts (Next.js `allowedDevOrigins`); other hosts get a 403 for dev resources.
+- `LOCALE_ORIGINS` optionally names each language's home domain, for example
+  `en=https://moneyworks.example,sv=https://pengarjobbar.example`. Every domain
+  still serves every language; the hub and tool pages then send `canonical` and
+  `hreflang` Link headers pointing at each language's own domain. It is read at
+  request time, so the published image needs no rebuild. Blank or invalid sends
+  no such links.
 - Everything else is optional and off by default. Account and mail settings
   are described in [AUTH.md](AUTH.md). Mail, the privacy controller, Google sign-in and public
   registration are not in `.env`: an admin sets them at `/admin` (first sign in
@@ -169,7 +175,7 @@ Copy `.env.example` to the gitignored root `.env` before starting any stack.
   Registration stays off until mail and real privacy details are saved there;
   the devcontainer always allows it and fills in clearly fake privacy details.
 - Development ignores the production `APP_ORIGIN`, `APP_ORIGIN_ALIASES`,
-  `AUTH_SECRET` and `SETTINGS_ENCRYPTION_KEY` in `.env`. It reads `DEV_`-prefixed
+  `LOCALE_ORIGINS`, `AUTH_SECRET` and `SETTINGS_ENCRYPTION_KEY` in `.env`. It reads `DEV_`-prefixed
   versions instead (listed at the end of `.env.example`). Mail settings live in
   the database the stack opens. Every stack with the same project name shares
   that database (see below), so on a machine that also runs a production stack,

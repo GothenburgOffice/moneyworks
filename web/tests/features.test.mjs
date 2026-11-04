@@ -9,9 +9,11 @@ import {
 import {
   availableToolIds,
   getTools,
+  publicPagePaths,
   toolCatalog,
   toolPath,
 } from "../src/features/tools/catalog.ts";
+import { languageLinkHeader, parseLocaleOrigins } from "../src/features/site/language-links.ts";
 import { getAccountCopy } from "../src/content/account.ts";
 import { getPrivacyCopy } from "../src/content/privacy.ts";
 
@@ -91,4 +93,54 @@ test("account and privacy translations have matching keys and separate responsib
   assert.deepEqual(Object.keys(getPrivacyCopy("en")), Object.keys(getPrivacyCopy("sv")));
   assert.equal("cookieShort" in getAccountCopy("en"), false);
   assert.equal("loginTitle" in getPrivacyCopy("en"), false);
+});
+
+const locales = ["en", "sv"];
+const origins = { en: "https://moneyworks.example", sv: "https://pengarjobbar.example" };
+
+test("language home domains need one valid origin per locale", () => {
+  assert.deepEqual(
+    parseLocaleOrigins(
+      " en=https://moneyworks.example/ , sv=https://pengarjobbar.example",
+      locales,
+    ),
+    origins,
+  );
+  assert.deepEqual(
+    parseLocaleOrigins("en=http://localhost:3410,sv=http://localhost:3410", locales),
+    {
+      en: "http://localhost:3410",
+      sv: "http://localhost:3410",
+    },
+  );
+  for (const value of [
+    "",
+    "en=https://moneyworks.example",
+    "en=https://moneyworks.example,sv=https://pengarjobbar.example,de=https://x.example",
+    "en=https://moneyworks.example,en=https://other.example,sv=https://pengarjobbar.example",
+    "en=https://moneyworks.example/en,sv=https://pengarjobbar.example",
+    "en=ftp://moneyworks.example,sv=https://pengarjobbar.example",
+    "en=moneyworks.example,sv=https://pengarjobbar.example",
+    "https://moneyworks.example,sv=https://pengarjobbar.example",
+  ])
+    assert.equal(parseLocaleOrigins(value, locales), null, value);
+});
+
+test("public pages link canonical and hreflang copies on each language's domain", () => {
+  const options = { locales, defaultLocale: "en", pagePaths: publicPagePaths };
+  assert.equal(
+    languageLinkHeader("/sv/tools/fire", origins, options),
+    [
+      '<https://pengarjobbar.example/sv/tools/fire>; rel="canonical"',
+      '<https://moneyworks.example/en/tools/fire>; rel="alternate"; hreflang="en"',
+      '<https://pengarjobbar.example/sv/tools/fire>; rel="alternate"; hreflang="sv"',
+      '<https://moneyworks.example/en/tools/fire>; rel="alternate"; hreflang="x-default"',
+    ].join(", "),
+  );
+  assert.match(
+    languageLinkHeader("/en", origins, options),
+    /^<https:\/\/moneyworks\.example\/en>; rel="canonical"/,
+  );
+  for (const path of ["/", "/en/account", "/sv/tools/crypto", "/de", "/en/tools/fire/x"])
+    assert.equal(languageLinkHeader(path, origins, options), null, path);
 });
