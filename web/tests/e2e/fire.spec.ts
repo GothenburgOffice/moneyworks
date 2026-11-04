@@ -36,7 +36,7 @@ for (const locale of locales) {
   test.describe(`${locale}`, () => {
     // The calculator enables its controls once React has hydrated it.
     async function openCalculator(page: Page) {
-      await page.goto(`/${locale}#fire-calculator`);
+      await page.goto(`/${locale}/tools/fire`);
       const calculator = page.locator("[data-fire]");
       await expect(calculator.getByRole("button", { name: copy.calculate })).toBeEnabled();
       return calculator;

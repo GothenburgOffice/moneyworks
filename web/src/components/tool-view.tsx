@@ -3,7 +3,7 @@ import type { ToolId } from "@/features/tools/catalog";
 
 type ToolViewProps = {
   id: ToolId;
-  anchor: string;
+  backHref: string;
   label: string;
   back: string;
   titleLead: string;
@@ -13,10 +13,10 @@ type ToolViewProps = {
   children: ReactNode;
 };
 
-/** Static, reusable tool shell. Native hash navigation owns the active view. */
+/** Static, reusable tool shell: banner with a way back to the hub, then the workspace. */
 export function ToolView({
   id,
-  anchor,
+  backHref,
   label,
   back,
   titleLead,
@@ -26,15 +26,15 @@ export function ToolView({
   children,
 }: ToolViewProps) {
   return (
-    <section id={anchor} data-tool-panel={id} aria-labelledby={`${id}-page-title`} tabIndex={-1}>
+    <section data-tool-panel={id} aria-labelledby={`${id}-page-title`}>
       <header className="tool-banner page-width">
-        <a className="tool-back" href="#tools">
+        <a className="tool-back" href={backHref}>
           <span aria-hidden="true">←</span> {back}
         </a>
         <div className="tool-banner-body">
           <div className="intro-copy">
             <p className="tool-eyebrow">{label}</p>
-            <h1 id={`${id}-page-title`} tabIndex={-1} data-tool-title>
+            <h1 id={`${id}-page-title`}>
               <span>{titleLead}</span> <span>{titleEnd}</span>
             </h1>
             <p>{description}</p>

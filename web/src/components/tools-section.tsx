@@ -1,8 +1,8 @@
-import type { SiteCopy } from "@/content/site";
-import { getTools } from "@/features/tools/catalog";
+import type { Locale, SiteCopy } from "@/content/site";
+import { getTools, toolPath } from "@/features/tools/catalog";
 import { ToolCard } from "./tool-card";
 
-export function ToolsSection({ copy }: { copy: SiteCopy["tools"] }) {
+export function ToolsSection({ copy, locale }: { copy: SiteCopy["tools"]; locale: Locale }) {
   return (
     <section className="tools-section page-width" id="tools" aria-labelledby="tools-heading">
       <div className="section-heading">
@@ -17,7 +17,11 @@ export function ToolsSection({ copy }: { copy: SiteCopy["tools"] }) {
             tool={tool.content}
             statusLabel={tool.status === "available" ? copy.available : copy.planned}
             details={copy.details}
-            action={tool.href ? { href: tool.href, label: copy.open } : undefined}
+            action={
+              tool.status === "available"
+                ? { href: toolPath(locale, tool.id), label: copy.open }
+                : undefined
+            }
           />
         ))}
       </div>

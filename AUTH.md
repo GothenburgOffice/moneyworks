@@ -29,7 +29,7 @@ calculator is client-local and does not save inputs to an account.
 
 ## Public homepage and account boundary
 
-The `/en` and `/sv` homepage remains SSG with metadata and native navigation.
+The `/en` and `/sv` homepage and tool pages remain SSG with metadata and native navigation.
 Reading account cookies is confined to the separate dynamic account route and
 auth endpoints. The header's generic Account link does not make home dynamic.
 Account HTML is private/no-store, noindex and anti-framing. It overrides the

@@ -299,7 +299,7 @@ export function FireWorkspace({ copy, locale }: Props) {
       <form
         ref={form}
         className="fire-form"
-        action="#fire-calculator"
+        action="#fire-workspace"
         autoComplete="off"
         data-fire-form
         onKeyDown={handleKeyDown}

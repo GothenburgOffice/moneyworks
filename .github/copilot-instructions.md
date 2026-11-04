@@ -51,7 +51,7 @@ moneyworks/
     ├── prisma.config.ts          # Prisma connection URL and migration configuration
     ├── scripts/                  # FIRE bundle builder, auth cleanup
     ├── src/
-    │   ├── app/[locale]/         # Static public hub and dynamic account route
+    │   ├── app/[locale]/         # Static hub, static tools/[tool] pages and dynamic account route
     │   ├── app/admin/            # Site settings form (404 unless a signed-in admin)
     │   ├── app/api/              # account and admin form adapters, auth endpoints, DB health
     │   ├── components/           # Site, fire/, account/ and privacy/ components
@@ -73,7 +73,7 @@ moneyworks/
 - **Pure features:** `features/account/view.ts` parses allowlisted view/feedback queries; `features/tools/catalog.ts` defines tool IDs/status and a neutral card-content contract. Add tools through the catalogue and both translations, not duplicated card calls.
 - **Server boundary:** DB/auth/HTTP/mail modules are server-only. ESLint and `test:architecture` reject persistence/auth imports or environment reads from presentation/content/pure-feature modules.
 - **Styles and tests:** Shared tokens/site rules live in `app/globals.css`; feature CSS in `styles/`. Keep content readable without JavaScript (tool workspaces and account pages may require it), both locales/themes and responsive layouts.
-- **Shared navigation:** Keep the sticky header's reserved slot independent of its compact bar height to prevent scroll/layout oscillation. Preserve hash/skip/result clearance, 44px controls, both mobile-menu modes and the full-size no-JS fallback. The header logo replaces footer back-to-top links.
+- **Shared navigation:** Keep the sticky header's reserved slot independent of its compact bar height to prevent scroll/layout oscillation. Preserve section-link/skip/result clearance, 44px controls, both mobile-menu modes and the full-size no-JS fallback. The header logo replaces footer back-to-top links.
 - **Interactive tools:** Each tool's workspace is a React client component (an island) inside the pre-rendered page; the server renders the tool's heading, description, walkthrough and method, and passes typed copy and the locale as props. Keep tool state in component memory: no browser storage, URLs or telemetry. Tools import their pure model from `features/` directly; no separate browser bundle. Decided in #4.
 - **Icon-only actions:** Use shared local SVG icons, native buttons, localized contextual accessible names, decorative SVGs hidden from assistive technology, visible focus and at least 44px targets.
 
@@ -90,8 +90,8 @@ moneyworks/
 
 ## Runtime behavior
 
-- **Hub and tool views:** One pre-rendered content page per locale composed from separate components. Available tools open a pre-rendered ToolView by native hash, with their own banner/workspace and the shared header/footer. Keep no-JS entry, Back/Forward, section exits and context-preserving theme/locale controls. Financial inputs never enter the URL.
-- **Static content:** Pre-render `/en` and `/sv` with localized metadata. Do not client-render the page or fetch the body after load.
+- **Hub and tool pages:** One pre-rendered hub page per locale composed from separate components. Each available tool has its own static page at `/[locale]/tools/[tool]` (`/en/tools/fire`, `/sv/tools/fire`: only the locale prefix differs), generated from `features/tools/catalog.ts` with its own title and description; planned and unknown tools are 404. A tool page uses ToolView (banner, back link to the hub's tools) and the shared header/footer. Old `#fire-calculator` links are not redirected (decision #5). Keep plain-link entry, Back/Forward and context-preserving theme/locale controls. Financial inputs never enter the URL.
+- **Static content:** Pre-render `/en`, `/sv` and every available tool page with localized metadata. Do not client-render the page or fetch the body after load.
 - **Small enhancements:** `public/site-ui.js` closes the mobile menu and provides theme switching. Dark is the static default; `light`/`dark` are the only accepted URL preference values, carried through locale links with guarded history updates. No browser-storage APIs. Hide the theme control without JavaScript. Pages never call the database; builds need no database.
 - **Brand:** Direction C (Bright works) as recorded in `DESIGN.md`: charcoal/lime, bold headings, contrasting tool panels, original marks, self-hosted Manrope, CSS tokens.
 - **Country-neutral:** Do not assume SEK, a tax jurisdiction, a trading method or financial outputs.

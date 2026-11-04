@@ -428,19 +428,6 @@ main[id],
   outline-color: var(--ink);
 }
 
-/* Both views are pre-rendered. Hash selection works without a client router or JS. */
-[data-tool-panel] {
-  display: none;
-}
-[data-tool-panel]:focus {
-  outline: none;
-}
-[data-tool-panel]:target {
-  display: block;
-}
-html:has([data-tool-panel]:target) [data-home-view] {
-  display: none;
-}
 .tool-banner {
   padding-block: 20px 48px;
 }

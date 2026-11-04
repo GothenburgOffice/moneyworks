@@ -63,66 +63,6 @@ test("C defaults to dark and progressively reveals the localized toggle", () => 
   assert.equal(ui.attributes["aria-pressed"], "true");
 });
 
-test("native tool view keeps locale and skip controls in context without persisting inputs", () => {
-  const root = { dataset: {} },
-    listeners = {},
-    frames = [],
-    dispatched = [];
-  const location = { hash: "", href: "https://example.test/en?theme=light" };
-  const panel = { id: "fire-calculator", dataset: { toolPanel: "fire" } };
-  const links = ["/en?theme=light", "/sv?theme=light"].map((href) => ({
-    href,
-    getAttribute() {
-      return this.href;
-    },
-    setAttribute(name, value) {
-      this[name] = value;
-    },
-  }));
-  const skip = {
-    href: "#main-content",
-    setAttribute(name, value) {
-      this[name] = value;
-    },
-  };
-  runInNewContext(source, {
-    document: {
-      addEventListener() {},
-      readyState: "complete",
-      documentElement: root,
-      querySelector: (selector) => (selector === ".skip-link" ? skip : null),
-      querySelectorAll: (selector) =>
-        selector === "[data-tool-panel]" ? [panel] : selector === "[data-locale-link]" ? links : [],
-    },
-    location,
-    URL,
-    URLSearchParams,
-    Event,
-    requestAnimationFrame: (callback) => frames.push(callback),
-    window: {
-      addEventListener(event, callback) {
-        listeners[event] = callback;
-      },
-      dispatchEvent(event) {
-        dispatched.push(event.type);
-      },
-    },
-  });
-  while (frames.length) frames.shift()();
-  assert.equal(root.dataset.activeTool, "");
-  location.hash = "#fire-calculator";
-  listeners.hashchange();
-  assert.equal(root.dataset.activeTool, "fire");
-  assert.equal(links[1].href, "/sv?theme=light#fire-calculator");
-  assert.equal(skip.href, "#fire-calculator");
-  location.hash = "#tools";
-  listeners.hashchange();
-  assert.equal(root.dataset.activeTool, "");
-  assert.equal(links[1].href, "/sv?theme=light");
-  assert.equal(skip.href, "#main-content");
-  while (frames.length) frames.shift()();
-  assert.ok(dispatched.includes("resize"));
-});
 test("theme switches, persists and follows locale links", () => {
   const ui = setup();
   ui.click();
@@ -196,7 +136,7 @@ test("sticky header uses a stable threshold and coalesces passive scroll work", 
   assert.equal(slot.dataset.compact, "false");
 });
 
-test("native demo pauses on close, hidden document and tool exit without autoplay", () => {
+test("native demo pauses on close and hidden document without autoplay", () => {
   let pauses = 0;
   const video = {
     pause: () => pauses++,
@@ -213,12 +153,6 @@ test("native demo pauses on close, hidden document and tool exit without autopla
     },
     querySelector: () => video,
   };
-  const panel = {
-    id: "fire-calculator",
-    dataset: { toolPanel: "fire" },
-    contains: (candidate) => candidate === video,
-  };
-  const location = { hash: "#fire-calculator" };
   const document = {
     readyState: "complete",
     hidden: false,
@@ -229,15 +163,12 @@ test("native demo pauses on close, hidden document and tool exit without autopla
     querySelector: () => null,
     querySelectorAll: (selector) =>
       ({
-        "[data-tool-panel]": [panel],
         "[data-tool-demo]": [demo],
         "[data-tool-demo] video": [video],
       })[selector] ?? [],
   };
   runInNewContext(source, {
     document,
-    location,
-    Event,
     requestAnimationFrame: (callback) => frames.push(callback),
     window: {
       addEventListener(event, listener) {
@@ -257,10 +188,4 @@ test("native demo pauses on close, hidden document and tool exit without autopla
   document.hidden = true;
   documentEvents.visibilitychange();
   assert.equal(pauses, 2);
-  location.hash = "#tools";
-  windowEvents.hashchange();
-  assert.equal(pauses, 3);
-  location.hash = "#fire-calculator";
-  windowEvents.hashchange();
-  assert.equal(pauses, 3);
 });

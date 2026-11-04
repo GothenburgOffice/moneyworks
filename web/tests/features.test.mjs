@@ -6,7 +6,12 @@ import {
   accountFormViews,
   accountMessages,
 } from "../src/features/account/view.ts";
-import { getTools, toolCatalog } from "../src/features/tools/catalog.ts";
+import {
+  availableToolIds,
+  getTools,
+  toolCatalog,
+  toolPath,
+} from "../src/features/tools/catalog.ts";
 import { getAccountCopy } from "../src/content/account.ts";
 import { getPrivacyCopy } from "../src/content/privacy.ts";
 
@@ -59,8 +64,11 @@ test("catalogue retains approved stable IDs and honest implementation status", (
   );
   assert.equal(new Set(toolCatalog.map((tool) => tool.id)).size, toolCatalog.length);
   assert.equal(toolCatalog[0].status, "available");
-  assert.equal(toolCatalog[0].href, "#fire-calculator");
   assert.equal(toolCatalog[1].status, "planned");
+  assert.deepEqual(availableToolIds, ["fire"]);
+  // Only the locale prefix differs between languages.
+  assert.equal(toolPath("en", "fire"), "/en/tools/fire");
+  assert.equal(toolPath("sv", "fire"), "/sv/tools/fire");
 });
 
 test("every catalogue entry has complete localized content in both languages", () => {
