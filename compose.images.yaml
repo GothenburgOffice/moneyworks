@@ -49,6 +49,7 @@ services:
       DATABASE_URL: *database-url
       APP_ORIGIN: ${APP_ORIGIN:-http://localhost:${APP_PORT:-3410}}
       APP_ORIGIN_ALIASES: ${APP_ORIGIN_ALIASES:-}
+      LOCALE_ORIGINS: ${LOCALE_ORIGINS:-}
       AUTH_SECRET: ${AUTH_SECRET:-}
       # Privacy and SMTP settings are edited at /admin and stored in the database.
       SETTINGS_ENCRYPTION_KEY: ${SETTINGS_ENCRYPTION_KEY:-}

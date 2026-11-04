@@ -44,11 +44,10 @@ and fees, not recommended planning assumptions.
 
 ## Result phases
 
-The calculator is entered from its tool card into the focused `#fire-calculator`
-view, not shown open on the clean homepage. Its pre-rendered ToolView supplies a
-FIRE-specific banner, shared header/footer and All tools link; native hash
-navigation works without JavaScript. Locale/theme controls keep tool context,
-not financial values. Explicit tool-link refresh reopens that view.
+The calculator has its own static page, `/en/tools/fire` and `/sv/tools/fire`,
+linked from its tool card on the hub (decision #5). Its ToolView supplies a
+FIRE-specific banner, shared header/footer and All tools link. Locale/theme
+controls keep the tool page, not financial values.
 
 The result switches between Savings plan and Retirement plan without changing the
 inputs or funding verdict. Savings shows the entered current portfolio, month-end

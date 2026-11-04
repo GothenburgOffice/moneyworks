@@ -13,7 +13,7 @@ for (const [locale, title, fire, crypto, planned] of [
     "Planeras",
   ],
 ]) {
-  test(`${locale}: the complete one-page tool hub is pre-rendered without JavaScript`, async () => {
+  test(`${locale}: the tool hub is pre-rendered without JavaScript`, async () => {
     const response = await fetch(`${base}/${locale}`);
     assert.equal(response.status, 200);
     const html = await response.text();
@@ -47,12 +47,11 @@ for (const [locale, title, fire, crypto, planned] of [
     assert.ok(main.includes(fire));
     assert.ok(main.includes(crypto));
     assert.ok(main.includes(planned));
-    // Both views are pre-rendered; native hash/CSS selection exposes one at a time.
-    assert.equal((main.match(/<h1\b/g) ?? []).length, 2);
-    assert.ok(main.includes("data-home-view"));
-    assert.ok(main.includes('data-tool-panel="fire"'));
-    assert.ok(main.includes('id="fire-page-title"'));
-    for (const id of ["tools", "fire", "fire-calculator", "crypto", "learn", "about"]) {
+    // The hub links to each tool page instead of carrying its workspace.
+    assert.equal((main.match(/<h1\b/g) ?? []).length, 1);
+    assert.ok(main.includes(`href="/${locale}/tools/fire"`));
+    assert.ok(!main.includes("data-fire-form"));
+    for (const id of ["tools", "fire", "crypto", "learn", "about"]) {
       assert.ok(main.includes(`id="${id}"`), `Missing ${id} section`);
     }
     assert.ok(html.includes('aria-label="') && html.includes('href="/sv"'));
@@ -61,6 +60,23 @@ for (const [locale, title, fire, crypto, planned] of [
     assert.ok(!main.includes("från PostgreSQL"));
     assert.ok(html.includes('name="description"'));
     assert.ok(html.includes('src="/site-ui.js"'));
+  });
+
+  test(`${locale}: the FIRE tool has its own pre-rendered page`, async () => {
+    const response = await fetch(`${base}/${locale}/tools/fire`);
+    assert.equal(response.status, 200);
+    const html = await response.text();
+    assert.ok(html.includes(`<html lang="${locale}"`));
+    const brand = locale === "sv" ? "Pengar jobbar" : "MoneyWorks";
+    assert.ok(html.includes(`<title>${fire} | ${brand}</title>`), "Missing tool page title");
+    assert.ok(html.includes('name="description"'));
+    const main = html.match(/<main\b[^>]*>([\s\S]*?)<\/main>/)?.[1];
+    assert.ok(main, "Missing main element");
+    assert.equal((main.match(/<h1\b/g) ?? []).length, 1);
+    assert.ok(main.includes('id="fire-page-title"'));
+    assert.ok(main.includes(`href="/${locale}#tools"`));
+    assert.ok(html.includes(`href="/${locale === "sv" ? "en" : "sv"}/tools/fire"`));
+    assert.ok(html.includes('src="/site-ui.js"'));
     assert.ok(main.includes("data-fire-form"));
     assert.ok(main.includes("data-tool-demo"));
     assert.ok(main.includes("/media/fire-demo.mp4"));
@@ -68,6 +84,31 @@ for (const [locale, title, fire, crypto, planned] of [
     assert.ok(!main.includes('autoplay=""'));
   });
 }
+
+test("without LOCALE_ORIGINS, pages send no same-host hreflang links", async () => {
+  for (const path of ["/en", "/sv/tools/fire", "/en/account"]) {
+    const response = await fetch(`${base}${path}`);
+    assert.doesNotMatch(response.headers.get("link") ?? "", /hreflang/, path);
+  }
+});
+
+test("robots.txt and sitemap.xml respond without naming unconfigured domains", async () => {
+  const robots = await fetch(`${base}/robots.txt`);
+  assert.equal(robots.status, 200);
+  const rules = await robots.text();
+  assert.match(rules, /Disallow: \/admin/);
+  assert.doesNotMatch(rules, /Sitemap:/);
+  const sitemap = await fetch(`${base}/sitemap.xml`);
+  assert.equal(sitemap.status, 200);
+  assert.doesNotMatch(await sitemap.text(), /<loc>/);
+});
+
+test("planned and unknown tools have no page", async () => {
+  for (const tool of ["crypto", "missing"]) {
+    const response = await fetch(`${base}/en/tools/${tool}`);
+    assert.equal(response.status, 404, tool);
+  }
+});
 
 test("English is the default even with Swedish browser language and cookie", async () => {
   const response = await fetch(`${base}/`, {

@@ -1,0 +1,89 @@
+// Each language has a home domain (decision #7). Every domain serves every
+// language, so search engines are told which copy is canonical and where each
+// language lives. Pure: the caller reads the configuration.
+
+export type LocaleOrigins<L extends string> = Record<L, string>;
+
+/**
+ * Parses "en=https://moneyworks.example,sv=https://pengarjobbar.example".
+ * Returns null when blank or invalid: every locale needs exactly one
+ * origin (scheme and host, optional port, no path).
+ */
+export function parseLocaleOrigins<L extends string>(
+  value: string,
+  locales: readonly L[],
+): LocaleOrigins<L> | null {
+  if (!value.trim()) return null;
+  const origins: Partial<Record<L, string>> = {};
+  for (const entry of value.split(",")) {
+    const separator = entry.indexOf("=");
+    const locale = entry.slice(0, separator).trim() as L;
+    const raw = entry.slice(separator + 1).trim();
+    if (separator < 1 || !locales.includes(locale) || origins[locale]) return null;
+    let url: URL;
+    try {
+      url = new URL(raw);
+    } catch {
+      return null;
+    }
+    if (!["http:", "https:"].includes(url.protocol) || url.origin !== raw.replace(/\/$/, ""))
+      return null;
+    origins[locale] = url.origin;
+  }
+  return locales.every((locale) => origins[locale]) ? (origins as LocaleOrigins<L>) : null;
+}
+
+/**
+ * Builds the HTTP Link header for an indexable page: rel="canonical" to the
+ * requested language on its home domain, and an hreflang alternate per
+ * language plus x-default (the default locale). Returns null for other paths.
+ */
+export function languageLinkHeader<L extends string>(
+  pathname: string,
+  origins: LocaleOrigins<L>,
+  options: { locales: readonly L[]; defaultLocale: L; pagePaths: readonly string[] },
+): string | null {
+  const [, first = "", ...rest] = pathname.split("/");
+  const locale = first as L;
+  const page = rest.length ? `/${rest.join("/")}` : "";
+  if (!options.locales.includes(locale) || !options.pagePaths.includes(page)) return null;
+  const url = (target: L) => `${origins[target]}/${target}${page}`;
+  return [
+    `<${url(locale)}>; rel="canonical"`,
+    ...options.locales.map((target) => `<${url(target)}>; rel="alternate"; hreflang="${target}"`),
+    `<${url(options.defaultLocale)}>; rel="alternate"; hreflang="x-default"`,
+  ].join(", ");
+}
+
+export type SitemapEntry = { url: string; alternates: { languages: Record<string, string> } };
+
+/**
+ * Sitemap entries for the domain serving the request: every public page in each
+ * language whose home domain has this host, with its alternates (search engines
+ * expect a sitemap's URLs on its own host). Empty for any other host.
+ */
+export function sitemapEntries<L extends string>(
+  host: string,
+  origins: LocaleOrigins<L>,
+  options: { locales: readonly L[]; defaultLocale: L; pagePaths: readonly string[] },
+): SitemapEntry[] {
+  const url = (locale: L, page: string) => `${origins[locale]}/${locale}${page}`;
+  const home = options.locales.filter((locale) => new URL(origins[locale]).host === host);
+  return home.flatMap((locale) =>
+    options.pagePaths.map((page) => ({
+      url: url(locale, page),
+      alternates: {
+        languages: Object.fromEntries([
+          ...options.locales.map((target) => [target, url(target, page)]),
+          ["x-default", url(options.defaultLocale, page)],
+        ]),
+      },
+    })),
+  );
+}
+
+/** The sitemap URL for the requesting host, when it is a language's home domain. */
+export function sitemapUrl<L extends string>(host: string, origins: LocaleOrigins<L>) {
+  const origin = Object.values<string>(origins).find((value) => new URL(value).host === host);
+  return origin ? `${origin}/sitemap.xml` : undefined;
+}

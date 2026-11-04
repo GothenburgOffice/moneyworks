@@ -13,9 +13,8 @@ for (const locale of locales) {
   test.describe(`${locale}`, () => {
     test("the hub is readable and navigable without JavaScript", async ({ page, isMobile }) => {
       await page.goto(`/${locale}`);
-      await expect(page.locator("[data-home-view] h1")).toBeVisible();
+      await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
       await expect(page.locator("[data-theme-toggle]")).toBeHidden();
-      await expect(page.locator('[data-tool-panel="fire"]')).toBeHidden();
 
       // Native details disclose planned-tool information.
       const crypto = page.locator("#crypto");
@@ -28,14 +27,14 @@ for (const locale of locales) {
         await expect(menu.getByRole("link", { name: copy.nav.about })).toBeVisible();
       }
 
-      // CSS :target selects the pre-rendered tool view.
+      // The tool card is a plain link to the tool's own page.
       await page.getByRole("link", { name: copy.tools.open }).click();
+      await expect(page).toHaveURL(new RegExp(`/${locale}/tools/fire$`));
       await expect(page.locator('[data-tool-panel="fire"] h1')).toBeVisible();
-      await expect(page.locator("[data-home-view]")).toBeHidden();
     });
 
-    test("the FIRE view explains itself while calculation is unavailable", async ({ page }) => {
-      await page.goto(`/${locale}#fire-calculator`);
+    test("the FIRE page explains itself while calculation is unavailable", async ({ page }) => {
+      await page.goto(`/${locale}/tools/fire`);
       const calculator = page.locator("[data-fire]");
       await expect(calculator.getByRole("heading", { name: fire.title })).toBeVisible();
       // Chromium stops scripts here but still parses <noscript> as one raw text node.

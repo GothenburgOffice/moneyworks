@@ -62,8 +62,8 @@ stored in browser storage.
   44×44px mobile menu summary that closes on navigation and Escape.
 - **ToolCard:** category, status (available or planned), purpose and native
   expandable details. Planned tools never show fake inputs or results.
-- **ToolView:** a focused tool workspace with its own banner, sharing only the
-  header and footer with the hub.
+- **ToolView:** a tool's own page (`/[locale]/tools/[tool]`) with its own banner,
+  sharing only the header and footer with the hub.
 - **LearnSection:** native disclosures, one open initially.
 - **Footer:** logo, necessary-only cookie notice as a sentence with native
   details (no banner).
