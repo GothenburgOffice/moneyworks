@@ -92,6 +92,17 @@ test("without LOCALE_ORIGINS, pages send no same-host hreflang links", async () 
   }
 });
 
+test("robots.txt and sitemap.xml respond without naming unconfigured domains", async () => {
+  const robots = await fetch(`${base}/robots.txt`);
+  assert.equal(robots.status, 200);
+  const rules = await robots.text();
+  assert.match(rules, /Disallow: \/admin/);
+  assert.doesNotMatch(rules, /Sitemap:/);
+  const sitemap = await fetch(`${base}/sitemap.xml`);
+  assert.equal(sitemap.status, 200);
+  assert.doesNotMatch(await sitemap.text(), /<loc>/);
+});
+
 test("planned and unknown tools have no page", async () => {
   for (const tool of ["crypto", "missing"]) {
     const response = await fetch(`${base}/en/tools/${tool}`);

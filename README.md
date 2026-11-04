@@ -164,7 +164,9 @@ Copy `.env.example` to the gitignored root `.env` before starting any stack.
 - `LOCALE_ORIGINS` optionally names each language's home domain, for example
   `en=https://moneyworks.example,sv=https://pengarjobbar.example`. Every domain
   still serves every language; the hub and tool pages then send `canonical` and
-  `hreflang` Link headers pointing at each language's own domain. It is read at
+  `hreflang` Link headers pointing at each language's own domain, and each
+  domain's `/sitemap.xml` (named in `/robots.txt`) lists its languages' pages.
+  Language links still stay on the current domain. It is read at
   request time, so the published image needs no rebuild. Blank or invalid sends
   no such links.
 - Everything else is optional and off by default. Account and mail settings

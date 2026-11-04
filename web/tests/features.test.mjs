@@ -13,7 +13,12 @@ import {
   toolCatalog,
   toolPath,
 } from "../src/features/tools/catalog.ts";
-import { languageLinkHeader, parseLocaleOrigins } from "../src/features/site/language-links.ts";
+import {
+  languageLinkHeader,
+  parseLocaleOrigins,
+  sitemapEntries,
+  sitemapUrl,
+} from "../src/features/site/language-links.ts";
 import { getAccountCopy } from "../src/content/account.ts";
 import { getPrivacyCopy } from "../src/content/privacy.ts";
 
@@ -143,4 +148,23 @@ test("public pages link canonical and hreflang copies on each language's domain"
   );
   for (const path of ["/", "/en/account", "/sv/tools/crypto", "/de", "/en/tools/fire/x"])
     assert.equal(languageLinkHeader(path, origins, options), null, path);
+});
+
+test("each domain's sitemap lists its own languages' pages with alternates", () => {
+  const options = { locales, defaultLocale: "en", pagePaths: publicPagePaths };
+  const swedish = sitemapEntries("pengarjobbar.example", origins, options);
+  assert.deepEqual(
+    swedish.map((entry) => entry.url),
+    ["https://pengarjobbar.example/sv", "https://pengarjobbar.example/sv/tools/fire"],
+  );
+  assert.deepEqual(swedish[1].alternates.languages, {
+    en: "https://moneyworks.example/en/tools/fire",
+    sv: "https://pengarjobbar.example/sv/tools/fire",
+    "x-default": "https://moneyworks.example/en/tools/fire",
+  });
+  assert.deepEqual(sitemapEntries("other.example", origins, options), []);
+  const shared = { en: "https://pengar.example", sv: "https://pengar.example" };
+  assert.equal(sitemapEntries("pengar.example", shared, options).length, 4);
+  assert.equal(sitemapUrl("moneyworks.example", origins), "https://moneyworks.example/sitemap.xml");
+  assert.equal(sitemapUrl("127.0.0.1:3000", origins), undefined);
 });

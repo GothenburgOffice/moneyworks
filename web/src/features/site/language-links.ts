@@ -54,3 +54,36 @@ export function languageLinkHeader<L extends string>(
     `<${url(options.defaultLocale)}>; rel="alternate"; hreflang="x-default"`,
   ].join(", ");
 }
+
+export type SitemapEntry = { url: string; alternates: { languages: Record<string, string> } };
+
+/**
+ * Sitemap entries for the domain serving the request: every public page in each
+ * language whose home domain has this host, with its alternates (search engines
+ * expect a sitemap's URLs on its own host). Empty for any other host.
+ */
+export function sitemapEntries<L extends string>(
+  host: string,
+  origins: LocaleOrigins<L>,
+  options: { locales: readonly L[]; defaultLocale: L; pagePaths: readonly string[] },
+): SitemapEntry[] {
+  const url = (locale: L, page: string) => `${origins[locale]}/${locale}${page}`;
+  const home = options.locales.filter((locale) => new URL(origins[locale]).host === host);
+  return home.flatMap((locale) =>
+    options.pagePaths.map((page) => ({
+      url: url(locale, page),
+      alternates: {
+        languages: Object.fromEntries([
+          ...options.locales.map((target) => [target, url(target, page)]),
+          ["x-default", url(options.defaultLocale, page)],
+        ]),
+      },
+    })),
+  );
+}
+
+/** The sitemap URL for the requesting host, when it is a language's home domain. */
+export function sitemapUrl<L extends string>(host: string, origins: LocaleOrigins<L>) {
+  const origin = Object.values<string>(origins).find((value) => new URL(value).host === host);
+  return origin ? `${origin}/sitemap.xml` : undefined;
+}
