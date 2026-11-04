@@ -9,44 +9,6 @@ import {
 import { getTools, toolCatalog } from "../src/features/tools/catalog.ts";
 import { getAccountCopy } from "../src/content/account.ts";
 import { getPrivacyCopy } from "../src/content/privacy.ts";
-import { getFireCopy } from "../src/content/fire.ts";
-
-test("FIRE controller copy keys exist in both locales", () => {
-  const controller = readFileSync(
-    new URL("../src/enhancements/fire-calculator.js", import.meta.url),
-    "utf8",
-  );
-  const keys = new Set(
-    [...controller.matchAll(/\bcopy\.([A-Za-z_]\w*)/g)].map((match) => match[1]),
-  );
-  for (const locale of ["en", "sv"]) {
-    const copy = getFireCopy(locale);
-    for (const key of keys)
-      assert.equal(typeof copy[key], "string", `Missing ${locale} FIRE copy: ${key}`);
-  }
-});
-
-test("FIRE result selectors used by the controller exist in its server-rendered view", () => {
-  const controller = readFileSync(
-    new URL("../src/enhancements/fire-calculator.js", import.meta.url),
-    "utf8",
-  );
-  const view = readFileSync(
-    new URL("../src/components/fire/fire-results.tsx", import.meta.url),
-    "utf8",
-  );
-  const attributes = new Set(
-    [...view.matchAll(/\b(data-result-[a-z-]+)(?=[\s=>])/g)].map((match) => match[1]),
-  );
-  const selectors = [
-    ...controller.matchAll(
-      /(?:text|querySelector|querySelectorAll)\(["']\[(data-result-[a-z-]+)\]["']/g,
-    ),
-  ];
-  assert.ok(selectors.length > 10);
-  for (const [, attribute] of selectors)
-    assert.ok(attributes.has(attribute), `Missing result marker: ${attribute}`);
-});
 
 test("account query allows only implemented views and feedback", () => {
   for (const view of [...accountFormViews, "privacy"])

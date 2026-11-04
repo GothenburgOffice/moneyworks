@@ -158,27 +158,25 @@ tax schedules. Stress-test lower returns, higher spending and longer horizons.
 - **Presentation:** `web/src/components/fire/` separates section, numeric fields,
   pension editing and result scaffold. `content/fire.ts` owns EN/SV copy;
   `styles/fire.css` owns the feature styles.
-- **Interaction:** `web/src/enhancements/fire-calculator.js` reads native controls,
-  draws safe text/SVG/table output and hides stale results. Another tool should
-  have its own small enhancement, not grow this one.
-- **Build:** `scripts/build-fire.mjs` uses the existing TypeScript compiler to
-  combine the tested engine and DOM enhancement into one classic script, rejecting
-  runtime imports. No browser compiler, client framework or chart package is added.
-  Prebuild/predev generates ignored `public/fire-calculator.js`; after editing
-  model/enhancement source during development, rerun this generator before reload.
+- **Interaction:** `fire-workspace.tsx` is a React client component (decision #4)
+  inside the server-rendered section. It keeps inputs, accepted payouts and the
+  last result in component state, imports the model directly and hides stale
+  results. `fire-results.tsx` and `fire-chart.tsx` render text, SVG and tables
+  from that state. No chart package is added. Another tool gets its own
+  workspace component, not a branch of this one.
 - **Tests:** `npm run test:fire` covers independent annuity/backward calculations,
   pension boundaries/overlaps, bridging, reserves, preservation, zero/negative
   returns and age search. `npm run test:e2e` drives the real page in Chromium and
   compares its results with the same engine. Architecture and account checks still apply.
 
-Main content remains SSG, not a client-rendered app. Without JavaScript, labels,
-explanations and method remain HTML; calculation/pension controls are disabled.
-Native account forms remain unaffected.
+Main content remains SSG; only the workspace hydrates. Calculation needs
+JavaScript: without it, labels, explanations and method remain HTML, the
+calculation/pension controls are disabled and a notice says why.
 
 ## Privacy
 
 Financial values have no form field names, avoiding accidental URL submission.
-The enhancement uses a local button/Enter handler, also intercepts submission,
+The workspace uses a local button/Enter handler, also intercepts submission,
 and makes no network requests. Inputs stay
 in the current page: no cookies, browser storage or account saving.
 Changing language/reloading starts another page. No real pension entitlement is

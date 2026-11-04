@@ -40,7 +40,8 @@ sends only the origin, yet preserves the real Origin on native form POSTs. Do
 not use no-referrer on these pages: browsers then submit Origin:null and the
 intentionally strict CSRF check must reject them.
 
-Forms work through full-document POST/redirect/GET without JavaScript. The small
+Forms work through full-document POST/redirect/GET without JavaScript. That is
+how they are built, not a requirement: account pages may use JavaScript (decision #4). The small
 form bridge invokes the actual Better Auth HTTP handler, not `auth.api` for
 mutations: [server API calls bypass library rate limits](https://www.better-auth.com/docs/concepts/rate-limit).
 Session validation on the private account page checks the real database, not

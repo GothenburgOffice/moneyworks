@@ -79,6 +79,7 @@ stored in browser storage.
   transitions and smooth scrolling. No content depends on entry animation.
 - One H1, landmarks, skip link, visible keyboard focus, at least 44px targets.
 - Content, links, language switching and disclosures work without JavaScript.
+  Tool workspaces and account pages may require it (decision #4).
 
 ## Don'ts
 

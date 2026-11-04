@@ -47,7 +47,6 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
     "src/generated/prisma/**",
-    "public/fire-calculator.js",
     "playwright-report/**",
     "test-results/**",
   ]),

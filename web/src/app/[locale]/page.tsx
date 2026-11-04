@@ -62,7 +62,6 @@ export default async function HomePage({ params }: Props) {
       </main>
       <SiteFooter copy={copy} locale={language} />
       <script src="/site-ui.js" defer />
-      <script src="/fire-calculator.js" defer />
     </div>
   );
 }
