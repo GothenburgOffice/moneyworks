@@ -176,6 +176,44 @@ switches it off. Saving another client takes effect at once in that app process.
   Never blindly trust arbitrary X-Forwarded-For. See the library's
   [proxy and IP guidance](https://www.better-auth.com/docs/concepts/rate-limit).
 
+## Account lifecycle: export, deletion and admin user management
+
+Members manage their own data on the account page:
+
+- **Export:** "Download my data" is `GET /api/account/export`, a JSON file of
+  everything stored about the signed-in member: the account row, sign-in methods
+  (for Google, the account ID Google gave this site), active sessions with IP and
+  browser, and saved scenarios. It never includes password hashes, session tokens or
+  anything else that signs in, and it only ever exports the session's own user.
+  The format is versioned (`format: "moneyworks-account-export"`, `version: 1`);
+  there is no import.
+- **Deletion:** the "Delete account" form posts to `/api/account/delete`, which calls
+  Better Auth's `delete-user` through the form bridge (rate limited, 5/minute). It
+  needs the confirmation box, and a password member's password: the bridge refuses
+  an empty one, because Better Auth would otherwise accept any recent session. A
+  Google member needs a session younger than `freshAge` (10 minutes), so they sign
+  in with Google again first. The user and everything it owns (accounts, sessions,
+  scenarios) are deleted at once, with no grace period, and the session cookie is
+  cleared. The last admin who can sign in cannot delete their own account.
+
+Admins manage accounts at `/admin/users` (same 404-unless-admin rule as `/admin`):
+a server-paged list (50 per page) with email search, an Active/Locked/Trash
+filter, sorting by email, creation or last sign-in, and per-account actions:
+
+- **Lock / Unlock:** `User.lockedAt`. Locking ends the account's sessions at once.
+- **Trash / Restore:** `User.deletedAt`. The trash also ends sessions and blocks
+  sign-in; after 30 days (`TRASH_DAYS`) the account is deleted with all its data.
+  Expired trash is purged when the first page of the list loads and by
+  `auth:cleanup -- --apply`.
+- An admin cannot lock or trash their own account, and the last admin who can still
+  sign in cannot be locked or trashed. Changes run one at a time under a
+  PostgreSQL advisory lock, so two admins cannot remove each other.
+
+A locked or trashed account cannot sign in by any method: a `session.create.before`
+hook refuses the session after the password or Google check, and the account page
+says the account is locked (callback error `account_locked` for Google).
+`User.lastSignInAt` is set on every new session and shown in the list.
+
 ## Cookies and privacy
 
 The application uses a necessary-only profile, not a fake consent banner:
@@ -198,10 +236,12 @@ hosting audit. If analytics, embeds, marketing or other non-essential storage is
 introduced, gate it appropriately before loading and revisit consent design.
 
 `npm run auth:cleanup` is a dry run. `npm run auth:cleanup -- --apply` purges only
-expired sessions/verification and rate-limit records older than a day. Configure
-an operator-owned schedule and backup retention; no automation was created here.
-Account-erasure requests currently go to the configured contact, not a made-up
-self-service deletion screen.
+expired sessions/verification, rate-limit records older than a day and accounts
+that have been in the admin trash for 30 days. Configure an operator-owned schedule
+and backup retention; no automation was created here. Members delete their own
+account and download their data on the account page; other erasure or access
+requests go to the configured privacy contact. Deleted accounts remain in
+backups until those expire.
 
 ## Testing
 
@@ -212,14 +252,17 @@ self-service deletion screen.
 - `npm run test:accounts`: built-app HTTP integration with an explicit
   `AUTH_TEST_DATABASE_URL` pointing to a migrated disposable database.
   It starts a loopback Next instance and capture-only SMTP service, creates its
-  own test user, verifies/reset/logs in/out and removes its own fixtures.
+  own test user, verifies/reset/logs in/out and removes its own fixtures. It also
+  covers the export, self-deletion, the last-admin guard, locking (password and
+  Google) and the trash with its 30-day purge.
   Never target a production database.
 - `npm run test:e2e:accounts`: the account pages in Chromium (desktop and phone,
   English and Swedish) against the same fixture, after `npm run build` and with
   the same `AUTH_TEST_DATABASE_URL`: registration, the mailed verification and
   recovery links, sign-in, language switching while signed in, sign-out, form
-  messages, the disabled reset form, the privacy page and the whole flow without
-  JavaScript. It deletes the users and rate-limit rows it created.
+  messages, the disabled reset form, the privacy page, the data download, account
+  deletion and the whole flow (deletion included) without JavaScript. It deletes
+  the users and rate-limit rows it created.
 - Existing lint, typecheck, Prisma, SSG, line-ending and audit checks remain.
 
 Account pages send anti-framing headers. Do not weaken cookie/origin or framing

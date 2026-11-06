@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { hashPassword } from "better-auth/crypto";
 const require = createRequire(new URL("../package.json", import.meta.url));
 const { Pool } = require("pg");
 if (!process.env.AUTH_TEST_DATABASE_URL)
@@ -688,6 +689,229 @@ try {
   assert.ok(page.includes("Site settings"));
   checks.push("an admin who signs in with Google switches too and still reaches /admin");
 
+  // Account lifecycle: members export and delete their own data; admins lock accounts
+  // and move them to the trash at /admin/users. Members are inserted directly, verified.
+  const memberPassword = "a lifecycle member test passphrase";
+  const makeMember = async (id, address) => {
+    await pool.query(
+      `INSERT INTO "User" (id, name, email, "emailVerified", "updatedAt")
+       VALUES ($1, 'MoneyWorks member', $2, true, now())`,
+      [id, address],
+    );
+    await pool.query(
+      `INSERT INTO "Account" (id, "accountId", "providerId", "userId", password, "updatedAt")
+       VALUES ($1 || '-credential', $1, 'credential', $1, $2, now())`,
+      [id, await hashPassword(memberPassword)],
+    );
+  };
+  // A browser of its own per member: its cookies and form posts.
+  const browser = () => {
+    const cookies = new Map();
+    const cookie = () => [...cookies].map(([key, value]) => `${key}=${value}`).join("; ");
+    const post = async (path, fields, origin = base) => {
+      const result = await fetch(`${base}/api/${path}`, {
+        method: "POST",
+        redirect: "manual",
+        headers: {
+          origin,
+          "content-type": "application/x-www-form-urlencoded",
+          "x-test-client-ip": `198.51.100.${counter++}`,
+          ...(cookies.size ? { cookie: cookie() } : {}),
+        },
+        body: new URLSearchParams(fields),
+      });
+      for (const set of result.headers.getSetCookie()) {
+        const [first] = set.split(";");
+        const [key, value] = [
+          first.slice(0, first.indexOf("=")),
+          first.slice(first.indexOf("=") + 1),
+        ];
+        if (!value || /Max-Age=0/i.test(set)) cookies.delete(key);
+        else cookies.set(key, value);
+      }
+      return result;
+    };
+    const get = (path) => fetch(`${base}${path}`, { headers: { cookie: cookie() } });
+    const session = async () => (await (await get("/api/auth/get-session")).json())?.session;
+    return { post, get, session, cookies };
+  };
+  const signIn = (who, address) =>
+    who.post("account/login", { email: address, password: memberPassword, locale: "en" });
+  const userRow = async (address) =>
+    (
+      await pool.query(
+        'SELECT id, "lockedAt", "deletedAt", "lastSignInAt" FROM "User" WHERE email=$1',
+        [address],
+      )
+    ).rows[0];
+
+  const lockedEmail = "mw-lifecycle-locked-qa@example.invalid";
+  await makeMember("lifecycle-locked-qa", lockedEmail);
+  await insertScenario("lifecycle-locked-qa");
+  const member = browser();
+  assert.equal(message(await signIn(member, lockedEmail)), "");
+  assert.ok(await member.session());
+  assert.ok((await userRow(lockedEmail)).lastSignInAt, "sign-in recorded");
+
+  // Export: only the signed-in member's own data, as a download, without secrets.
+  assert.equal((await fetch(`${base}/api/account/export`)).status, 401);
+  response = await member.get("/api/account/export");
+  assert.equal(response.status, 200);
+  assert.match(
+    response.headers.get("content-disposition"),
+    /^attachment; filename="moneyworks-account-\d{4}-\d{2}-\d{2}\.json"$/,
+  );
+  assert.equal(response.headers.get("cache-control"), "no-store");
+  const exportText = await response.text();
+  const exported = JSON.parse(exportText);
+  assert.equal(exported.format, "moneyworks-account-export");
+  assert.equal(exported.account.email, lockedEmail);
+  assert.deepEqual(
+    exported.signInMethods.map((method) => method.method),
+    ["password"],
+  );
+  assert.equal(exported.sessions.filter((session) => session.current).length, 1);
+  assert.deepEqual(
+    exported.scenarios.map((scenario) => scenario.data),
+    [{ spending: 1 }],
+  );
+  const storedHash = (
+    await pool.query(`SELECT password FROM "Account" WHERE "userId"='lifecycle-locked-qa'`)
+  ).rows[0].password;
+  const storedToken = (
+    await pool.query(`SELECT token FROM "Session" WHERE "userId"='lifecycle-locked-qa'`)
+  ).rows[0].token;
+  assert.ok(!exportText.includes(storedHash) && !exportText.includes(storedToken));
+  page = await (await member.get("/en/account")).text();
+  assert.ok(page.includes('href="/api/account/export"') && page.includes("Delete my account"));
+  checks.push("export: own data only, as a no-store download without hashes or tokens");
+
+  // /admin/users exists for admins only.
+  assert.equal((await member.get("/admin/users")).status, 404);
+  assert.equal((await member.post("admin/users", { userId: "x", op: "lock" })).status, 404);
+  page = await (await fetch(`${base}/admin/users`, { headers: { cookie: cookieHeader() } })).text();
+  assert.ok(page.includes(lockedEmail) && page.includes(adminEmail));
+  const adminId = (await userRow(adminEmail)).id;
+  const lockedId = (await userRow(lockedEmail)).id;
+  assert.equal(message(await adminForm("admin/users", { userId: adminId, op: "lock" })), "self");
+  assert.equal(message(await adminForm("admin/users", { userId: adminId, op: "trash" })), "self");
+  assert.equal(
+    message(await adminForm("admin/users", { userId: lockedId, op: "drop" })),
+    "invalid",
+  );
+  assert.equal(
+    message(await adminForm("admin/users", { userId: "no-such-user", op: "lock" })),
+    "notFound",
+  );
+  assert.equal(
+    (
+      await adminForm(
+        "admin/users",
+        { userId: lockedId, op: "lock" },
+        { origin: "https://attacker.invalid" },
+      )
+    ).status,
+    403,
+  );
+  assert.equal((await userRow(lockedEmail)).lockedAt, null);
+  checks.push("/admin/users: admins only, never on yourself, cross-site posts refused");
+
+  // Lock: sessions end at once, and the password no longer signs in.
+  response = await adminForm("admin/users", {
+    userId: lockedId,
+    op: "lock",
+    return: "?scope=active&q=lifecycle&page=2&sort=bogus",
+  });
+  const back = new URL(response.headers.get("location"));
+  assert.equal(back.pathname, "/admin/users");
+  assert.equal(back.search, "?q=lifecycle&scope=active&page=2&message=lock");
+  assert.ok((await userRow(lockedEmail)).lockedAt);
+  assert.equal(await member.session(), undefined);
+  assert.equal(message(await signIn(member, lockedEmail)), "locked");
+  assert.equal(await member.session(), undefined, "a locked sign-in starts no session");
+  assert.equal(
+    (await pool.query(`SELECT 1 FROM "Session" WHERE "userId"='lifecycle-locked-qa'`)).rowCount,
+    0,
+  );
+  assert.equal(
+    message(await adminForm("admin/users", { userId: lockedId, op: "unlock" })),
+    "unlock",
+  );
+  assert.equal(message(await signIn(member, lockedEmail)), "");
+  const googleMemberId = (await userRow(memberEmail)).id;
+  await adminForm("admin/users", { userId: googleMemberId, op: "lock" });
+  result = await googleSignIn({ sub: "google-member", email: memberEmail, email_verified: true });
+  assert.equal(result.session, null);
+  assert.equal(result.location.searchParams.get("error"), "account_locked");
+  await adminForm("admin/users", { userId: googleMemberId, op: "unlock" });
+  checks.push("locking ends sessions and blocks sign-in, Google too; unlocking allows it again");
+
+  // Trash: locked out at once, restorable, and deleted with its data after 30 days.
+  assert.equal(message(await adminForm("admin/users", { userId: lockedId, op: "trash" })), "trash");
+  assert.equal(await member.session(), undefined);
+  assert.equal(message(await signIn(member, lockedEmail)), "locked");
+  page = await (
+    await fetch(`${base}/admin/users?scope=trash`, { headers: { cookie: cookieHeader() } })
+  ).text();
+  assert.ok(page.includes(`<td>${lockedEmail}`), "the trash lists the account");
+  assert.ok(!page.includes(`<td>${adminEmail}`), "the trash lists nothing else");
+  assert.equal(
+    message(await adminForm("admin/users", { userId: lockedId, op: "restore" })),
+    "restore",
+  );
+  assert.equal(message(await signIn(member, lockedEmail)), "");
+  await adminForm("admin/users", { userId: lockedId, op: "trash" });
+  await pool.query(
+    `UPDATE "User" SET "deletedAt" = now() - interval '31 days' WHERE id='lifecycle-locked-qa'`,
+  );
+  page = await (await fetch(`${base}/admin/users`, { headers: { cookie: cookieHeader() } })).text();
+  assert.ok(!page.includes(lockedEmail));
+  assert.equal(await userRow(lockedEmail), undefined);
+  assert.equal(
+    (await pool.query(`SELECT 1 FROM "Scenario" WHERE "userId"='lifecycle-locked-qa'`)).rowCount,
+    0,
+  );
+  checks.push("trash blocks sign-in, can be restored, and is purged with its data after 30 days");
+
+  // Self-service deletion: confirmed with the password, at once, with everything owned.
+  const leavingEmail = "mw-lifecycle-leaving-qa@example.invalid";
+  await makeMember("lifecycle-leaving-qa", leavingEmail);
+  await insertScenario("lifecycle-leaving-qa");
+  const leaving = browser();
+  assert.equal(message(await signIn(leaving, leavingEmail)), "");
+  const remove = (fields, origin) =>
+    leaving.post("account/delete", { locale: "sv", ...fields }, origin);
+  assert.equal(message(await remove({ password: memberPassword })), "deleteConfirm");
+  assert.equal(message(await remove({ confirm: "on" })), "deleteWrongPassword");
+  assert.equal(
+    message(await remove({ confirm: "on", password: "not the member's passphrase" })),
+    "deleteWrongPassword",
+  );
+  assert.equal(
+    (await remove({ confirm: "on", password: memberPassword }, "https://attacker.invalid")).status,
+    403,
+  );
+  assert.ok(await userRow(leavingEmail));
+  page = await (await leaving.get("/sv/account?message=deleteWrongPassword")).text();
+  assert.ok(page.includes("Lösenordet stämde inte"));
+  response = await remove({ confirm: "on", password: memberPassword });
+  assert.equal(message(response), "deleted");
+  assert.equal(new URL(response.headers.get("location")).pathname, "/sv/account");
+  assert.equal(leaving.cookies.size, 0);
+  assert.equal(await userRow(leavingEmail), undefined);
+  assert.equal(
+    (await pool.query(`SELECT 1 FROM "Scenario" WHERE "userId"='lifecycle-leaving-qa'`)).rowCount,
+    0,
+  );
+  assert.equal(message(await signIn(leaving, leavingEmail)), "failed");
+  checks.push("members delete their own account and data at once, confirmed with the password");
+
+  // The last admin who can sign in cannot delete themselves (Google admin: fresh session).
+  response = await adminForm("account/delete", { locale: "en", confirm: "on" });
+  assert.equal(message(response), "deleteLastAdmin");
+  assert.ok(await userRow(adminEmail));
+  checks.push("the last active admin cannot delete their own account");
+
   await adminForm("account/logout", { locale: "en" });
   assert.equal((await adminForm("admin/settings", settingsFields)).status, 404);
   checks.push("admin sign-out ends access");
@@ -712,6 +936,8 @@ try {
         "mw-google-qa@example.invalid",
         "mw-google-member-qa@example.invalid",
         "mw-google-squatted-qa@example.invalid",
+        "mw-lifecycle-locked-qa@example.invalid",
+        "mw-lifecycle-leaving-qa@example.invalid",
       ],
     ]);
     await pool.query('DELETE FROM "SiteSetting"');
