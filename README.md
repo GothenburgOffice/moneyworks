@@ -8,15 +8,16 @@ A self-hosted, country-neutral personal-finance tool hub in English
   streams), with a narrated walkthrough video.
 - **Foundation:** email/password accounts with verification and recovery,
   optional Google sign-in, and an intentionally empty private area.
-- **Planned:** a crypto-tax tool, production hosting and more.
+- **Planned:** Learn articles edited at `/admin` (decided in #10), a crypto-tax
+  tool, production hosting and more.
 
 Work is tracked in [GitHub issues](https://github.com/GothenburgOffice/moneyworks/issues).
 Issues labelled [`decision`](https://github.com/GothenburgOffice/moneyworks/issues?q=label%3Adecision)
 are the decision log: open ones need answering before dependent work starts,
 closed ones record what was decided.
 
-Pages are pre-rendered by Next.js and their content is readable without
-JavaScript; a small script adds theme switching, and tools such as the FIRE
+Pages are server-rendered HTML (the hub and tool pages are pre-rendered and
+never read the database) and their content is readable without JavaScript; a small script adds theme switching, and tools such as the FIRE
 calculator run as React client components that need JavaScript.
 Financial inputs never leave the browser.
 
