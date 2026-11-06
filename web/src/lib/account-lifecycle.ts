@@ -27,6 +27,37 @@ export async function recordSignIn(userId: string) {
   });
 }
 
+// Right after a new session is committed: if an admin locked or trashed the account
+// since the check before it, the session goes and the sign-in fails. FOR SHARE waits
+// for an admin change still in progress (changeAccess updates the user row before it
+// deletes sessions), so either that change's DELETE sees this session, or this read
+// sees the change. Returns true when the session was removed.
+export async function endSessionIfBlocked(userId: string, sessionId: string) {
+  const db = getDatabase();
+  const [user] = await db.$queryRaw<{ lockedAt: Date | null; deletedAt: Date | null }[]>`
+    SELECT "lockedAt", "deletedAt" FROM "User" WHERE id = ${userId} FOR SHARE`;
+  if (!user || user.lockedAt || user.deletedAt) {
+    await db.session.deleteMany({ where: { id: sessionId } });
+    return true;
+  }
+  return false;
+}
+
+// Just before a member's own deletion: under the same lock as the admin actions, check
+// the last-admin rule and move the account to the trash. A second admin deleting
+// themselves at the same moment then sees this one as gone and is refused, and an
+// account whose deletion fails afterwards stays locked out and is purged later.
+export async function claimSelfDeletion(userId: string) {
+  return getDatabase().$transaction(async (tx) => {
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended('admin:user-access', 0))`;
+    const user = await tx.user.findUnique({ where: { id: userId }, select: { isAdmin: true } });
+    if (!user) return false;
+    if (!canRemoveAccess(user.isAdmin, await otherActiveAdmin(userId, tx))) return false;
+    await tx.user.update({ where: { id: userId }, data: { deletedAt: new Date() } });
+    return true;
+  });
+}
+
 // Is there an admin other than this user who can still sign in?
 export async function otherActiveAdmin(
   userId: string,
@@ -147,6 +178,8 @@ export async function loadExportSource(
     where: { id: userId },
     select: {
       id: true,
+      name: true,
+      image: true,
       email: true,
       emailVerified: true,
       isAdmin: true,

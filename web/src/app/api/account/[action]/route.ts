@@ -22,7 +22,10 @@ const errorMessages: Record<string, string> = {
   account_locked: "locked",
   INVALID_PASSWORD: "deleteWrongPassword",
   CREDENTIAL_ACCOUNT_NOT_FOUND: "deleteWrongPassword",
+  // delete-user throws SESSION_EXPIRED for a session older than freshAge; Better Auth's
+  // other sensitive routes use SESSION_NOT_FRESH, kept in case delete-user moves to it.
   SESSION_EXPIRED: "deleteSignInAgain",
+  SESSION_NOT_FRESH: "deleteSignInAgain",
   last_admin: "deleteLastAdmin",
 };
 export async function POST(request: Request, { params }: { params: Promise<{ action: string }> }) {

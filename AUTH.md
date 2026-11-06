@@ -194,7 +194,11 @@ Members manage their own data on the account page:
   Google member needs a session younger than `freshAge` (10 minutes), so they sign
   in with Google again first. The user and everything it owns (accounts, sessions,
   scenarios) are deleted at once, with no grace period, and the session cookie is
-  cleared. The last admin who can sign in cannot delete their own account.
+  cleared. The last admin who can sign in cannot delete their own account: just
+  before the delete, one transaction under the admin-actions advisory lock checks
+  that rule and moves the account to the trash, so two admins deleting themselves
+  at once cannot both pass (and an account whose delete then fails stays locked
+  out until the purge).
 
 Admins manage accounts at `/admin/users` (same 404-unless-admin rule as `/admin`):
 a server-paged list (50 per page) with email search, an Active/Locked/Trash
@@ -211,7 +215,10 @@ filter, sorting by email, creation or last sign-in, and per-account actions:
 
 A locked or trashed account cannot sign in by any method: a `session.create.before`
 hook refuses the session after the password or Google check, and the account page
-says the account is locked (callback error `account_locked` for Google).
+says the account is locked (callback error `account_locked` for Google). Once the
+session is committed, the `after` hook reads the user row again `FOR SHARE` and
+removes the session if the account was locked in between; an admin change updates
+the user row before it deletes sessions, so one of the two always catches it.
 `User.lastSignInAt` is set on every new session and shown in the list.
 
 ## Cookies and privacy

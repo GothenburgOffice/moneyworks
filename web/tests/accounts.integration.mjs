@@ -912,6 +912,41 @@ try {
   assert.ok(await userRow(adminEmail));
   checks.push("the last active admin cannot delete their own account");
 
+  // A Google member (here the admin) whose sign-in is older than 10 minutes is asked to
+  // sign in again before deleting.
+  await pool.query(
+    `UPDATE "Session" SET "createdAt" = "createdAt" - interval '11 minutes'
+     WHERE "userId" = $1`,
+    [adminId],
+  );
+  response = await adminForm("account/delete", { locale: "en", confirm: "on" });
+  assert.equal(message(response), "deleteSignInAgain");
+  await pool.query(
+    `UPDATE "Session" SET "createdAt" = "createdAt" + interval '11 minutes'
+     WHERE "userId" = $1`,
+    [adminId],
+  );
+  checks.push("a Google member with an old sign-in is asked to sign in again to delete");
+
+  // Two admins deleting themselves at the same moment: exactly one goes.
+  const secondAdminEmail = "mw-lifecycle-admin-qa@example.invalid";
+  await makeMember("lifecycle-admin-qa", secondAdminEmail);
+  await pool.query(`UPDATE "User" SET "isAdmin" = true WHERE id='lifecycle-admin-qa'`);
+  const secondAdmin = browser();
+  assert.equal(message(await signIn(secondAdmin, secondAdminEmail)), "");
+  const outcomes = await Promise.all([
+    adminForm("account/delete", { locale: "en", confirm: "on" }).then(message),
+    secondAdmin
+      .post("account/delete", { locale: "en", confirm: "on", password: memberPassword })
+      .then(message),
+  ]);
+  assert.deepEqual([...outcomes].sort(), ["deleteLastAdmin", "deleted"]);
+  const admins = await pool.query(
+    `SELECT email FROM "User" WHERE "isAdmin" AND "deletedAt" IS NULL AND "lockedAt" IS NULL`,
+  );
+  assert.equal(admins.rowCount, 1);
+  checks.push("two admins deleting themselves at once: exactly one goes, one admin remains");
+
   await adminForm("account/logout", { locale: "en" });
   assert.equal((await adminForm("admin/settings", settingsFields)).status, 404);
   checks.push("admin sign-out ends access");
@@ -938,6 +973,7 @@ try {
         "mw-google-squatted-qa@example.invalid",
         "mw-lifecycle-locked-qa@example.invalid",
         "mw-lifecycle-leaving-qa@example.invalid",
+        "mw-lifecycle-admin-qa@example.invalid",
       ],
     ]);
     await pool.query('DELETE FROM "SiteSetting"');

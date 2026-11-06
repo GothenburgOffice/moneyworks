@@ -8,7 +8,12 @@ import { accountConfig, authCookieOptions } from "./auth-config";
 import { queueAccountEmail } from "./auth-mail";
 import { loadAccountConfig, loadAccountSettings } from "./site-settings";
 import { endUnverifiedSessions, removePassword, usesGoogleOnly } from "./sign-in-methods";
-import { accessBlocked, otherActiveAdmin, recordSignIn } from "./account-lifecycle";
+import {
+  accessBlocked,
+  claimSelfDeletion,
+  endSessionIfBlocked,
+  recordSignIn,
+} from "./account-lifecycle";
 
 type GoogleClient = { clientId: string; clientSecret: string } | null;
 const locale = (request?: Request) => request?.headers.get("x-moneyworks-locale") || "en";
@@ -169,7 +174,14 @@ function createAuth(secure: boolean, google: GoogleClient) {
                 message: "This account is locked.",
               });
           },
+          // Checked again once the session exists, in case an admin locked the account
+          // in between: lib/account-lifecycle.ts explains the ordering.
           after: async (session, context) => {
+            if (await endSessionIfBlocked(session.userId, session.id))
+              throw new APIError("FORBIDDEN", {
+                code: "account_locked",
+                message: "This account is locked.",
+              });
             if (context?.path?.startsWith("/callback/")) await removePassword(session.userId);
             await recordSignIn(session.userId);
           },
@@ -183,12 +195,10 @@ function createAuth(secure: boolean, google: GoogleClient) {
     user: {
       deleteUser: {
         enabled: true,
+        // Checks the rule and moves the account to the trash in one locked step, so
+        // two admins deleting themselves at once cannot both pass.
         beforeDelete: async (user) => {
-          const admin = await getDatabase().user.findUnique({
-            where: { id: user.id },
-            select: { isAdmin: true },
-          });
-          if (admin?.isAdmin && !(await otherActiveAdmin(user.id)))
+          if (!(await claimSelfDeletion(user.id)))
             throw new APIError("FORBIDDEN", {
               code: "last_admin",
               message: "The last admin cannot delete their account.",

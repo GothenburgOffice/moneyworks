@@ -80,6 +80,8 @@ export const EXPORT_VERSION = 1;
 export type ExportSource = {
   user: {
     id: string;
+    name: string;
+    image: string | null;
     email: string;
     emailVerified: boolean;
     isAdmin: boolean;
@@ -117,6 +119,8 @@ export function buildAccountExport(source: ExportSource, now: Date) {
     exportedAt: now.toISOString(),
     account: {
       id: user.id,
+      name: user.name,
+      image: user.image,
       email: user.email,
       emailVerified: user.emailVerified,
       isAdmin: user.isAdmin,
