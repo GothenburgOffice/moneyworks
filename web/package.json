@@ -24,7 +24,7 @@
     "test:architecture": "node --test tests/architecture.test.mjs tests/features.test.mjs tests/workspace.test.mjs",
     "test:fire": "node --test tests/fire.test.mjs",
     "auth:cleanup": "node scripts/cleanup-auth.mjs",
-    "test:auth-config": "node --test tests/auth-config.test.mjs tests/secrets.test.mjs",
+    "test:auth-config": "node --test tests/auth-config.test.mjs tests/secrets.test.mjs tests/account-lifecycle.test.mjs",
     "test:accounts": "node tests/accounts.integration.mjs",
     "typecheck": "prisma generate && next typegen && tsc --noEmit",
     "db:validate": "prisma validate",

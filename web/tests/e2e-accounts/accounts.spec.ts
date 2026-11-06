@@ -1,3 +1,4 @@
+import { readFile } from "node:fs/promises";
 import { getAccountCopy } from "@/content/account";
 import { getPrivacyCopy } from "@/content/privacy";
 import type { Locale } from "@/content/site";
@@ -85,6 +86,38 @@ for (const locale of locales) {
       await expect(page.getByRole("heading", { level: 1 })).toHaveText(copy.futureTitle);
     });
 
+    test("data export and deleting the account", async ({ page }) => {
+      const email = uniqueEmail(`delete-${locale}`);
+      await registerVerified(page, locale, email);
+      await signIn(page, locale, email);
+      await expect(page.getByRole("heading", { level: 1 })).toHaveText(copy.futureTitle);
+
+      const [download] = await Promise.all([
+        page.waitForEvent("download"),
+        page.getByRole("link", { name: copy.exportData }).click(),
+      ]);
+      expect(download.suggestedFilename()).toMatch(/^moneyworks-account-\d{4}-\d{2}-\d{2}\.json$/);
+      const exported = JSON.parse(await readFile(await download.path(), "utf8")) as {
+        account: { email: string };
+      };
+      expect(exported.account.email).toBe(email);
+
+      const danger = page.getByRole("region", { name: copy.deleteTitle });
+      await danger.getByLabel(copy.password).fill(`${password} typo`);
+      await danger.getByLabel(copy.deleteConfirmLabel).check();
+      await danger.getByRole("button", { name: copy.deleteAccount }).click();
+      await expect(page.getByRole("status")).toHaveText(copy.deleteWrongPassword);
+      await expect(page.getByRole("heading", { level: 1 })).toHaveText(copy.futureTitle);
+
+      await danger.getByLabel(copy.password).fill(password);
+      await danger.getByLabel(copy.deleteConfirmLabel).check();
+      await danger.getByRole("button", { name: copy.deleteAccount }).click();
+      await expect(page.getByRole("status")).toHaveText(copy.deleted);
+      await expect(page.getByRole("heading", { level: 1 })).toHaveText(copy.loginTitle);
+      await signIn(page, locale, email);
+      await expect(page.getByRole("status")).toHaveText(copy.failed);
+    });
+
     test("form messages, disabled reset and the privacy page", async ({ page }) => {
       await page.goto(`/${locale}/account?view=register`);
       await fillCredentials(page, locale, uniqueEmail(`mismatch-${locale}`), password);
@@ -125,5 +158,17 @@ test.describe("without JavaScript", () => {
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(copy.futureTitle);
     await page.getByRole("button", { name: copy.logout }).click();
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(copy.loginTitle);
+  });
+
+  test("deleting the account", async ({ page }) => {
+    const copy = getAccountCopy("en");
+    const email = uniqueEmail("nojs-delete");
+    await registerVerified(page, "en", email);
+    await signIn(page, "en", email);
+    const danger = page.getByRole("region", { name: copy.deleteTitle });
+    await danger.getByLabel(copy.password).fill(password);
+    await danger.getByLabel(copy.deleteConfirmLabel).check();
+    await danger.getByRole("button", { name: copy.deleteAccount }).click();
+    await expect(page.getByRole("status")).toHaveText(copy.deleted);
   });
 });

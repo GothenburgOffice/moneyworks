@@ -77,6 +77,7 @@ export default async function AccountPage({ params, searchParams }: Props) {
         locale={language}
         copy={copy}
         privacyLabel={privacy.privacy}
+        message={message}
         user={{ email: session.user.email, emailVerified: session.user.emailVerified }}
         {...await accountSummary(session.user.id)}
         googleAvailable={google}

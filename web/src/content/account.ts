@@ -59,6 +59,26 @@ const en = {
   passwordChanged: "Your password has been changed. Sign in again with the new password.",
   tooMany: "Too many requests. Please wait at least a minute before trying again.",
   resetMissing: "Open a valid recovery link from your email, or request a new one.",
+  locked:
+    "This account is locked and cannot sign in. If you think that is a mistake, write to the privacy contact.",
+  dataTitle: "Your data",
+  dataBody:
+    "Download everything stored about your account as a JSON file: account details, sign-in methods, active sessions and saved work.",
+  exportData: "Download my data",
+  deleteTitle: "Delete account",
+  deleteBody:
+    "This deletes your account and everything saved in it at once. It cannot be undone, so download your data first if you want to keep it.",
+  deleteGoogleHint:
+    "To confirm it is you, sign out and sign in with Google again if it was more than 10 minutes ago.",
+  deleteConfirmLabel: "I understand that my account and its data are deleted for good.",
+  deleteAccount: "Delete my account",
+  deleted: "Your account and its data have been deleted.",
+  deleteConfirm: "Tick the box to confirm that you want to delete your account.",
+  deleteWrongPassword: "The password was not correct. Your account has not been deleted.",
+  deleteSignInAgain:
+    "To confirm it is you, sign out, sign in with Google again, then delete the account within 10 minutes.",
+  deleteLastAdmin:
+    "You are the only admin who can sign in, so this account cannot be deleted until another admin exists.",
 };
 export type AccountCopy = { [K in keyof typeof en]: string };
 const sv: AccountCopy = {
@@ -121,6 +141,26 @@ const sv: AccountCopy = {
   passwordChanged: "Ditt lösenord har ändrats. Logga in igen med det nya lösenordet.",
   tooMany: "För många försök. Vänta minst en minut och försök igen.",
   resetMissing: "Öppna en giltig återställningslänk från ditt mejl eller begär en ny.",
+  locked:
+    "Kontot är spärrat och kan inte logga in. Skriv till integritetskontakten om du tror att det är fel.",
+  dataTitle: "Dina uppgifter",
+  dataBody:
+    "Ladda ner allt som sparats om ditt konto som en JSON-fil: kontouppgifter, inloggningsmetoder, aktiva sessioner och sparat arbete.",
+  exportData: "Ladda ner mina uppgifter",
+  deleteTitle: "Radera kontot",
+  deleteBody:
+    "Kontot och allt som sparats i det raderas direkt. Det går inte att ångra, så ladda ner dina uppgifter först om du vill behålla dem.",
+  deleteGoogleHint:
+    "För att bekräfta att det är du: logga ut och logga in med Google igen om det var mer än 10 minuter sedan.",
+  deleteConfirmLabel: "Jag förstår att kontot och dess uppgifter raderas för gott.",
+  deleteAccount: "Radera mitt konto",
+  deleted: "Ditt konto och dess uppgifter har raderats.",
+  deleteConfirm: "Kryssa i rutan för att bekräfta att du vill radera kontot.",
+  deleteWrongPassword: "Lösenordet stämde inte. Kontot har inte raderats.",
+  deleteSignInAgain:
+    "För att bekräfta att det är du: logga ut, logga in med Google igen och radera sedan kontot inom 10 minuter.",
+  deleteLastAdmin:
+    "Du är den enda administratören som kan logga in, så kontot kan inte raderas förrän det finns en till.",
 };
 export function getAccountCopy(locale: Locale): AccountCopy {
   return locale === "sv" ? sv : en;
