@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { randomBytes } from "node:crypto";
 import { test } from "node:test";
-import { decryptSecret, encryptionReady, encryptSecret } from "../src/lib/secrets.ts";
+import { decryptSecret, encryptionReady, encryptSecret, sameSecret } from "../src/lib/secrets.ts";
 
 const env = { SETTINGS_ENCRYPTION_KEY: randomBytes(32).toString("base64") };
 
@@ -29,4 +29,23 @@ test("tampered values are rejected", () => {
   flipped[0] ^= 1;
   assert.equal(decryptSecret([version, iv, tag, flipped.toString("base64")].join(":"), env), null);
   assert.equal(decryptSecret("plaintext", env), null);
+});
+
+test("secrets are compared exactly, whatever their length", () => {
+  const password = "correct horse battery staple";
+  assert.equal(sameSecret(password, password), true);
+  assert.equal(sameSecret("", ""), true);
+  assert.equal(sameSecret("pässwörd ✓", "pässwörd ✓"), true);
+  for (const other of [
+    "",
+    "correct horse battery stapl",
+    "correct horse battery staple ",
+    "Correct horse battery staple",
+    password + "\0",
+    "x".repeat(2000),
+  ])
+    assert.equal(sameSecret(other, password), false, JSON.stringify(other.slice(0, 40)));
+  // Longer than the compared buffer never matches, even when equal.
+  const long = "y".repeat(1025);
+  assert.equal(sameSecret(long, long), false);
 });
