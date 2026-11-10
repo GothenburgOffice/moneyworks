@@ -221,7 +221,7 @@ jobs:
           docker compose exec -T db psql -U moneyworks -d moneyworks -tAc "SELECT value FROM ci_restart_check;" | grep -Fx 'Release image restart check'
       - name: Sign in to GHCR
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
-        uses: docker/login-action@v4.7.0
+        uses: docker/login-action@v4.8.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
