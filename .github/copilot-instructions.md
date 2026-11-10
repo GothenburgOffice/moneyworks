@@ -4,6 +4,21 @@ MoneyWorks is a self-hosted, country-neutral personal-finance tool hub. It imple
 
 This file is the shared reference for coding agents (Copilot reads it directly; `CLAUDE.md` imports it). Topic details live in `DESIGN.md`, `FIRE.md` and `AUTH.md`; history, decisions and planned work live in GitHub issues.
 
+## Shared standards
+
+This repo follows the owner's [WebDev Studio](https://github.com/hkarn/WebDev-Studio)
+standards: [stack](https://github.com/hkarn/WebDev-Studio/blob/main/standards/nextjs-postgres.md),
+[dev environment](https://github.com/hkarn/WebDev-Studio/blob/main/standards/dev-environment.md),
+[CI](https://github.com/hkarn/WebDev-Studio/blob/main/standards/ci.md),
+[dependencies](https://github.com/hkarn/WebDev-Studio/blob/main/standards/dependencies.md),
+[security](https://github.com/hkarn/WebDev-Studio/blob/main/standards/security.md) and
+[agent instructions](https://github.com/hkarn/WebDev-Studio/blob/main/standards/agent-instructions.md).
+Which services, models and providers to use, how to configure and price them, and the business
+decisions behind them come from
+[tech-research FINDINGS.md](https://github.com/hkarn/tech-research/blob/main/FINDINGS.md), which
+is private: the owner's agent sessions read it with `gh`. This repo's own files stay the authority
+for what is implemented here.
+
 ## Working rules
 
 - **Workflow:** Work on a branch and open a pull request. While iterating, run only `npm run typecheck` and `npm run lint`, and keep a note of which tests the changes call for. Run the rest before a commit or a PR, or when asked: lint, format check (`format:check`), typecheck and the unit tests (`test:line-endings`, `test:ui`, `test:architecture`, `test:fire`, `test:auth-config`), plus integration tests (`test:accounts`, `test:smoke`) when API, auth or database code changed and the browser/E2E tests (`test:e2e`, `test:e2e:accounts` for account pages) covering any changed UI. CI runs the full suite on every PR. Report the checks that actually ran; never claim a pass that was not observed.
