@@ -37,8 +37,8 @@
   "dependencies": {
     "@prisma/adapter-pg": "7.10.1",
     "@prisma/client": "7.10.1",
-    "better-auth": "1.7.14",
-    "next": "16.4.3",
+    "better-auth": "1.7.18",
+    "next": "16.4.5",
     "next-intl": "4.14.9",
     "nodemailer": "10.3.1",
     "pg": "8.23.1",
@@ -46,17 +46,17 @@
     "react-dom": "19.3.1"
   },
   "devDependencies": {
-    "@playwright/test": "1.64.1",
-    "@tailwindcss/postcss": "4.3.3",
+    "@playwright/test": "1.65.0",
+    "@tailwindcss/postcss": "4.3.5",
     "@types/node": "22.20.5",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "eslint": "9.39.5",
-    "eslint-config-next": "16.4.3",
+    "eslint-config-next": "16.4.5",
     "eslint-config-prettier": "10.1.8",
     "prettier": "3.9.10",
     "prisma": "7.10.1",
-    "tailwindcss": "4.3.3",
+    "tailwindcss": "4.3.5",
     "typescript": "6.0.3"
   },
   "allowScripts": {
