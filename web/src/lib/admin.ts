@@ -1,19 +1,20 @@
 import "server-only";
-import { createHash, randomUUID, timingSafeEqual } from "node:crypto";
+import { randomUUID } from "node:crypto";
 import { hashPassword } from "better-auth/crypto";
 import { validEmail } from "./auth-config";
 import { getAuth } from "./auth";
 import { getDatabase } from "./db";
+import { sameSecret } from "./secrets";
 
 type Env = Record<string, string | undefined>;
-const digest = (value: string) => createHash("sha256").update(value).digest();
 
-// True when a login submits exactly ADMIN_EMAIL and ADMIN_PASSWORD (constant time).
+// True when a login submits exactly ADMIN_EMAIL and ADMIN_PASSWORD (constant time, both
+// compared every time; the password is never hashed with a fast hash here).
 export function isBootstrapLogin(email: string, password: string, env: Env = process.env) {
   const expected = (env.ADMIN_EMAIL || "").trim().toLowerCase();
   if (!expected || !env.ADMIN_PASSWORD) return false;
-  const emailMatches = timingSafeEqual(digest(email), digest(expected));
-  return timingSafeEqual(digest(password), digest(env.ADMIN_PASSWORD)) && emailMatches;
+  const emailMatches = sameSecret(email, expected);
+  return sameSecret(password, env.ADMIN_PASSWORD) && emailMatches;
 }
 
 // While no admin exists, a login with ADMIN_EMAIL and ADMIN_PASSWORD creates that

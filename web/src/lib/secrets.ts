@@ -1,7 +1,7 @@
 // Secrets in SiteSetting are encrypted with AES-256-GCM, as in vocabulary-training. The key is
 // SETTINGS_ENCRYPTION_KEY (32 bytes, base64) from the environment, so a database dump alone
 // doesn't reveal them.
-import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
+import { createCipheriv, createDecipheriv, randomBytes, timingSafeEqual } from "node:crypto";
 
 type Env = Record<string, string | undefined>;
 function encryptionKey(env: Env) {
@@ -35,4 +35,20 @@ export function decryptSecret(stored: string, env: Env = process.env): string | 
   } catch {
     return null;
   }
+}
+
+// Compares a submitted secret (such as ADMIN_PASSWORD at sign-in) with the expected one in
+// constant time, without hashing it: both are copied into equal, zero-padded buffers, so the
+// time doesn't depend on where they differ or on either length. Anything longer than
+// SECRET_COMPARE_BYTES never matches; passwords are at most 128 characters.
+const SECRET_COMPARE_BYTES = 1024;
+export function sameSecret(given: string, expected: string) {
+  const a = Buffer.from(given, "utf8");
+  const b = Buffer.from(expected, "utf8");
+  const paddedA = Buffer.alloc(SECRET_COMPARE_BYTES);
+  const paddedB = Buffer.alloc(SECRET_COMPARE_BYTES);
+  a.copy(paddedA);
+  b.copy(paddedB);
+  const equal = timingSafeEqual(paddedA, paddedB);
+  return equal && a.length === b.length && a.length <= SECRET_COMPARE_BYTES;
 }
