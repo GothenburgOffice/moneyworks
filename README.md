@@ -7,7 +7,8 @@ A self-hosted, country-neutral personal-finance tool hub in English
   retirement age, planned drawdown or capital preservation, manual pension
   streams), with a narrated walkthrough video.
 - **Foundation:** email/password accounts with verification and recovery,
-  optional Google sign-in, and an intentionally empty private area.
+  optional Google sign-in, a data download and self-service account deletion,
+  and user management (lock, 30-day trash) for admins.
 - **Planned:** Learn articles edited at `/admin` (decided in #10), a crypto-tax
   tool, production hosting and more.
 
