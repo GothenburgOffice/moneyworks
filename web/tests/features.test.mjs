@@ -47,6 +47,7 @@ test("provider callback errors map to their own messages; others to the generic 
     ["googleSignupClosed", false],
   );
   assert.equal(parseAccountQuery({ error: "email_not_verified" }).message, "googleUnverified");
+  assert.equal(parseAccountQuery({ error: "account_locked" }).message, "locked");
   for (const error of ["state_not_found", "constructor", "toString"]) {
     const parsed = parseAccountQuery({ error, message: "passwordChanged" });
     assert.equal(parsed.hasError, true);

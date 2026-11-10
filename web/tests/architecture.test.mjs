@@ -56,7 +56,15 @@ test("ESLint actively rejects server imports in presentation files", async () =>
 });
 
 test("database and auth modules retain explicit server-only guards", () => {
-  for (const name of ["db", "auth", "auth-http", "auth-mail", "admin", "site-settings"]) {
+  for (const name of [
+    "db",
+    "auth",
+    "auth-http",
+    "auth-mail",
+    "admin",
+    "site-settings",
+    "account-lifecycle",
+  ]) {
     assert.match(readFileSync(`src/lib/${name}.ts`, "utf8"), /^import ["']server-only["'];/);
   }
 });

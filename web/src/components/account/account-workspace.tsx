@@ -1,11 +1,14 @@
 import Link from "next/link";
 import type { AccountCopy } from "@/content/account";
 import type { Locale } from "@/content/site";
+import type { AccountMessage } from "@/features/account/view";
 
 type Props = {
   locale: Locale;
   copy: AccountCopy;
   privacyLabel: string;
+  /** Feedback from a form posted while signed in, such as a refused deletion. */
+  message?: AccountMessage;
   user: { email: string; emailVerified: boolean };
   methods: { password: boolean; google: boolean };
   /** Admins get a link to the site settings at /admin. */
@@ -18,6 +21,7 @@ export function AccountWorkspace({
   locale,
   copy,
   privacyLabel,
+  message,
   user,
   methods,
   isAdmin,
@@ -25,6 +29,11 @@ export function AccountWorkspace({
 }: Props) {
   return (
     <section className="account-workspace">
+      {message && (
+        <p className="account-notice" role="status">
+          {copy[message]}
+        </p>
+      )}
       <div className="account-workspace-heading">
         <div>
           <p className="account-kicker">{copy.account}</p>
@@ -68,6 +77,41 @@ export function AccountWorkspace({
           ) : (
             <p>{copy.googleSecurity}</p>
           )}
+        </section>
+        <section>
+          <h2>{copy.dataTitle}</h2>
+          <p>{copy.dataBody}</p>
+          <a className="account-secondary account-action" href="/api/account/export" download>
+            {copy.exportData}
+          </a>
+        </section>
+        <section className="account-danger" aria-labelledby="delete-account">
+          <h2 id="delete-account">{copy.deleteTitle}</h2>
+          <p>{copy.deleteBody}</p>
+          <form action="/api/account/delete" method="post">
+            <input type="hidden" name="locale" value={locale} />
+            {methods.password ? (
+              <label>
+                {copy.password}
+                <input
+                  type="password"
+                  name="password"
+                  maxLength={128}
+                  autoComplete="current-password"
+                  required
+                />
+              </label>
+            ) : (
+              <p className="account-muted">{copy.deleteGoogleHint}</p>
+            )}
+            <label className="account-check">
+              <input type="checkbox" name="confirm" required />
+              {copy.deleteConfirmLabel}
+            </label>
+            <button className="account-secondary account-delete" type="submit">
+              {copy.deleteAccount}
+            </button>
+          </form>
         </section>
       </div>
       {isAdmin && (

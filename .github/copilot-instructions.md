@@ -4,6 +4,21 @@ MoneyWorks is a self-hosted, country-neutral personal-finance tool hub. It imple
 
 This file is the shared reference for coding agents (Copilot reads it directly; `CLAUDE.md` imports it). Topic details live in `DESIGN.md`, `FIRE.md` and `AUTH.md`; history, decisions and planned work live in GitHub issues.
 
+## Shared standards
+
+This repo follows the owner's [WebDev Studio](https://github.com/hkarn/WebDev-Studio)
+standards: [stack](https://github.com/hkarn/WebDev-Studio/blob/main/standards/nextjs-postgres.md),
+[dev environment](https://github.com/hkarn/WebDev-Studio/blob/main/standards/dev-environment.md),
+[CI](https://github.com/hkarn/WebDev-Studio/blob/main/standards/ci.md),
+[dependencies](https://github.com/hkarn/WebDev-Studio/blob/main/standards/dependencies.md),
+[security](https://github.com/hkarn/WebDev-Studio/blob/main/standards/security.md) and
+[agent instructions](https://github.com/hkarn/WebDev-Studio/blob/main/standards/agent-instructions.md).
+Which services, models and providers to use, how to configure and price them, and the business
+decisions behind them come from
+[tech-research FINDINGS.md](https://github.com/hkarn/tech-research/blob/main/FINDINGS.md), which
+is private: the owner's agent sessions read it with `gh`. This repo's own files stay the authority
+for what is implemented here.
+
 ## Working rules
 
 - **Workflow:** Work on a branch and open a pull request. While iterating, run only `npm run typecheck` and `npm run lint`, and keep a note of which tests the changes call for. Run the rest before a commit or a PR, or when asked: lint, format check (`format:check`), typecheck and the unit tests (`test:line-endings`, `test:ui`, `test:architecture`, `test:fire`, `test:auth-config`), plus integration tests (`test:accounts`, `test:smoke`) when API, auth or database code changed and the browser/E2E tests (`test:e2e`, `test:e2e:accounts` for account pages) covering any changed UI. CI runs the full suite on every PR. Report the checks that actually ran; never claim a pass that was not observed.
@@ -20,7 +35,7 @@ This file is the shared reference for coding agents (Copilot reads it directly; 
 
 - **Repository:** `GothenburgOffice/moneyworks`, MIT licensed, public.
 - **Application:** Next.js App Router, React, strict TypeScript, Tailwind CSS and `next-intl`, with `en` and `sv` locales.
-- **Database:** PostgreSQL 18 via Prisma 7 and `@prisma/adapter-pg`. Models: `User` (with `isAdmin`), `Account`, `Session`, `Verification` and `RateLimit` for accounts, `SiteSetting` (key/value site settings edited at `/admin`; secrets encrypted), plus `Scenario` for saved tool work (`userId`, `toolId`, `name`, `schemaVersion`, JSON `data`, created/updated times; deleted with its user). Nothing writes scenarios yet: saving is decision #8.
+- **Database:** PostgreSQL 18 via Prisma 7 and `@prisma/adapter-pg`. Models: `User` (with `isAdmin`, and `lockedAt`, `deletedAt` and `lastSignInAt` for admin user management), `Account`, `Session`, `Verification` and `RateLimit` for accounts, `SiteSetting` (key/value site settings edited at `/admin`; secrets encrypted), plus `Scenario` for saved tool work (`userId`, `toolId`, `name`, `schemaVersion`, JSON `data`, created/updated times; deleted with its user). Nothing writes scenarios yet: saving is decision #8.
 - **Toolchain:** Node.js and npm run only inside the Debian-based development container; the host needs Docker, not Node. CI installs its own matching toolchain.
 - **Node support:** `engines.node` is `>=22.12.0` for hosting flexibility. The Dockerfile and `@types/node` track Node 22 so newer-only APIs fail locally; CI runs a single unit job on Node 22, like vocabulary-training. Raise the floor in `package.json`, `Dockerfile`, `@types/node`, the CI `node-version` and the Dependabot holds together.
 - **Dependency policy:** Compatible stable releases, exact direct versions, committed lockfile. No forced peer overrides or prereleases. TypeScript and ESLint majors are held in Dependabot until lint-plugin peers support them. Prettier and `eslint-config-prettier` are dev-only, for one shared formatting standard across GothenburgOffice repositories. `@playwright/test` is dev-only: real-browser checks of navigation, the FIRE calculator, account pages and no-JS rendering that the mocked-DOM unit tests cannot cover.
@@ -52,9 +67,9 @@ moneyworks/
     ├── scripts/                  # FIRE bundle builder, auth cleanup
     ├── src/
     │   ├── app/[locale]/         # Static hub, static tools/[tool] pages and dynamic account route
-    │   ├── app/admin/            # Site settings form (404 unless a signed-in admin)
+    │   ├── app/admin/            # Site settings and users pages (404 unless a signed-in admin)
     │   ├── app/api/              # account and admin form adapters, auth endpoints, DB health
-    │   ├── components/           # Site, fire/, account/ and privacy/ components
+    │   ├── components/           # Site, fire/, account/, admin/ and privacy/ components
     │   ├── content/              # Typed site, brand, FIRE, account and privacy copy
     │   ├── features/             # Pure models: FIRE engine, account queries, tool catalogue
     │   ├── generated/prisma/     # Generated client; gitignored
@@ -121,6 +136,7 @@ moneyworks/
 - **Security:** Use Better Auth for hashing, verification, sessions, recovery, origin checks and durable rate limits. Keep auth/mail server-only. Never log credentials or token URLs, disable origin checks or authorize by cookie presence alone. Preserve the body limit, guarded IP-header boundary and fallback limiter.
 - **Configuration:** Missing origin/secret disables accounts (and `/admin`); missing mail disables registration and recovery but not sign-in (the first admin must reach `/admin` to set mail up); registration needs mail, real privacy details (reserved example domains never count) and the `/admin` switch. Do not invent operator details or enable public signup with fixture values.
 - **Admin:** Admins are ordinary members with `User.isAdmin`; they sign in on the account page, which links them to `/admin`. There is no separate admin sign-in. `/admin` is English-only and `noindex`; the page and its API answer 404 to everyone but a signed-in admin and uses the account forms' origin/size/type checks. Never display stored secrets; show only whether they are set and readable.
+- **Account lifecycle:** Members download their data (`/api/account/export`, versioned JSON, never hashes or tokens) and delete their own account at once (password, or a Google sign-in younger than 10 minutes); the user row cascades to everything it owns. Admins manage accounts at `/admin/users`: search, filter, sort, lock (ends sessions) and a 30-day trash that `auth:cleanup` and the list purge. Locked or trashed accounts cannot sign in by any method. Never on yourself, never the last admin who can sign in. `AUTH.md` "Account lifecycle" has the rules.
 - **Necessary-only storage:** No analytics, advertising or locale cookies. Keep the native footer cookie/privacy notice; no accept-all banner or consent cookie. Any optional tracking needs a privacy review and a decided issue first.
 - **Testing:** Real flows are tested against a disposable database and a loopback capture mailbox, over HTTP (`test:accounts`) and in a browser (`test:e2e:accounts`). Account pages send anti-framing headers; do not weaken cookie/origin/framing protections. `AUTH.md` has setup and verification details.
 

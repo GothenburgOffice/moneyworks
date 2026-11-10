@@ -12,11 +12,18 @@ export const accountMessages = [
   "unavailable",
   "googleSignupClosed",
   "googleUnverified",
+  "locked",
+  "deleted",
+  "deleteConfirm",
+  "deleteWrongPassword",
+  "deleteSignInAgain",
+  "deleteLastAdmin",
 ] as const;
 // Error codes a sign-in provider's callback may return that have their own message.
 const callbackErrors: Record<string, AccountMessage> = {
   signup_disabled: "googleSignupClosed",
   email_not_verified: "googleUnverified",
+  account_locked: "locked",
 };
 export type AccountMessage = (typeof accountMessages)[number];
 type Query = Record<string, string | string[] | undefined>;
