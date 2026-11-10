@@ -35,7 +35,7 @@ Financial inputs never leave the browser.
 ## Stack
 
 Next.js 16 (App Router), React 19, TypeScript 6, Tailwind CSS 4, next-intl,
-Prisma 7, PostgreSQL 18, Better Auth. Runs on Node.js 22.12 or newer; the dev
+Prisma 7, PostgreSQL 18, Better Auth. Runs on Node.js 22.13 or newer; the dev
 container, release image and CI all use Node 22. Exact versions are pinned
 in [web/package.json](web/package.json), the [Dockerfile](Dockerfile) and
 [compose.yaml](compose.yaml).
