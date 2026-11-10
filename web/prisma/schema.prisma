@@ -16,18 +16,26 @@ datasource db {
 // A user owns future saved work; credentials and future OAuth identities are
 // separate accounts. Never use an email address as the business-data foreign key.
 model User {
-  id            String    @id
+  id            String     @id
   name          String
-  email         String    @unique
-  emailVerified Boolean   @default(false)
+  email         String     @unique
+  emailVerified Boolean    @default(false)
   // Admins see /admin. Set in the database, or once from ADMIN_EMAIL (lib/admin.ts).
-  isAdmin       Boolean   @default(false)
+  isAdmin       Boolean    @default(false)
   image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  // Set by an admin at /admin/users. A locked account cannot sign in; one in the
+  // trash cannot either, and is deleted with all its data 30 days after deletedAt.
+  lockedAt      DateTime?
+  deletedAt     DateTime?
+  // Set when a session is created (lib/auth.ts), shown at /admin/users.
+  lastSignInAt  DateTime?
   sessions      Session[]
   accounts      Account[]
   scenarios     Scenario[]
+
+  @@index([deletedAt])
 }
 
 model Session {
@@ -40,6 +48,7 @@ model Session {
   userAgent String?
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([userId])
   @@index([expiresAt])
 }
@@ -59,6 +68,7 @@ model Account {
   password              String?
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
+
   @@unique([providerId, accountId])
   @@index([userId])
 }
@@ -70,6 +80,7 @@ model Verification {
   expiresAt  DateTime
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+
   @@index([identifier])
   @@index([expiresAt])
 }
@@ -93,6 +104,7 @@ model Scenario {
   data          Json
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+
   @@index([userId, toolId])
 }
 

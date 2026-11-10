@@ -2,17 +2,24 @@ import { NextResponse } from "next/server";
 import { boundedBody } from "@/lib/auth-http";
 import { accountConfig, validEmail } from "@/lib/auth-config";
 import { currentAdmin } from "@/lib/admin";
+import { changeAccess } from "@/lib/account-lifecycle";
+import {
+  parseUserListQuery,
+  userActions,
+  userListSearch,
+  type UserAction,
+} from "@/features/account/lifecycle";
 import { encryptionReady } from "@/lib/secrets";
 import { loadAccountSettings, saveSettings } from "@/lib/site-settings";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// The settings form at /admin. Same origin, size and type checks as the account forms;
-// admins sign in and out through the account forms.
+// The settings form at /admin and the account actions at /admin/users. Same origin,
+// size and type checks as the account forms; admins sign in and out through those.
 export async function POST(request: Request, { params }: { params: Promise<{ action: string }> }) {
   const { action } = await params;
-  if (action !== "settings") return new Response(null, { status: 404 });
+  if (action !== "settings" && action !== "users") return new Response(null, { status: 404 });
   const config = accountConfig();
   if (!config.ready) return new Response(config.problem, { status: 503 });
   const origin = request.headers.get("origin") || "";
@@ -32,7 +39,27 @@ export async function POST(request: Request, { params }: { params: Promise<{ act
     return response;
   };
   // Everyone but a signed-in admin gets 404, so the admin area doesn't reveal itself.
-  if (!(await currentAdmin(origin, request.headers))) return new Response(null, { status: 404 });
+  const admin = await currentAdmin(origin, request.headers);
+  if (!admin) return new Response(null, { status: 404 });
+
+  if (action === "users") {
+    // Back to the same view of the list, rebuilt from allowlisted values only.
+    const back = parseUserListQuery(
+      Object.fromEntries(new URLSearchParams(field("return").replace(/^\?/, ""))),
+    );
+    const op = field("op");
+    const userId = field("userId");
+    let message = "invalid";
+    if ((userActions as readonly string[]).includes(op) && userId && userId.length <= 200) {
+      const result = await changeAccess(admin.id, userId, op as UserAction);
+      message = result === "done" ? op : result;
+    }
+    const url = new URL(`/admin/users${userListSearch(back)}`, origin);
+    url.searchParams.set("message", message);
+    const response = NextResponse.redirect(url, 303);
+    response.headers.set("Cache-Control", "no-store");
+    return response;
+  }
 
   const settings = {
     controllerName: field("controllerName"),

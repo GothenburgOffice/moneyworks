@@ -8,6 +8,12 @@ import { accountConfig, authCookieOptions } from "./auth-config";
 import { queueAccountEmail } from "./auth-mail";
 import { loadAccountConfig, loadAccountSettings } from "./site-settings";
 import { endUnverifiedSessions, removePassword, usesGoogleOnly } from "./sign-in-methods";
+import {
+  accessBlocked,
+  claimSelfDeletion,
+  endSessionIfBlocked,
+  recordSignIn,
+} from "./account-lifecycle";
 
 type GoogleClient = { clientId: string; clientSecret: string } | null;
 const locale = (request?: Request) => request?.headers.get("x-moneyworks-locale") || "en";
@@ -159,9 +165,44 @@ function createAuth(secure: boolean, google: GoogleClient) {
       // sign-in has succeeded, so a failed link never costs the password.
       session: {
         create: {
-          after: async (session, context) => {
-            if (context?.path?.startsWith("/callback/")) await removePassword(session.userId);
+          // An account locked by an admin, or in the trash, cannot sign in by any method.
+          // This runs after the password or Google check, so it reveals nothing new.
+          before: async (session) => {
+            if (await accessBlocked(session.userId))
+              throw new APIError("FORBIDDEN", {
+                code: "account_locked",
+                message: "This account is locked.",
+              });
           },
+          // Checked again once the session exists, in case an admin locked the account
+          // in between: lib/account-lifecycle.ts explains the ordering.
+          after: async (session, context) => {
+            if (await endSessionIfBlocked(session.userId, session.id))
+              throw new APIError("FORBIDDEN", {
+                code: "account_locked",
+                message: "This account is locked.",
+              });
+            if (context?.path?.startsWith("/callback/")) await removePassword(session.userId);
+            await recordSignIn(session.userId);
+          },
+        },
+      },
+    },
+    // Members delete their own account from the account page (api/account/delete):
+    // with their password, or, for Google members, within freshAge of signing in.
+    // Everything they own goes with it (cascade). The last admin who can sign in
+    // cannot delete themselves, so the site never loses /admin.
+    user: {
+      deleteUser: {
+        enabled: true,
+        // Checks the rule and moves the account to the trash in one locked step, so
+        // two admins deleting themselves at once cannot both pass.
+        beforeDelete: async (user) => {
+          if (!(await claimSelfDeletion(user.id)))
+            throw new APIError("FORBIDDEN", {
+              code: "last_admin",
+              message: "The last admin cannot delete their account.",
+            });
         },
       },
     },
@@ -178,6 +219,7 @@ function createAuth(secure: boolean, google: GoogleClient) {
         "/request-password-reset": { window: 60, max: 3 },
         "/send-verification-email": { window: 60, max: 3 },
         "/reset-password": { window: 60, max: 5 },
+        "/delete-user": { window: 60, max: 5 },
       },
     },
     advanced: {

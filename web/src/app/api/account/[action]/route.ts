@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { ensureAdmin, isBootstrapLogin } from "@/lib/admin";
 import { boundedBody, handleAuthRequest } from "@/lib/auth-http";
+import { getAuth } from "@/lib/auth";
+import { usesGoogleOnly } from "@/lib/sign-in-methods";
 import { loadAccountConfig } from "@/lib/site-settings";
 
 export const runtime = "nodejs";
@@ -13,6 +15,18 @@ const operations: Record<string, string> = {
   reset: "reset-password",
   resend: "send-verification-email",
   google: "sign-in/social",
+  delete: "delete-user",
+};
+// Better Auth error codes that have their own message on the account page.
+const errorMessages: Record<string, string> = {
+  account_locked: "locked",
+  INVALID_PASSWORD: "deleteWrongPassword",
+  CREDENTIAL_ACCOUNT_NOT_FOUND: "deleteWrongPassword",
+  // delete-user throws SESSION_EXPIRED for a session older than freshAge; Better Auth's
+  // other sensitive routes use SESSION_NOT_FRESH, kept in case delete-user moves to it.
+  SESSION_EXPIRED: "deleteSignInAgain",
+  SESSION_NOT_FRESH: "deleteSignInAgain",
+  last_admin: "deleteLastAdmin",
 };
 export async function POST(request: Request, { params }: { params: Promise<{ action: string }> }) {
   const { action } = await params;
@@ -21,7 +35,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ act
   const config = await loadAccountConfig(action === "register");
   // Signing in and out needs only the origin and secret: the first admin must get in
   // to set up mail at /admin. Everything else sends mail or creates accounts.
-  const ready = ["login", "logout"].includes(action) ? config.ready : config.configured;
+  // Deleting your own account needs no mail either.
+  const ready = ["login", "logout", "delete"].includes(action) ? config.ready : config.configured;
   if (!ready) return new Response(config.problem, { status: 503 });
   // Fail closed: only exact allowed origins; no null/absent origins, wildcards,
   // forwarded-host guesses or GET mutations.
@@ -78,6 +93,16 @@ export async function POST(request: Request, { params }: { params: Promise<{ act
       disableRedirect: true,
     };
   }
+  if (action === "delete") {
+    if (form.get("confirm") !== "on") return redirect("login", "deleteConfirm");
+    const session = await (await getAuth(origin)).api.getSession({ headers: request.headers });
+    if (!session) return redirect("login", "");
+    // A password member always confirms with the password: without one, Better Auth
+    // accepts any recent session. Google members need a recent Google sign-in instead.
+    if (!(await usesGoogleOnly(session.user.id)) && !password)
+      return redirect("login", "deleteWrongPassword");
+    body = password ? { password } : {};
+  }
   if (action === "reset") {
     if (password !== form.get("confirmPassword"))
       return redirect("reset", "passwordMismatch", String(form.get("token") || ""));
@@ -109,18 +134,26 @@ export async function POST(request: Request, { params }: { params: Promise<{ act
     return response;
   }
   const view = action === "register" ? "register" : action === "forgot" ? "forgot" : "login";
+  const code =
+    !result.ok && result.status !== 429
+      ? String(((await result.json().catch(() => ({}))) as { code?: unknown }).code || "")
+      : "";
   const message =
     result.status === 429
       ? "tooMany"
       : !result.ok
-        ? "failed"
-        : action === "register" || action === "resend"
-          ? "verificationSent"
-          : action === "forgot"
-            ? "resetSent"
-            : action === "reset"
-              ? "passwordChanged"
-              : "";
+        ? Object.hasOwn(errorMessages, code)
+          ? errorMessages[code]
+          : "failed"
+        : action === "delete"
+          ? "deleted"
+          : action === "register" || action === "resend"
+            ? "verificationSent"
+            : action === "forgot"
+              ? "resetSent"
+              : action === "reset"
+                ? "passwordChanged"
+                : "";
   const response = redirect(view, message);
   for (const cookie of result.headers.getSetCookie()) response.headers.append("Set-Cookie", cookie);
   return response;

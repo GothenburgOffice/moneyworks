@@ -1,5 +1,5 @@
 import { headers } from "next/headers";
-import Link from "next/link";
+import { AdminNav } from "@/components/admin/admin-nav";
 import { notFound } from "next/navigation";
 import { accountConfig, requestOrigin } from "@/lib/auth-config";
 import { currentAdmin } from "@/lib/admin";
@@ -57,12 +57,8 @@ export default async function AdminPage({
   const password = secretState[settings.smtpPassword];
   return (
     <>
+      <AdminNav current="/admin" email={admin.email} />
       <h1>Site settings</h1>
-      <form method="post" action="/api/account/logout" className="admin-inline">
-        <input type="hidden" name="locale" value="en" />
-        Signed in as {admin.email}. <Link href="/en/account">Account</Link>{" "}
-        <button type="submit">Sign out</button>
-      </form>
       {notice && <p role="status">{notice}</p>}
       <form method="post" action="/api/admin/settings" className="admin-form">
         <fieldset>
