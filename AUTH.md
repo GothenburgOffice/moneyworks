@@ -274,7 +274,7 @@ backups until those expire.
 
 Account pages send anti-framing headers. Do not weaken cookie/origin or framing
 protections to make sign-in work inside an iframe. Real public
-signup requires operator mail/privacy configuration and hosting (#11, #12).
+signup requires operator mail/privacy configuration (#12).
 
 The `Scenario` table is ready for saved tool work but nothing writes to it yet
 (decision #8). Before storing financial records, add per-user authorization on

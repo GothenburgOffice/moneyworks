@@ -10,7 +10,7 @@ A self-hosted, country-neutral personal-finance tool hub in English
   optional Google sign-in, a data download and self-service account deletion,
   and user management (lock, 30-day trash) for admins.
 - **Planned:** Learn articles edited at `/admin` (decided in #10), a crypto-tax
-  tool, production hosting and more.
+  tool and more.
 
 Work is tracked in [GitHub issues](https://github.com/GothenburgOffice/moneyworks/issues).
 Issues labelled [`decision`](https://github.com/GothenburgOffice/moneyworks/issues?q=label%3Adecision)
