@@ -2,7 +2,11 @@ import createMiddleware from "next-intl/middleware";
 import { NextResponse, type NextRequest } from "next/server";
 import { routing } from "@/i18n/routing";
 import { publicPagePaths } from "@/features/tools/catalog";
-import { homeLocale, languageLinkHeader, parseLocaleOrigins } from "@/features/site/language-links";
+import {
+  homeRedirect,
+  languageLinkHeader,
+  parseLocaleOrigins,
+} from "@/features/site/language-links";
 
 const handleLocale = createMiddleware(routing);
 
@@ -11,15 +15,19 @@ export default function proxy(request: NextRequest) {
   // the pages themselves stay static.
   const origins = parseLocaleOrigins(process.env.LOCALE_ORIGINS ?? "", routing.locales);
   // A language's home domain opens in that language when the URL names none (decision #83).
-  const { pathname } = request.nextUrl;
-  const [, first = ""] = pathname.split("/");
-  const home =
-    origins && !(routing.locales as readonly string[]).includes(first)
-      ? homeLocale(request.headers.get("host") ?? "", origins, routing.locales)
-      : undefined;
-  if (home) {
+  const target =
+    origins &&
+    homeRedirect(
+      {
+        pathname: request.nextUrl.pathname,
+        search: request.nextUrl.search,
+        host: request.headers.get("host") ?? "",
+      },
+      origins,
+      routing.locales,
+    );
+  if (target) {
     // A relative Location keeps the public scheme and host, which this server only sees as http.
-    const target = `/${home}${pathname === "/" ? "" : pathname}${request.nextUrl.search}`;
     return new NextResponse(null, { status: 307, headers: { Location: target } });
   }
   const response = handleLocale(request);

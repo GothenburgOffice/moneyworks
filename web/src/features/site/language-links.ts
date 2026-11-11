@@ -98,6 +98,25 @@ export function homeLocale<L extends string>(
   origins: LocaleOrigins<L>,
   locales: readonly L[],
 ): L | undefined {
-  const matches = locales.filter((locale) => new URL(origins[locale]).host === host);
+  // Host names are case-insensitive; the configured origins are already lower case.
+  const requestHost = host.toLowerCase();
+  const matches = locales.filter((locale) => new URL(origins[locale]).host === requestHost);
   return matches.length === 1 ? matches[0] : undefined;
+}
+
+/**
+ * Where an unprefixed visit to a language's home domain goes: the same path and query under
+ * that language, as a relative target so the public scheme and host stay as the client sent
+ * them. Undefined when the path already has a language, or the host has no single home language.
+ */
+export function homeRedirect<L extends string>(
+  request: { pathname: string; search: string; host: string },
+  origins: LocaleOrigins<L>,
+  locales: readonly L[],
+): string | undefined {
+  const [, first = ""] = request.pathname.split("/");
+  if ((locales as readonly string[]).includes(first)) return undefined;
+  const locale = homeLocale(request.host, origins, locales);
+  if (!locale) return undefined;
+  return `/${locale}${request.pathname === "/" ? "" : request.pathname}${request.search}`;
 }
