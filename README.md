@@ -10,7 +10,7 @@ A self-hosted, country-neutral personal-finance tool hub in English
   optional Google sign-in, a data download and self-service account deletion,
   and user management (lock, 30-day trash) for admins.
 - **Planned:** Learn articles edited at `/admin` (decided in #10), a crypto-tax
-  tool, production hosting and more.
+  tool and more.
 
 Work is tracked in [GitHub issues](https://github.com/GothenburgOffice/moneyworks/issues).
 Issues labelled [`decision`](https://github.com/GothenburgOffice/moneyworks/issues?q=label%3Adecision)
@@ -214,8 +214,8 @@ To try a local build, run
 `docker build --file Dockerfile --target production --tag moneyworks:local web`
 and set `MONEYWORKS_IMAGE=moneyworks:local`. Expired auth records are removed
 with `docker compose -f compose.images.yaml run --rm app node scripts/cleanup-auth.mjs --apply`.
-A real deployment still needs HTTPS, backups and scheduling, tracked in
-[#11](https://github.com/GothenburgOffice/moneyworks/issues/11).
+Running the image on a server (HTTPS, backups, scheduling) is up to its operator and
+is not documented here.
 
 ## Repository layout
 
