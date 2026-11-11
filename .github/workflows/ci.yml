@@ -4,8 +4,10 @@ on:
   push:
     branches: [main]
   # Draft pull requests run nothing; marking one ready for review starts CI.
+  # converted_to_draft starts a run whose jobs all skip, and that run cancels
+  # any run still going for the pull request (see concurrency below).
   pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
+    types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]
   workflow_dispatch:
 
 # Superseded pull request runs are cancelled; main runs finish so every merge
