@@ -106,8 +106,8 @@ export function homeLocale<L extends string>(
 
 /**
  * Where an unprefixed visit to a language's home domain goes: the same path and query under
- * that language, as a relative target so the public scheme and host stay as the client sent
- * them. Undefined when the path already has a language, or the host has no single home language.
+ * that language, as an absolute URL on its configured origin (Next.js rejects a relative
+ * Location in the proxy, and the scheme behind a reverse proxy is only known from configuration). Undefined when the path already has a language, or the host has no single home language.
  */
 export function homeRedirect<L extends string>(
   request: { pathname: string; search: string; host: string },
@@ -118,5 +118,5 @@ export function homeRedirect<L extends string>(
   if ((locales as readonly string[]).includes(first)) return undefined;
   const locale = homeLocale(request.host, origins, locales);
   if (!locale) return undefined;
-  return `/${locale}${request.pathname === "/" ? "" : request.pathname}${request.search}`;
+  return `${origins[locale]}/${locale}${request.pathname === "/" ? "" : request.pathname}${request.search}`;
 }

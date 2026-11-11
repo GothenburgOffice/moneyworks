@@ -186,11 +186,17 @@ test("a language's home domain names the language an unprefixed visit opens in",
 test("an unprefixed visit to a home domain redirects, keeping path and query", () => {
   const at = (host, pathname = "/", search = "") =>
     homeRedirect({ pathname, search, host }, origins, locales);
-  assert.equal(at("pengarjobbar.example"), "/sv");
-  assert.equal(at("PENGARJOBBAR.EXAMPLE"), "/sv");
-  assert.equal(at("moneyworks.example"), "/en");
-  assert.equal(at("pengarjobbar.example", "/tools/fire", "?a=1&b=2"), "/sv/tools/fire?a=1&b=2");
-  assert.equal(at("pengarjobbar.example", "/account", "?view=login"), "/sv/account?view=login");
+  assert.equal(at("pengarjobbar.example"), "https://pengarjobbar.example/sv");
+  assert.equal(at("PENGARJOBBAR.EXAMPLE"), "https://pengarjobbar.example/sv");
+  assert.equal(at("moneyworks.example"), "https://moneyworks.example/en");
+  assert.equal(
+    at("pengarjobbar.example", "/tools/fire", "?a=1&b=2"),
+    "https://pengarjobbar.example/sv/tools/fire?a=1&b=2",
+  );
+  assert.equal(
+    at("pengarjobbar.example", "/account", "?view=login"),
+    "https://pengarjobbar.example/sv/account?view=login",
+  );
   // Already prefixed (either language), other hosts and shared hosts are left to next-intl.
   assert.equal(at("pengarjobbar.example", "/en"), undefined);
   assert.equal(at("pengarjobbar.example", "/sv/tools/fire"), undefined);

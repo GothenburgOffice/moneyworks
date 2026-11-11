@@ -26,10 +26,7 @@ export default function proxy(request: NextRequest) {
       origins,
       routing.locales,
     );
-  if (target) {
-    // A relative Location keeps the public scheme and host, which this server only sees as http.
-    return new NextResponse(null, { status: 307, headers: { Location: target } });
-  }
+  if (target) return NextResponse.redirect(target, 307);
   const response = handleLocale(request);
   const link =
     origins &&
