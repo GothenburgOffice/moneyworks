@@ -1,0 +1,19 @@
+name: Feature or tool idea
+description: Suggest an improvement or a new tool
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Ideas are welcome, but the maintainer decides what is built, and larger product questions are settled in `decision` issues first. Opening an issue does not commit anyone to building it, and pull requests are only reviewed for issues the maintainer has approved (see [CONTRIBUTING.md](https://github.com/GothenburgOffice/moneyworks/blob/main/CONTRIBUTING.md)).
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What do you have in mind?
+      description: Keep it country-neutral and free of financial advice claims, as the rest of the site is.
