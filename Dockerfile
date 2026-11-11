@@ -75,7 +75,7 @@ RUN apt-get update \
 # Headless Chromium and its system libraries for `npm run test:e2e`, in a shared path
 # outside the node_modules volume. PLAYWRIGHT_VERSION must equal @playwright/test in
 # package.json (tests/workspace.test.mjs checks it); bump both together.
-ARG PLAYWRIGHT_VERSION=1.64.1
+ARG PLAYWRIGHT_VERSION=1.65.0
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 RUN npx --yes "playwright@$PLAYWRIGHT_VERSION" install --with-deps --only-shell chromium \
     && rm -rf /var/lib/apt/lists/* /root/.npm
