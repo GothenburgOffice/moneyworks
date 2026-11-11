@@ -35,12 +35,12 @@ for (const [locale, title, fire, crypto, planned] of [
     // Inspect rendered main content, not translation strings in Next.js payloads.
     const main = html.match(/<main\b[^>]*>([\s\S]*?)<\/main>/)?.[1];
     assert.ok(main, "Missing main element");
-    // The heading's text: tags removed, then any stray angle bracket, since one pass of a
-    // tag pattern can leave a partial tag behind (CodeQL js/incomplete-multi-character-sanitization).
-    const heading = main
-      .match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/)?.[1]
-      .replace(/<[^>]*>/g, "")
-      .replace(/[<>]/g, "")
+    // The heading's text: only the runs of text between tags are collected, and those cannot
+    // contain "<" or ">". Stripping tags out of the string instead can leave a partial tag
+    // behind (CodeQL js/incomplete-multi-character-sanitization).
+    const inner = main.match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/)?.[1] ?? "";
+    const heading = Array.from(`>${inner}<`.matchAll(/>([^<>]*)</g), (part) => part[1])
+      .join("")
       .replace(/\s+/g, " ")
       .trim();
     assert.equal(heading, title);
