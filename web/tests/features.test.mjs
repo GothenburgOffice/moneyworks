@@ -14,6 +14,7 @@ import {
   toolPath,
 } from "../src/features/tools/catalog.ts";
 import {
+  homeLocale,
   languageLinkHeader,
   parseLocaleOrigins,
   sitemapEntries,
@@ -168,4 +169,14 @@ test("each domain's sitemap lists its own languages' pages with alternates", () 
   assert.equal(sitemapEntries("pengar.example", shared, options).length, 4);
   assert.equal(sitemapUrl("moneyworks.example", origins), "https://moneyworks.example/sitemap.xml");
   assert.equal(sitemapUrl("127.0.0.1:3000", origins), undefined);
+});
+
+test("a language's home domain names the language an unprefixed visit opens in", () => {
+  assert.equal(homeLocale("pengarjobbar.example", origins, locales), "sv");
+  assert.equal(homeLocale("moneyworks.example", origins, locales), "en");
+  // Not a home domain, or one domain home to both languages: keep the default.
+  assert.equal(homeLocale("other.example", origins, locales), undefined);
+  assert.equal(homeLocale("127.0.0.1:3410", origins, locales), undefined);
+  const shared = { en: "https://pengar.example", sv: "https://pengar.example" };
+  assert.equal(homeLocale("pengar.example", shared, locales), undefined);
 });

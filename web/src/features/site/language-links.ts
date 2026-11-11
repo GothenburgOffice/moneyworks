@@ -87,3 +87,17 @@ export function sitemapUrl<L extends string>(host: string, origins: LocaleOrigin
   const origin = Object.values<string>(origins).find((value) => new URL(value).host === host);
   return origin ? `${origin}/sitemap.xml` : undefined;
 }
+
+/**
+ * The language a request host is the home domain of, so an unprefixed visit (the root, or a
+ * path without a language) opens in that language instead of the default. Undefined when the
+ * host is no language's home domain, or when one host is home to several languages.
+ */
+export function homeLocale<L extends string>(
+  host: string,
+  origins: LocaleOrigins<L>,
+  locales: readonly L[],
+): L | undefined {
+  const matches = locales.filter((locale) => new URL(origins[locale]).host === host);
+  return matches.length === 1 ? matches[0] : undefined;
+}
