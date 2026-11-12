@@ -115,7 +115,7 @@ moneyworks/
 - **Health endpoint:** `/api/health` runs `SELECT 1` against PostgreSQL (used by Compose and CI health checks); HTTP 200 `status: "ok"` or 503 `status: "error"`, always `Cache-Control: no-store`.
 - **Connection handling:** Reuse the Prisma pool across hot reloads, initialize lazily and keep finite connection/query timeouts.
 - **Secrets:** Never expose connection strings, credentials or raw database errors. Never put secrets in `NEXT_PUBLIC_` variables.
-- **Localization:** English is the default regardless of browser language or old locale cookies; automatic detection stays disabled. Localized pages live under `src/app/[locale]/`.
+- **Localization:** English is the default regardless of browser language or old locale cookies; automatic detection stays disabled. The one exception is a language's home domain (`LOCALE_ORIGINS`, decision #83): an unprefixed URL on it redirects to that language (`pengarjobbar.nu/` to `/sv`), done in `proxy.ts` with `homeLocale`; any other host, or one host serving both languages, keeps English. Localized pages live under `src/app/[locale]/`.
 
 ## Containers and credentials
 

@@ -14,6 +14,8 @@ import {
   toolPath,
 } from "../src/features/tools/catalog.ts";
 import {
+  homeLocale,
+  homeRedirect,
   languageLinkHeader,
   parseLocaleOrigins,
   sitemapEntries,
@@ -168,4 +170,41 @@ test("each domain's sitemap lists its own languages' pages with alternates", () 
   assert.equal(sitemapEntries("pengar.example", shared, options).length, 4);
   assert.equal(sitemapUrl("moneyworks.example", origins), "https://moneyworks.example/sitemap.xml");
   assert.equal(sitemapUrl("127.0.0.1:3000", origins), undefined);
+});
+
+test("a language's home domain names the language an unprefixed visit opens in", () => {
+  assert.equal(homeLocale("pengarjobbar.example", origins, locales), "sv");
+  assert.equal(homeLocale("PengarJobbar.Example", origins, locales), "sv", "host case");
+  assert.equal(homeLocale("moneyworks.example", origins, locales), "en");
+  // Not a home domain, or one domain home to both languages: keep the default.
+  assert.equal(homeLocale("other.example", origins, locales), undefined);
+  assert.equal(homeLocale("127.0.0.1:3410", origins, locales), undefined);
+  const shared = { en: "https://pengar.example", sv: "https://pengar.example" };
+  assert.equal(homeLocale("pengar.example", shared, locales), undefined);
+});
+
+test("an unprefixed visit to a home domain redirects, keeping path and query", () => {
+  const at = (host, pathname = "/", search = "") =>
+    homeRedirect({ pathname, search, host }, origins, locales);
+  assert.equal(at("pengarjobbar.example"), "https://pengarjobbar.example/sv");
+  assert.equal(at("PENGARJOBBAR.EXAMPLE"), "https://pengarjobbar.example/sv");
+  assert.equal(at("moneyworks.example"), "https://moneyworks.example/en");
+  assert.equal(
+    at("pengarjobbar.example", "/tools/fire", "?a=1&b=2"),
+    "https://pengarjobbar.example/sv/tools/fire?a=1&b=2",
+  );
+  assert.equal(
+    at("pengarjobbar.example", "/account", "?view=login"),
+    "https://pengarjobbar.example/sv/account?view=login",
+  );
+  // Already prefixed (either language), other hosts and shared hosts are left to next-intl.
+  assert.equal(at("pengarjobbar.example", "/en"), undefined);
+  assert.equal(at("pengarjobbar.example", "/sv/tools/fire"), undefined);
+  assert.equal(at("other.example"), undefined);
+  assert.equal(at("127.0.0.1:3410"), undefined);
+  const shared = { en: "https://pengar.example", sv: "https://pengar.example" };
+  assert.equal(
+    homeRedirect({ pathname: "/", search: "", host: "pengar.example" }, shared, locales),
+    undefined,
+  );
 });

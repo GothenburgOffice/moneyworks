@@ -1,16 +1,33 @@
 import createMiddleware from "next-intl/middleware";
-import type { NextRequest } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { routing } from "@/i18n/routing";
 import { publicPagePaths } from "@/features/tools/catalog";
-import { languageLinkHeader, parseLocaleOrigins } from "@/features/site/language-links";
+import {
+  homeRedirect,
+  languageLinkHeader,
+  parseLocaleOrigins,
+} from "@/features/site/language-links";
 
 const handleLocale = createMiddleware(routing);
 
 export default function proxy(request: NextRequest) {
-  const response = handleLocale(request);
   // Read per request, so one built image serves any deployment's domains while
   // the pages themselves stay static.
   const origins = parseLocaleOrigins(process.env.LOCALE_ORIGINS ?? "", routing.locales);
+  // A language's home domain opens in that language when the URL names none (decision #83).
+  const target =
+    origins &&
+    homeRedirect(
+      {
+        pathname: request.nextUrl.pathname,
+        search: request.nextUrl.search,
+        host: request.headers.get("host") ?? "",
+      },
+      origins,
+      routing.locales,
+    );
+  if (target) return NextResponse.redirect(target, 307);
+  const response = handleLocale(request);
   const link =
     origins &&
     languageLinkHeader(request.nextUrl.pathname, origins, {
