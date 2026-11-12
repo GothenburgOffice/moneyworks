@@ -1,0 +1,31 @@
+name: Bug report
+description: Something does not work as documented
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This is a small, owner-maintained project; read [CONTRIBUTING.md](https://github.com/GothenburgOffice/moneyworks/blob/main/CONTRIBUTING.md) before offering a fix.
+        **Never paste passwords, tokens, account numbers or real financial figures.** For a security problem use the private link on the issue chooser instead.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Page or route, language (English or Swedish) and the inputs you used (made-up numbers are fine).
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Commit or image tag
+      description: For example `sha-abc1234`, or `main` if you run from source.
+  - type: input
+    id: environment
+    attributes:
+      label: Browser and device

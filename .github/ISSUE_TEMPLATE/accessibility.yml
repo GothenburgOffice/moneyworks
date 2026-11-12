@@ -1,0 +1,26 @@
+name: Accessibility barrier
+description: Something on the site is hard or impossible to use
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting it. See [ACCESSIBILITY.md](https://github.com/GothenburgOffice/moneyworks/blob/main/ACCESSIBILITY.md) for what the project commits to and the known limitations.
+        Do not include personal or financial information.
+  - type: input
+    id: page
+    attributes:
+      label: Page or address
+    validations:
+      required: true
+  - type: textarea
+    id: barrier
+    attributes:
+      label: What did you try, and what got in the way?
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Browser, device and assistive technology
+      description: For example "Firefox on Windows with NVDA", "iPhone with VoiceOver" or "keyboard only".
