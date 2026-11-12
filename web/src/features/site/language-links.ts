@@ -87,3 +87,36 @@ export function sitemapUrl<L extends string>(host: string, origins: LocaleOrigin
   const origin = Object.values<string>(origins).find((value) => new URL(value).host === host);
   return origin ? `${origin}/sitemap.xml` : undefined;
 }
+
+/**
+ * The language a request host is the home domain of, so an unprefixed visit (the root, or a
+ * path without a language) opens in that language instead of the default. Undefined when the
+ * host is no language's home domain, or when one host is home to several languages.
+ */
+export function homeLocale<L extends string>(
+  host: string,
+  origins: LocaleOrigins<L>,
+  locales: readonly L[],
+): L | undefined {
+  // Host names are case-insensitive; the configured origins are already lower case.
+  const requestHost = host.toLowerCase();
+  const matches = locales.filter((locale) => new URL(origins[locale]).host === requestHost);
+  return matches.length === 1 ? matches[0] : undefined;
+}
+
+/**
+ * Where an unprefixed visit to a language's home domain goes: the same path and query under
+ * that language, as an absolute URL on its configured origin (Next.js rejects a relative
+ * Location in the proxy, and the scheme behind a reverse proxy is only known from configuration). Undefined when the path already has a language, or the host has no single home language.
+ */
+export function homeRedirect<L extends string>(
+  request: { pathname: string; search: string; host: string },
+  origins: LocaleOrigins<L>,
+  locales: readonly L[],
+): string | undefined {
+  const [, first = ""] = request.pathname.split("/");
+  if ((locales as readonly string[]).includes(first)) return undefined;
+  const locale = homeLocale(request.host, origins, locales);
+  if (!locale) return undefined;
+  return `${origins[locale]}/${locale}${request.pathname === "/" ? "" : request.pathname}${request.search}`;
+}
