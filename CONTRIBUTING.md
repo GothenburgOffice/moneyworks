@@ -48,6 +48,7 @@ Don't open public issues for vulnerabilities. Use
 
 ## License
 
-By contributing you agree that your contribution is licensed under the
-[MIT License](LICENSE). The artwork listed in [ARTWORK.md](ARTWORK.md) is
-licensed CC BY-NC 4.0, not MIT; don't contribute artwork you can't license on those terms.
+By contributing code, tests, documentation or other material you agree that it is
+licensed under the [MIT License](LICENSE). The marks, favicon and walkthrough
+video listed in [ARTWORK.md](ARTWORK.md) are CC BY-NC 4.0 and not MIT; pull
+requests that add or change that artwork are only accepted from the owner.

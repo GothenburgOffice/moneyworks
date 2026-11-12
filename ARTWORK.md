@@ -19,8 +19,8 @@ MoneyWorks or Pengar jobbar.
   - `web/public/moneyworks-mark.svg`
   - `web/public/pengar-jobbar-mark.svg`
   - `web/src/app/favicon.ico`
-  - the mark path data in `web/src/content/brand.ts`, and its rendering in
-    `web/src/components/brand-logo.tsx`
+  - the mark path data in `web/src/content/brand.ts` (the `paths` and `icon`
+    values), and the marks drawn from it
 - The FIRE calculator walkthrough video, its poster image and its subtitles:
   `web/public/media/fire-demo.mp4`, `fire-demo-poster.webp` and
   `fire-demo.en.vtt` / `fire-demo.sv.vtt`.
@@ -28,9 +28,10 @@ MoneyWorks or Pengar jobbar.
 ## What stays MIT
 
 Everything else, including the application code, styles, tests, configuration
-and the generic interface icons in `web/src/components/ui-icons.tsx`. The
-self-hosted Manrope font in `web/public/fonts/` keeps its own
-[SIL Open Font License](web/public/fonts/OFL.txt).
+and the generic interface icons in `web/src/components/ui-icons.tsx`. That
+includes `web/src/components/brand-logo.tsx`: the component is MIT, only the
+mark data it draws is artwork. The self-hosted Manrope font in
+`web/public/fonts/` keeps its own [SIL Open Font License](web/public/fonts/OFL.txt).
 
 ## Running your own copy
 
