@@ -243,4 +243,4 @@ where a maintainer approved the plan in a comment first. See
 ## License
 
 The code is MIT licensed ([LICENSE](LICENSE)). The artwork made for the hosted sites
-(the marks, favicon and walkthrough video) is not; see [ARTWORK.md](ARTWORK.md).
+(the marks, favicon and walkthrough video) is under CC BY-NC 4.0, not MIT; see [ARTWORK.md](ARTWORK.md).

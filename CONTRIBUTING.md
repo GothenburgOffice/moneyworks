@@ -50,4 +50,4 @@ Don't open public issues for vulnerabilities. Use
 
 By contributing you agree that your contribution is licensed under the
 [MIT License](LICENSE). The artwork listed in [ARTWORK.md](ARTWORK.md) is
-not MIT licensed; don't contribute artwork you can't license on those terms.
+licensed CC BY-NC 4.0, not MIT; don't contribute artwork you can't license on those terms.
