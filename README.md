@@ -168,6 +168,8 @@ Copy `.env.example` to the gitignored root `.env` before starting any stack.
   still serves every language; the hub and tool pages then send `canonical` and
   `hreflang` Link headers pointing at each language's own domain, and each
   domain's `/sitemap.xml` (named in `/robots.txt`) lists its languages' pages.
+  An unprefixed URL on a language's home domain redirects to that language (`pengarjobbar.example/`
+  to `/sv`), and other hosts keep English.
   Language links still stay on the current domain. It is read at
   request time, so the published image needs no rebuild. Blank or invalid sends
   no such links.
