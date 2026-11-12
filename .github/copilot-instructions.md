@@ -55,6 +55,7 @@ moneyworks/
 ├── .env.example                  # Template for the required, gitignored root .env
 ├── CLAUDE.md                     # Claude Code entry point; imports this file
 ├── SECURITY.md                   # Supported versions and private vulnerability reporting
+├── ARTWORK.md                    # Artwork that is not MIT licensed (marks, favicon, video)
 ├── Dockerfile                    # development, devcontainer, migration and production targets (Node 22, trixie-slim)
 ├── compose.yaml                  # Base stack: db, migrate, app (production build from source)
 ├── compose.dev.yaml              # Development override: dev target and source mounts
@@ -109,6 +110,7 @@ moneyworks/
 - **Static content:** Pre-render `/en`, `/sv` and every available tool page with localized metadata. Public pages are server-rendered HTML: never client-render the page or fetch the body after load.
 - **Learn articles (decided in #10, not built yet):** Markdown stored in PostgreSQL and edited by admins at `/admin`. `/[locale]/learn/**` is the only public page route that may read the database (`/api/health` also queries it, by design): Server Components render the Markdown on first request, and the page is cached and revalidated on demand when an article is saved, published or unpublished. A lookup that returns nothing is a 404; a failed lookup is a 503 (`Retry-After`, `no-store`), never a 404. No raw HTML in articles. The closing comment on #10 has the full design and build order.
 - **Small enhancements:** `public/site-ui.js` closes the mobile menu and provides theme switching. Dark is the static default; `light`/`dark` are the only accepted URL preference values, carried through locale links with guarded history updates. No browser-storage APIs. Hide the theme control without JavaScript. The hub and tool pages never call the database; builds need no database.
+- **Artwork is not MIT:** The marks, favicon and walkthrough video are listed in `ARTWORK.md` and excluded from the license (issue #87). Keep that list current when artwork is added or moved; the code stays MIT.
 - **Brand:** Direction C (Bright works) as recorded in `DESIGN.md`: charcoal/lime, bold headings, contrasting tool panels, original marks, self-hosted Manrope, CSS tokens.
 - **Country-neutral:** Do not assume SEK, a tax jurisdiction, a trading method or financial outputs.
 - **Security headers:** `next.config.ts` sends the same site-wide set as vocabulary-training on every route: CSP (`default-src 'self'`, `object-src 'none'`, `frame-ancestors 'none'`; inline scripts for Next.js hydration, eval only in development), `form-action 'self' https://accounts.google.com` for the Google sign-in redirect, `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy: same-origin` (account pages override it with `strict-origin`, because recovery URLs carry tokens) and a restrictive `Permissions-Policy`; `poweredByHeader` is off. Self-host every asset; adding an external origin needs a CSP change and a reason.
