@@ -41,6 +41,11 @@ That includes unsolicited fixes, refactors, dependency bumps and typo-only chang
   and the app stays Node 22 compatible.
 - **Disclose AI assistance** in the PR description, and say what you ran yourself.
 
+## Conduct and accessibility
+
+Participation is covered by the [code of conduct](CODE_OF_CONDUCT.md). Accessibility problems are
+bugs: see [ACCESSIBILITY.md](ACCESSIBILITY.md) for the commitment and how to report one.
+
 ## Security issues
 
 Don't open public issues for vulnerabilities. Use

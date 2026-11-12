@@ -48,6 +48,7 @@ moneyworks/
 ├── .github/
 │   ├── copilot-instructions.md   # This file
 │   ├── dependabot.yml            # Weekly updates and compatibility holds
+│   ├── ISSUE_TEMPLATE/           # Bug, feature and accessibility forms (no blank issues)
 │   └── workflows/
 │       ├── ci.yml                # Checks and disposable container integration tests
 │       └── claude.yml            # Read-only issue review on @claude mentions (writers only)
@@ -56,6 +57,8 @@ moneyworks/
 ├── CLAUDE.md                     # Claude Code entry point; imports this file
 ├── SECURITY.md                   # Supported versions and private vulnerability reporting
 ├── ARTWORK.md                    # Artwork under CC BY-NC, not MIT (marks, favicon, video)
+├── CODE_OF_CONDUCT.md            # Expected behavior and how to report it
+├── ACCESSIBILITY.md              # Accessibility commitment, known limitations, reporting
 ├── Dockerfile                    # development, devcontainer, migration and production targets (Node 22, trixie-slim)
 ├── compose.yaml                  # Base stack: db, migrate, app (production build from source)
 ├── compose.dev.yaml              # Development override: dev target and source mounts
