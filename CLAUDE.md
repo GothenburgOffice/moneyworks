@@ -34,6 +34,11 @@ The shared project reference for coding agents (also read by Copilot):
   GitHub views: `gh pr create --assignee hkarn`, or
   `gh pr edit <N> --add-assignee hkarn` for one opened another way (a GitHub MCP
   tool, or a draft the environment opened).
+- Reply to every review comment (see the workflow in
+  `.github/copilot-instructions.md`) but never resolve a conversation: `main`
+  requires resolved conversations, and the owner resolves them.
+- Never merge, approve or enable auto-merge on a pull request; the owner's merge
+  is the approval.
 - On GitHub, a `@claude` mention in an issue runs `.github/workflows/claude.yml`,
   which is read-only. Only when running in that workflow (the prompt says you
   are helping with a GitHub issue, and Bash/Edit/Write are denied): review the
