@@ -29,7 +29,11 @@ Financial inputs never leave the browser.
 | [DESIGN.md](DESIGN.md)                                             | Visual system (direction C, "Bright works")                                               |
 | [FIRE.md](FIRE.md)                                                 | FIRE model semantics, assumptions and how to add a tool                                   |
 | [AUTH.md](AUTH.md)                                                 | Accounts, privacy, operator configuration and security boundaries                         |
+| [ACCESSIBILITY.md](ACCESSIBILITY.md)                               | Accessibility commitment, known limitations and how to report a barrier                   |
+| [ARTWORK.md](ARTWORK.md)                                           | Artwork under CC BY-NC 4.0, not MIT (marks, favicon, walkthrough video)                   |
 | [SECURITY.md](SECURITY.md)                                         | Supported versions and how to report a vulnerability privately                            |
+| [CONTRIBUTING.md](CONTRIBUTING.md)                                 | Which outside pull requests are reviewed, and how                                         |
+| [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)                           | Expected behavior and how to report it                                                    |
 | [.github/copilot-instructions.md](.github/copilot-instructions.md) | Engineering rules for contributors and coding agents (imported by [CLAUDE.md](CLAUDE.md)) |
 
 ## Stack
@@ -127,25 +131,31 @@ mounts the source.
 Run inside the devcontainer from `/workspace/web`, or from the host with
 `docker compose -f compose.yaml -f compose.dev.yaml exec app <command>`.
 
-| Command                                         | Purpose                                             |
-| ----------------------------------------------- | --------------------------------------------------- |
-| `npm run format` / `npm run format:check`       | Format with Prettier / check formatting (CI)        |
-| `npm run lint` / `npm run typecheck`            | ESLint and TypeScript                               |
-| `npm run test:fire`                             | FIRE model tests (also rebuilds the browser script) |
-| `npm run test:ui` / `npm run test:architecture` | Enhancement scripts and import boundaries           |
-| `npm run test:auth-config`                      | Auth configuration and cookie attributes            |
-| `npm run test:smoke`                            | Live pages and health check (app must be running)   |
-| `npm run test:e2e`                              | Playwright browser tests (app must be running)      |
-| `npm run test:e2e:accounts`                     | Account pages in Chromium (disposable DB, AUTH.md)  |
-| `npm run build`                                 | Production build                                    |
-| `npm run db:migrate -- --name <name>`           | Create a migration after a schema change            |
-| `npm run db:setup`                              | Generate the Prisma client and apply migrations     |
-| `npm install --save-exact <pkg>`                | Add a dependency; commit both package files         |
+| Command                                   | Purpose                                                                       |
+| ----------------------------------------- | ----------------------------------------------------------------------------- |
+| `npm run format` / `npm run format:check` | Format with Prettier / check formatting (CI)                                  |
+| `npm run lint` / `npm run typecheck`      | ESLint and TypeScript                                                         |
+| `npm run test:line-endings`               | LF line endings in tracked files                                              |
+| `npm run test:fire`                       | FIRE model tests                                                              |
+| `npm run test:ui`                         | Theme and menu enhancement script                                             |
+| `npm run test:architecture`               | Import boundaries, account views, tool catalogue, language domains, dev stack |
+| `npm run test:auth-config`                | Auth configuration, cookies, settings encryption and account lifecycle rules  |
+| `npm run test:accounts`                   | Account flows over HTTP (disposable DB, see AUTH.md)                          |
+| `npm run test:smoke`                      | Live pages and health check (app must be running)                             |
+| `npm run test:e2e`                        | Playwright browser tests (app must be running)                                |
+| `npm run test:e2e:accounts`               | Account pages in Chromium (disposable DB, AUTH.md)                            |
+| `npm run build`                           | Production build                                                              |
+| `npm audit --audit-level=high`            | Dependency audit (CI fails on high severity)                                  |
+| `npm run db:validate`                     | Validate the Prisma schema                                                    |
+| `npm run db:migrate -- --name <name>`     | Create a migration after a schema change                                      |
+| `npm run db:setup`                        | Generate the Prisma client and apply migrations                               |
+| `npm run auth:cleanup`                    | Count expired auth records and trashed accounts; `-- --apply` deletes them    |
+| `npm install --save-exact <pkg>`          | Add a dependency; commit both package files                                   |
 
 CI ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs all checks, the
 account lifecycle against a disposable database and a full container stack
-test on every pull request. A `@claude` mention in an issue runs
-[.github/workflows/claude.yml](.github/workflows/claude.yml), which reviews the
+test on every pull request that is ready for review (drafts are skipped). A
+`@claude` mention in an issue runs [.github/workflows/claude.yml](.github/workflows/claude.yml), which reviews the
 issue against the code and answers in a comment: already done, or a plan.
 Writers only, and read-only: it can't push or open pull requests.
 
