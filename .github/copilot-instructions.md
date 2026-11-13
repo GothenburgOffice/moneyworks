@@ -50,13 +50,20 @@ moneyworks/
 │   ├── copilot-instructions.md   # This file
 │   ├── dependabot.yml            # Weekly updates and compatibility holds
 │   ├── ISSUE_TEMPLATE/           # Bug, feature and accessibility forms (no blank issues)
+│   ├── pull_request_template.md  # Linked issue, summary and the checks a PR owes
 │   └── workflows/
 │       ├── ci.yml                # Checks and disposable container integration tests
 │       └── claude.yml            # Read-only issue review on @claude mentions (writers only)
 ├── .editorconfig / .gitattributes # LF rules
+├── .prettierrc.json / .prettierignore # Shared Prettier settings (printWidth 100)
+├── .git-blame-ignore-revs        # Whole-repo reformat commits hidden from blame
 ├── .env.example                  # Template for the required, gitignored root .env
+├── README.md                     # Setup, commands and configuration
 ├── CLAUDE.md                     # Claude Code entry point; imports this file
+├── DESIGN.md / FIRE.md / AUTH.md # Visual system, FIRE model semantics, accounts and security
+├── CONTRIBUTING.md               # Which outside pull requests are reviewed
 ├── SECURITY.md                   # Supported versions and private vulnerability reporting
+├── LICENSE                       # MIT, for the code
 ├── ARTWORK.md                    # Artwork under CC BY-NC, not MIT (marks, favicon, video)
 ├── CODE_OF_CONDUCT.md            # Expected behavior and how to report it
 ├── ACCESSIBILITY.md              # Accessibility commitment, known limitations, reporting
@@ -66,10 +73,13 @@ moneyworks/
 ├── compose.images.yaml           # Published release image + PostgreSQL
 ├── moneyworks.code-workspace     # VS Code workspace and extension recommendations
 └── web/
+    ├── README.md                 # Pointer to the root README for the app folder
     ├── messages/                 # English/Swedish interface messages
     ├── prisma/                   # schema.prisma and committed migrations
     ├── prisma.config.ts          # Prisma connection URL and migration configuration
-    ├── scripts/                  # FIRE bundle builder, auth cleanup
+    ├── playwright.config.ts      # Browser tests against a running app (test:e2e)
+    ├── playwright.accounts.config.ts # Account-page browser tests on a disposable DB (test:e2e:accounts)
+    ├── scripts/                  # Auth cleanup (cleanup-auth.mjs)
     ├── src/
     │   ├── app/[locale]/         # Static hub, static tools/[tool] pages and dynamic account route
     │   ├── app/admin/            # Site settings and users pages (404 unless a signed-in admin)
