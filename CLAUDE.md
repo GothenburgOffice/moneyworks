@@ -30,6 +30,10 @@ The shared project reference for coding agents (also read by Copilot):
   (`gh issue list --label decision`). Check them before starting feature work.
 - Put session logs, verification notes and scratch decisions in the gitignored
   `notes/` folder or `CLAUDE.local.md`, not in tracked docs.
+- Assign every pull request you open to `hkarn`, so it shows up in the owner's
+  GitHub views: `gh pr create --assignee hkarn`, or
+  `gh pr edit <N> --add-assignee hkarn` for one opened another way (a GitHub MCP
+  tool, or a draft the environment opened).
 - On GitHub, a `@claude` mention in an issue runs `.github/workflows/claude.yml`,
   which is read-only. Only when running in that workflow (the prompt says you
   are helping with a GitHub issue, and Bash/Edit/Write are denied): review the
