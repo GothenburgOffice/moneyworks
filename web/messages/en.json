@@ -1,11 +1,11 @@
 {
   "Metadata": {
-    "title": "MoneyWorks | A clearer view of your money",
+    "title": "Money Working | A clearer view of your money",
     "description": "Plan financial independence with pension age ranges and planned portfolio drawdown. A country-neutral FIRE calculator in English and Swedish."
   },
   "Site": {
     "skip": "Skip to content",
-    "home": "MoneyWorks, back to the top",
+    "home": "Money Working, back to the top",
     "nav": {
       "label": "Main navigation",
       "tools": "Tools",
@@ -67,7 +67,7 @@
       "description": "Good tools should make things easier to understand, not give you another set of numbers to decipher.",
       "items": [
         {
-          "question": "What is MoneyWorks?",
+          "question": "What is Money Working?",
           "answer": "A growing home for personal finance tools and straightforward information. We're starting with financial independence planning and crypto-trading tax calculations, with room for more useful tools over time."
         },
         {
@@ -76,21 +76,21 @@
         },
         {
           "question": "Is the site for a particular country?",
-          "answer": "MoneyWorks is country-neutral and available in English and Swedish. When a tool needs country-specific rules, supported countries and assumptions will be stated explicitly."
+          "answer": "Money Working is country-neutral and available in English and Swedish. When a tool needs country-specific rules, supported countries and assumptions will be stated explicitly."
         }
       ]
     },
     "about": {
       "title": "More perspective. Less noise.",
-      "description": "Personal finance is personal. MoneyWorks is being built around clear explanations, useful tools and space to think, without assuming your currency, country or next move.",
+      "description": "Personal finance is personal. Money Working is being built around clear explanations, useful tools and space to think, without assuming your currency, country or next move.",
       "link": "Back to the tools"
     },
     "footer": {
       "description": "A useful place to think about your money.",
       "note": "A work in progress, with a clear direction.",
       "statusLabel": "Site connection",
-      "copyright": "MoneyWorks",
-      "home": "MoneyWorks home"
+      "copyright": "Money Working",
+      "home": "Money Working home"
     }
   }
 }

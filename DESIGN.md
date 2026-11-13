@@ -9,11 +9,15 @@ behind them.
 
 ## Identity
 
-- English: **MoneyWorks** with the original M/W mark. Swedish: **Pengar jobbar**
-  with a two-stroke PJ mark on the same 44-unit grid, weight and treatment.
-- Marks, names and favicons follow the locale at render time
+- English: **Money Working**. Swedish: **Pengar jobbar**. Mixed case, with the
+  second word in the primary colour (decision #92).
+- One original mark for both languages, on a 44-unit grid with 4.5-unit round
+  strokes: an M whose rising stroke breaks out into an arrow. The favicon is the
+  same mark in ground colour on a primary-colour rounded tile
+  (`web/public/brand-icon.svg`, `web/src/app/favicon.ico`).
+- Only the name follows the locale at render time
   ([web/src/content/brand.ts](web/src/content/brand.ts)).
-- At 420px and below the Swedish header name wraps to two lines without shrinking
+- At 420px and below the header name wraps to two lines without shrinking
   navigation controls.
 
 ## Colour

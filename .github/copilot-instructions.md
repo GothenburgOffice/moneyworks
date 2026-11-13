@@ -97,7 +97,7 @@ moneyworks/
 
 ## Component boundaries
 
-- **Localized identity:** `content/brand.ts` selects MoneyWorks/M-W for English and Pengar jobbar/PJ for Swedish. Pass the explicit locale to shared brand, intro and about components; keep names, SVG marks and favicons server-rendered. Language links stay on the current host and never switch domain (owner decision in #7); search engines learn each language's home domain from `LOCALE_ORIGINS`.
+- **Localized identity:** `content/brand.ts` selects the name: Money Working for English, Pengar jobbar for Swedish (decision #92). Both share one mark and one favicon (`public/brand-icon.svg`, `app/favicon.ico`). Pass the explicit locale to shared brand, intro and about components; keep names, the SVG mark and favicons server-rendered. The repository, package, database and image keep the `moneyworks` identifier. Language links stay on the current host and never switch domain (owner decision in #7); search engines learn each language's home domain from `LOCALE_ORIGINS`.
 - **Route orchestration:** Resolve request/query state, auth configuration and sessions in server routes. Pass only the required user fields or public controller/contact details into presentation, never full sessions/configuration.
 - **Presentation:** Reuse `components/account/` for entry, form, tabs and workspace, and `components/privacy/` for privacy rendering. Privacy copy lives in `content/privacy.ts`, independent of account messages.
 - **Pure features:** `features/account/view.ts` parses allowlisted view/feedback queries; `features/tools/catalog.ts` defines tool IDs/status and a neutral card-content contract. Add tools through the catalogue and both translations, not duplicated card calls.

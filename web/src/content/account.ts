@@ -6,7 +6,7 @@ const en = {
   logout: "Log out",
   loginTitle: "Welcome back.",
   registerTitle: "Make room for your plans.",
-  loginIntro: "Sign in to your MoneyWorks account.",
+  loginIntro: "Sign in to your Money Working account.",
   registerIntro:
     "Create your account with email and password. Verify your email before signing in.",
   email: "Email address",
@@ -23,7 +23,7 @@ const en = {
   resend: "Resend verification email",
   resendTitle: "Check your inbox.",
   sendVerification: "Send verification link",
-  back: "Back to MoneyWorks",
+  back: "Back to Money Working",
   unavailable:
     "Accounts are not ready on this host. The operator must configure the account URL, secret, email delivery and privacy contact. Please do not submit personal information yet.",
   futureTitle: "A place for the next chapter.",

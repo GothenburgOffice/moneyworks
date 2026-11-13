@@ -217,7 +217,7 @@ main[id],
   height: 42px;
   color: var(--brand);
 }
-.brand-period {
+.brand-accent {
   color: var(--brand);
 }
 .desktop-nav {
@@ -1030,8 +1030,8 @@ details[open] > summary .plus-icon {
   }
 }
 @media (max-width: 420px) {
-  /* Keep the longer Swedish name legible beside the existing 44px controls. */
-  .header-inner .brand[data-brand="sv"] .brand-name {
+  /* Keep the two-word name legible beside the existing 44px controls. */
+  .header-inner .brand .brand-name {
     max-inline-size: 7ch;
     white-space: normal;
     line-height: 1.05;

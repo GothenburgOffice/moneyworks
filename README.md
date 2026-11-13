@@ -1,7 +1,8 @@
 # MoneyWorks
 
-A self-hosted, country-neutral personal-finance tool hub in English
-(**MoneyWorks**) and Swedish (**Pengar jobbar**).
+A self-hosted, country-neutral personal-finance tool hub. The site is called
+**Money Working** in English and **Pengar jobbar** in Swedish; the repository,
+package and image keep the name `moneyworks`.
 
 - **Working:** a pension-aware FIRE calculator (portfolio needed or earliest
   retirement age, planned drawdown or capital preservation, manual pension
