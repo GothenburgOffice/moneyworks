@@ -77,7 +77,7 @@ for (const [locale, title, fire, crypto, planned] of [
     assert.ok(html.includes('src="/site-ui.js"'));
     assert.ok(main.includes("data-fire-form"));
     assert.ok(main.includes("data-tool-demo"));
-    assert.ok(main.includes("/media/fire-demo.mp4"));
+    assert.ok(main.includes(`/media/fire-demo/${locale}/video.mp4`));
     assert.ok(main.includes('controls=""') && main.includes('preload="none"'));
     assert.ok(!main.includes('autoplay=""'));
   });

@@ -31,12 +31,12 @@ export function FireCalculator({ locale }: { locale: Locale }) {
         downloadLabel={demo.download}
         transcriptLabel={demo.transcript}
         steps={demo.steps}
-        source="/media/fire-demo.mp4?v=whole-units-90"
-        poster="/media/fire-demo-poster.webp?v=whole-units-90"
-        subtitles={["en", "sv"].map((language) => ({
+        source={`${demo.media}/video.mp4?v=${demo.version}`}
+        poster={`${demo.media}/poster.webp?v=${demo.version}`}
+        subtitles={demo.captions.map((language) => ({
           language,
           label: language === "sv" ? "Svenska" : "English",
-          source: `/media/fire-demo.${language}.vtt?v=whole-units-90`,
+          source: `${demo.media}/fire-demo.${language}.vtt?v=${demo.version}`,
           default: false,
         }))}
       />

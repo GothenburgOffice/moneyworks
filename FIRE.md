@@ -17,9 +17,9 @@ inputs, percentage rates and internal model arithmetic remain unchanged.
 
 The focused tool has a “Watch a 90-second walkthrough” disclosure above the inputs.
 It follows one example and one pension through focused current-interface captures,
-custom payout ages and retirement/savings views. English narration replaces long
-text overlays. Native, self-hosted video has optional English/Swedish captions
-(off by default) and a readable walkthrough; it does not
+custom payout ages and retirement/savings views. Narration in the page's language
+replaces long text overlays. Native, self-hosted video has optional captions
+(off by default) and a readable walkthrough ([VIDEO.md](VIDEO.md)); it does not
 autoplay or add a tracking/player service. Closing it or leaving the tool pauses it.
 The illustrative amounts are arbitrary currency units with zero return, inflation
 and fees, not recommended planning assumptions.

@@ -2,3 +2,4 @@
 package-lock.json
 web/next-env.d.ts
 web/src/generated/
+video/**/vendor/
