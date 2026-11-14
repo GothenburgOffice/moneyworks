@@ -65,7 +65,7 @@ moneyworks/
 ├── SECURITY.md                   # Supported versions and private vulnerability reporting
 ├── LICENSE                       # MIT, for the code
 ├── ARTWORK.md                    # Artwork under CC BY-NC, not MIT (marks, favicon, video)
-├── VIDEO.md                      # How the walkthrough and teaser videos are made and rebuilt
+├── VIDEO.md                      # How the site's videos work and their rules (sources kept outside the repo)
 ├── CODE_OF_CONDUCT.md            # Expected behavior and how to report it
 ├── ACCESSIBILITY.md              # Accessibility commitment, known limitations, reporting
 ├── Dockerfile                    # development, devcontainer, migration and production targets (Node 22, trixie-slim)
@@ -73,7 +73,6 @@ moneyworks/
 ├── compose.dev.yaml              # Development override: dev target and source mounts
 ├── compose.images.yaml           # Published release image + PostgreSQL
 ├── moneyworks.code-workspace     # VS Code workspace and extension recommendations
-├── video/                        # Video sources and authoring image; never an app dependency
 └── web/
     ├── README.md                 # Pointer to the root README for the app folder
     ├── messages/                 # English/Swedish interface messages
@@ -118,7 +117,7 @@ moneyworks/
 - **Number entry:** Optional zero-based amounts (portfolio, contributions, end reserve, payout amount) start empty with a `0` placeholder; blank means zero. Spending and ages remain required. Normalize redundant leading zeros on blur only, preserving in-progress decimals.
 - **Result phases:** Keep the Savings plan / Retirement plan toggle, both from the same engine. Chart actual savings against a distinct minimum-capital target. Monthly saving to target is a total, not a top-up. Preserve phase on recalculation and reset it on Clear.
 - **Display:** Whole currency units in results, payouts, charts and yearly tables; keep fractional inputs/rates/model precision. Round the minimum required monthly saving up.
-- **Walkthrough video:** Self-hosted native video, one narrated file per language in `public/media/fire-demo/<locale>/` with local subtitles (off by default) and a text version, near the calculator heading. The videos are rendered from `video/`; `VIDEO.md` has the process, and narration, captions and the text version must say the same thing. User-initiated playback only; pause on closing the demo or leaving the tool. No third-party player, analytics or video-production dependency in the app.
+- **Walkthrough video:** Self-hosted native video, one narrated file per language in `public/media/fire-demo/<locale>/` with local subtitles (off by default) and a text version, near the calculator heading. The owner renders them from branded sources kept outside this repository; `VIDEO.md` has the rules, and narration, captions and the text version must say the same thing. User-initiated playback only; pause on closing the demo or leaving the tool. No third-party player, analytics or video-production dependency in the app.
 
 ## Runtime behavior
 
@@ -126,7 +125,7 @@ moneyworks/
 - **Static content:** Pre-render `/en`, `/sv` and every available tool page with localized metadata. Public pages are server-rendered HTML: never client-render the page or fetch the body after load.
 - **Learn articles (decided in #10, not built yet):** Markdown stored in PostgreSQL and edited by admins at `/admin`. `/[locale]/learn/**` is the only public page route that may read the database (`/api/health` also queries it, by design): Server Components render the Markdown on first request, and the page is cached and revalidated on demand when an article is saved, published or unpublished. A lookup that returns nothing is a 404; a failed lookup is a 503 (`Retry-After`, `no-store`), never a 404. No raw HTML in articles. The closing comment on #10 has the full design and build order.
 - **Small enhancements:** `public/site-ui.js` closes the mobile menu and provides theme switching. Dark is the static default; `light`/`dark` are the only accepted URL preference values, carried through locale links with guarded history updates. No browser-storage APIs. Hide the theme control without JavaScript. The hub and tool pages never call the database; builds need no database.
-- **Artwork is not MIT:** The marks, favicon and walkthrough video are listed in `ARTWORK.md` and excluded from MIT; they are CC BY-NC 4.0 (issue #87). Keep that list current when artwork is added or moved; the code stays MIT.
+- **Artwork is not MIT:** The marks, favicon and walkthrough video are listed in `ARTWORK.md` and excluded from MIT; they are CC BY-NC 4.0 (issue #87). Keep that list current when artwork is added or moved; the code stays MIT. Branded video sources and promotional material stay outside this public repository; only the rendered files the app serves are committed.
 - **Brand:** Direction C (Bright works) as recorded in `DESIGN.md`: charcoal/lime, bold headings, contrasting tool panels, original marks, self-hosted Manrope, CSS tokens.
 - **Country-neutral:** Do not assume SEK, a tax jurisdiction, a trading method or financial outputs.
 - **Security headers:** `next.config.ts` sends the same site-wide set as vocabulary-training on every route: CSP (`default-src 'self'`, `object-src 'none'`, `frame-ancestors 'none'`; inline scripts for Next.js hydration, eval only in development), `form-action 'self' https://accounts.google.com` for the Google sign-in redirect, `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy: same-origin` (account pages override it with `strict-origin`, because recovery URLs carry tokens) and a restrictive `Permissions-Policy`; `poweredByHeader` is off. Self-host every asset; adding an external origin needs a CSP change and a reason.

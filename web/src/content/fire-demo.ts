@@ -1,7 +1,8 @@
 import type { Locale } from "./site";
 
 // Each language has its own narrated video in public/media/fire-demo/<locale>/,
-// rendered from video/ (see VIDEO.md). Bump the version when a file changes.
+// rendered from sources kept outside the repository (see VIDEO.md).
+// Bump the version when a file changes.
 const version = "money-working-1";
 
 const en = {
