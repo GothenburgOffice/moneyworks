@@ -426,6 +426,7 @@ test("stored FIRE inputs round-trip and reject anything malformed", () => {
     JSON.stringify({ ...inputs, goal: "other" }),
     JSON.stringify({ ...inputs, strategy: 1 }),
     JSON.stringify({ ...inputs, values: null }),
+    JSON.stringify({ ...inputs, values: [] }),
     JSON.stringify({ ...inputs, values: { spending: 2400 } }),
     JSON.stringify({ ...inputs, values: { spending: "1".repeat(41) } }),
     JSON.stringify({ ...inputs, pensions: "none" }),

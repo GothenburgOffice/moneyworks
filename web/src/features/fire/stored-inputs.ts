@@ -41,7 +41,8 @@ export function parseFireInputs(
   const { goal, strategy, values, pensions } = data as Record<string, unknown>;
   if (goal !== "portfolio" && goal !== "age") return null;
   if (strategy !== "drawdown" && strategy !== "preserve") return null;
-  if (!values || typeof values !== "object" || !Array.isArray(pensions)) return null;
+  if (!values || typeof values !== "object" || Array.isArray(values)) return null;
+  if (!Array.isArray(pensions)) return null;
 
   const restored: Record<string, string> = {};
   for (const [field, fallback] of Object.entries(fields)) {
