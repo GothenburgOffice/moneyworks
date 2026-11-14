@@ -115,7 +115,7 @@ export async function sendTestEmail(config: MailConfig, to: string): Promise<Tes
     if (code === "EAUTH" || code === "ENOAUTH") return "testAuth";
     if (["ECONNECTION", "ETIMEDOUT", "ESOCKET", "EDNS", "ETLS", "EPROTOCOL"].includes(String(code)))
       return "testConnection";
-    if (code === "EENVELOPE" || code === "EMESSAGE") return "testRejected";
+    if (code === "EENVELOPE") return "testRejected";
     return "testFailed";
   }
 }
