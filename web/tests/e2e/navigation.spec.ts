@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { getAccountCopy } from "@/content/account";
 import { getFireCopy } from "@/content/fire";
 import { getSiteCopy, type Locale } from "@/content/site";
 
@@ -54,8 +55,8 @@ for (const locale of locales) {
       await expect(panel.getByRole("heading", { level: 1 })).toBeVisible();
       await expect(page).toHaveTitle(new RegExp(`^${fire.bannerLabel} \\|`));
       await expect(page.locator(".skip-link")).toHaveAttribute("href", "#main-content");
-      for (const link of await page.locator("[data-locale-link]").all()) {
-        await expect(link).toHaveAttribute("href", /\/tools\/fire(\?theme=dark)?$/);
+      for (const link of await page.locator(".language-switcher a").all()) {
+        await expect(link).toHaveAttribute("href", /\/tools\/fire$/);
       }
       await expectNoHorizontalScroll(page);
 
@@ -70,36 +71,91 @@ for (const locale of locales) {
       await expect(page.locator("#tools-heading")).toBeInViewport();
     });
 
-    test("theme switches and is carried across language links", async ({ page }) => {
+    test("the theme follows the system until picked, then sticks on every page", async ({
+      page,
+    }) => {
       const other = locale === "en" ? "sv" : "en";
+      await page.emulateMedia({ colorScheme: "light" });
       await open(page, `/${locale}/tools/fire`);
       const html = page.locator("html");
       const toggle = page.locator("[data-theme-toggle]");
-      await expect(html).toHaveAttribute("data-theme", "dark");
-      await expect(toggle).toHaveAttribute("aria-label", copy.nav.themeLight);
-      await expect(toggle).toHaveAttribute("aria-pressed", "true");
-
-      await toggle.click();
       await expect(html).toHaveAttribute("data-theme", "light");
       await expect(toggle).toHaveAttribute("aria-label", copy.nav.themeDark);
       await expect(toggle).toHaveAttribute("aria-pressed", "false");
-      await expect(page).toHaveURL(new RegExp(`/${locale}/tools/fire\\?theme=light$`));
+
+      await toggle.click();
+      await expect(html).toHaveAttribute("data-theme", "dark");
+      await expect(toggle).toHaveAttribute("aria-label", copy.nav.themeLight);
+      await expect(toggle).toHaveAttribute("aria-pressed", "true");
+      await expect(page).toHaveURL(new RegExp(`/${locale}/tools/fire$`));
       await expectNoHorizontalScroll(page);
 
-      await page.locator(`[data-locale-link][hreflang="${other}"]`).click();
-      await expect(page).toHaveURL(new RegExp(`/${other}/tools/fire\\?theme=light$`));
+      await page.reload();
+      await expect(html).toHaveAttribute("data-theme", "dark");
+      await page.locator(`.language-switcher a[hreflang="${other}"]`).click();
+      await expect(page).toHaveURL(new RegExp(`/${other}/tools/fire$`));
       await expect(html).toHaveAttribute("lang", other);
-      await expect(html).toHaveAttribute("data-theme", "light");
-      await expect(page.locator('[data-tool-panel="fire"]')).toBeVisible();
+      await expect(html).toHaveAttribute("data-theme", "dark");
+      await open(page, `/${other}/account`);
+      await expect(html).toHaveAttribute("data-theme", "dark");
     });
 
-    test("an unknown theme value falls back to dark", async ({ page }) => {
-      await open(page, `/${locale}?theme=blue`);
-      await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
-      await expect(page.locator(`[data-locale-link][hreflang="${locale}"]`)).toHaveAttribute(
-        "href",
-        `/${locale}?theme=dark`,
+    test("the stored theme applies before the enhancement script runs", async ({ page }) => {
+      // Without site-ui.js only the inline <head> script can set the theme.
+      await page.route("**/site-ui.js", (route) => route.abort());
+      await page.addInitScript(() => localStorage.setItem("theme", "light"));
+      await page.goto(`/${locale}`);
+      await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+    });
+
+    test("the account control shows Log in when signed out or the session check fails", async ({
+      page,
+    }) => {
+      const account = getAccountCopy(locale);
+      await page.route("**/api/account/session", (route) =>
+        route.fulfill({ status: 503, json: { signedIn: false } }),
       );
+      await open(page, `/${locale}`);
+      const control = page.locator("[data-account-control]");
+      await expect(control).toHaveAccessibleName(account.login);
+      await expect(control).toHaveAttribute("href", `/${locale}/account`);
+      const box = await control.boundingBox();
+      expect(box?.width).toBeGreaterThanOrEqual(44);
+      expect(box?.height).toBeGreaterThanOrEqual(44);
+    });
+
+    test("the account menu opens for a member and closes with Escape", async ({ page }) => {
+      const account = getAccountCopy(locale);
+      const email = "member@example.test";
+      await page.route("**/api/account/session", (route) =>
+        route.fulfill({ json: { signedIn: true, email, isAdmin: true } }),
+      );
+      await open(page, `/${locale}`);
+      const button = page.getByRole("button", { name: account.accountMenu });
+      await expect(button).toHaveAttribute("aria-expanded", "false");
+      await button.click();
+      await expect(button).toHaveAttribute("aria-expanded", "true");
+      const panel = page.locator(".account-menu-panel");
+      await expect(panel.getByText(email)).toBeVisible();
+      await expect(panel.getByRole("link", { name: account.accountSettings })).toHaveAttribute(
+        "href",
+        `/${locale}/account`,
+      );
+      await expect(panel.getByRole("link", { name: account.admin })).toHaveAttribute(
+        "href",
+        "/admin",
+      );
+      await expect(panel.getByRole("button", { name: account.logout })).toBeVisible();
+      await expectNoHorizontalScroll(page);
+
+      await page.keyboard.press("Escape");
+      await expect(panel).toBeHidden();
+      await expect(button).toBeFocused();
+
+      await button.click();
+      // An outside click closes it; the panel is right-aligned, so click the left edge.
+      await page.locator("main").click({ position: { x: 4, y: 4 } });
+      await expect(panel).toBeHidden();
     });
 
     test("header navigation fits the layout", async ({ page, isMobile }) => {

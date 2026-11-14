@@ -47,37 +47,53 @@ if (stickyHeader) {
   updateHeader();
 }
 
-// Default to the selected dark C design. Content does not depend on this script.
+// The theme follows the system until the visitor picks one; the pick is kept in
+// localStorage. The inline script in <head> applies it before paint; this only
+// wires the toggle. Without JavaScript the page stays dark and the toggle hidden.
 const themeButton = document.querySelector("[data-theme-toggle]");
 if (themeButton) {
-  const allowedThemes = ["light", "dark"];
-  let theme = new URLSearchParams(location.search).get("theme");
-  if (!allowedThemes.includes(theme)) theme = "dark";
-  const applyTheme = (updateURL = false) => {
-    document.documentElement.dataset.theme = theme;
-    const label = theme === "dark" ? themeButton.dataset.lightLabel : themeButton.dataset.darkLabel;
-    themeButton.setAttribute("aria-label", label);
-    themeButton.setAttribute("title", label);
-    themeButton.setAttribute("aria-pressed", String(theme === "dark"));
-    document.querySelectorAll("[data-locale-link]").forEach((link) => {
-      const url = new URL(link.getAttribute("href"), location.href);
-      url.searchParams.set("theme", theme);
-      link.setAttribute("href", `${url.pathname}${url.search}${url.hash}`);
-    });
-    if (updateURL) {
-      try {
-        const url = new URL(location.href);
-        url.searchParams.set("theme", theme);
-        history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
-      } catch {
-        /* Some browsers throttle or block replaceState; the links still carry the theme. */
-      }
+  const root = document.documentElement;
+  const valid = (value) => value === "light" || value === "dark";
+  const stored = () => {
+    try {
+      return localStorage.getItem("theme");
+    } catch {
+      return null; // Storage blocked: the toggle still works for this page.
     }
   };
-  applyTheme();
+  const label = () => {
+    const name =
+      root.dataset.theme === "dark"
+        ? themeButton.dataset.lightLabel
+        : themeButton.dataset.darkLabel;
+    themeButton.setAttribute("aria-label", name);
+    themeButton.setAttribute("title", name);
+    themeButton.setAttribute("aria-pressed", String(root.dataset.theme === "dark"));
+  };
+  if (!valid(root.dataset.theme)) root.dataset.theme = "dark";
+  label();
   themeButton.hidden = false;
   themeButton.addEventListener("click", () => {
-    theme = theme === "dark" ? "light" : "dark";
-    applyTheme(true);
+    const theme = root.dataset.theme === "dark" ? "light" : "dark";
+    root.dataset.theme = theme;
+    try {
+      localStorage.setItem("theme", theme);
+    } catch {
+      /* Not persisted, but applied to this page. */
+    }
+    label();
+  });
+  // Follow a system change until the visitor has picked a theme.
+  window.matchMedia?.("(prefers-color-scheme: light)").addEventListener?.("change", (event) => {
+    if (valid(stored())) return;
+    root.dataset.theme = event.matches ? "light" : "dark";
+    label();
+  });
+  // Another tab picked a theme.
+  window.addEventListener("storage", (event) => {
+    if (event.key === "theme" && valid(event.newValue)) {
+      root.dataset.theme = event.newValue;
+      label();
+    }
   });
 }

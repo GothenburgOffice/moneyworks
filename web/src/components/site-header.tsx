@@ -2,6 +2,7 @@ import type { Locale, SiteCopy } from "@/content/site";
 import { BrandLogo } from "./brand-logo";
 import { LanguageSwitcher } from "./language-switcher";
 import { ThemeToggle } from "./theme-toggle";
+import { AccountMenu } from "./account-menu";
 import { getAccountCopy } from "@/content/account";
 
 export function SiteHeader({
@@ -33,13 +34,22 @@ export function SiteHeader({
                 {text}
               </a>
             ))}
-            <a className="account-nav-link" href={`/${locale}/account`}>
-              {account.account}
-            </a>
           </nav>
           <div className="header-utilities">
             <LanguageSwitcher locale={locale} label={copy.nav.language} suffix={localeSuffix} />
             <ThemeToggle copy={copy.nav} />
+            <AccountMenu
+              locale={locale}
+              copy={{
+                account: account.account,
+                accountMenu: account.accountMenu,
+                accountSettings: account.accountSettings,
+                admin: account.admin,
+                signedIn: account.signedIn,
+                login: account.login,
+                logout: account.logout,
+              }}
+            />
             <details className="mobile-menu" data-mobile-menu>
               <summary aria-label={copy.nav.menu}>
                 <span>{copy.nav.menu}</span>
@@ -58,7 +68,6 @@ export function SiteHeader({
                     {text}
                   </a>
                 ))}
-                <a href={`/${locale}/account`}>{account.account}</a>
               </nav>
             </details>
           </div>
