@@ -282,6 +282,10 @@ try {
   assert.ok(jar.size, "the member is signed in");
   assert.equal((await fetch(`${base}/admin`, { headers: { cookie: cookieHeader() } })).status, 404);
   assert.equal((await adminForm("admin/settings", {})).status, 404);
+  assert.equal(
+    (await adminForm("admin/testmail", { testEmail: "mw-test-mail-qa@example.invalid" })).status,
+    404,
+  );
   assert.ok(
     !(
       await (await fetch(`${base}/en/account`, { headers: { cookie: cookieHeader() } })).text()
@@ -322,6 +326,11 @@ try {
     (await adminForm("admin/settings", settingsFields)).status,
     404,
     "settings need an admin",
+  );
+  assert.equal(
+    (await adminForm("admin/testmail", { testEmail: "mw-test-mail-qa@example.invalid" })).status,
+    404,
+    "the test email needs an admin",
   );
   assert.equal((await fetch(`${base}/admin`)).status, 404, "signed out, /admin does not exist");
   // Someone registered the admin email first but never verified it: the bootstrap
@@ -404,6 +413,50 @@ try {
   assert.equal(await setting("smtp.password"), undefined);
   assert.equal(await setting("smtp.user"), "");
   checks.push("admin settings: SMTP password stored encrypted, never shown; bad input rejected");
+
+  // The test email: any address, the saved settings read fresh, a fixed result in the URL.
+  const testRecipient = `mw-test-mail-qa-${Date.now()}@example.invalid`;
+  response = await adminForm("admin/testmail", { testEmail: testRecipient });
+  assert.equal(response.status, 303);
+  const testResult = new URL(response.headers.get("location"));
+  assert.equal(testResult.pathname, "/admin");
+  assert.deepEqual(
+    [...testResult.searchParams],
+    [["message", "testSent"]],
+    "only the fixed result",
+  );
+  const end = Date.now() + 6000;
+  let delivered;
+  while (!delivered && Date.now() < end) {
+    const messages = await (await fetch("http://127.0.0.1:3304/messages")).json();
+    delivered = messages.findLast((text) => text.includes(testRecipient));
+    if (!delivered) await new Promise((resolve) => setTimeout(resolve, 25));
+  }
+  assert.ok(delivered?.includes("Money Working test email"), "the test email reaches the server");
+  assert.equal(
+    message(await adminForm("admin/testmail", { testEmail: "not-an-address" })),
+    "testInvalid",
+  );
+  assert.equal(
+    (
+      await adminForm(
+        "admin/testmail",
+        { testEmail: testRecipient },
+        { origin: "https://attacker.invalid" },
+      )
+    ).status,
+    403,
+  );
+  // Saved settings pointing at a closed port, without waiting for the settings cache.
+  await adminForm("admin/settings", { ...settingsFields, smtpPort: "10259" });
+  assert.equal(
+    message(await adminForm("admin/testmail", { testEmail: testRecipient })),
+    "testConnection",
+  );
+  assert.equal(message(await adminForm("admin/settings", settingsFields)), "saved");
+  checks.push(
+    "admin test email: delivered with saved settings; fixed results; admin and origin only",
+  );
 
   // Without mail, accounts cannot register or recover, but signing in still works:
   // that is how the first admin gets to /admin to set mail up.
