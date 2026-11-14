@@ -1,6 +1,6 @@
 # Pension-aware FIRE planning
 
-The calculator is part of the static English/Swedish homepage.
+The calculator is a tool on the English/Swedish hub, with its own page.
 It is a deterministic scenario, not a pension entitlement estimate, tax calculation,
 recommended withdrawal rate, probability of success or financial advice.
 No government/employer service, Google integration or market feed is used.
@@ -44,7 +44,7 @@ and fees, not recommended planning assumptions.
 
 ## Result phases
 
-The calculator has its own static page, `/en/tools/fire` and `/sv/tools/fire`,
+The calculator has its own server-rendered page, `/en/tools/fire` and `/sv/tools/fire`,
 linked from its tool card on the hub (decision #5). Its ToolView supplies a
 FIRE-specific banner, shared header/footer and All tools link. Locale/theme
 controls keep the tool page, not financial values.
