@@ -6,7 +6,7 @@ project commits to, where it runs, what is known to fall short and how to report
 
 ## Commitment
 
-- Public pages are pre-rendered HTML that read without JavaScript, in English and Swedish with the
+- Public pages are server-rendered HTML that read without JavaScript, in English and Swedish with the
   same meaning and hierarchy.
 - Controls are native elements where possible, with visible focus, localized accessible names for
   icon-only buttons and targets of at least 44 px.
