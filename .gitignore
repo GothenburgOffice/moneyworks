@@ -16,6 +16,5 @@ CLAUDE.local.md
 .impeccable/
 .taste-skill/
 
-# Rendered videos and HyperFrames working files; the shipped files live in web/public/media
-video/out/
-video/**/.hyperframes/
+# Video sources are kept outside the repository; the shipped files live in web/public/media.
+/video/

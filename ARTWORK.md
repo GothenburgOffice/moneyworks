@@ -22,11 +22,8 @@ Money Working or Pengar jobbar.
   - the mark path data in `web/src/content/brand.ts` (the `paths` and `icon`
     values), and the marks drawn from it
 - The FIRE calculator videos in both languages: the rendered walkthroughs,
-  posters and subtitles in `web/public/media/fire-demo/`, and their sources in
-  `video/` (compositions, narration recordings and scripts, interface captures).
-  The authoring scripts there (`Dockerfile`, `capture.mjs`, `render.sh`) are MIT.
-  Third-party files in `video/` keep their own licenses (GSAP, Manrope,
-  HyperFrames notice).
+  posters and subtitles in `web/public/media/fire-demo/`. Their sources are not
+  in this repository.
 
 ## What stays MIT
 
