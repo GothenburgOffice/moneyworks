@@ -35,7 +35,7 @@ That includes unsolicited fixes, refactors, dependency bumps and typo-only chang
   everything set up; no host Node.js is needed.
 - Add or update tests for behavior changes.
 - Follow the rules in [.github/copilot-instructions.md](.github/copilot-instructions.md),
-  for example: public pages stay pre-rendered and readable without JavaScript,
+  for example: public pages stay server-rendered and readable without JavaScript,
   financial inputs never leave the browser, the site stays country-neutral,
   migrations are append-only, new dependencies are agreed in the issue first,
   and the app stays Node 22 compatible.
