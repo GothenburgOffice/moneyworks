@@ -14,8 +14,6 @@ export function LanguageSwitcher({
     <nav className="language-switcher" aria-label={label}>
       <a
         href={`/en${suffix}`}
-        suppressHydrationWarning
-        data-locale-link
         hrefLang="en"
         lang="en"
         aria-current={locale === "en" ? "page" : undefined}
@@ -27,8 +25,6 @@ export function LanguageSwitcher({
       </span>
       <a
         href={`/sv${suffix}`}
-        suppressHydrationWarning
-        data-locale-link
         hrefLang="sv"
         lang="sv"
         aria-current={locale === "sv" ? "page" : undefined}

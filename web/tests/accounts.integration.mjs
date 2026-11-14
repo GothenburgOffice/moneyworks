@@ -368,6 +368,10 @@ try {
     ).includes('href="/admin"'),
     "the admin's account page links to /admin",
   );
+  // The header's account control: only the email and the admin flag, never cached.
+  response = await fetch(`${base}/api/account/session`, { headers: { cookie: cookieHeader() } });
+  assert.equal(response.headers.get("cache-control"), "no-store");
+  assert.deepEqual(await response.json(), { signedIn: true, email: adminEmail, isAdmin: true });
   checks.push("admin bootstrap on the account form takes over an unverified squatter");
 
   response = await adminForm("admin/settings", {
@@ -785,6 +789,22 @@ try {
   page = await (await member.get("/en/account")).text();
   assert.ok(page.includes('href="/api/account/export"') && page.includes("Delete my account"));
   checks.push("export: own data only, as a no-store download without hashes or tokens");
+
+  // Header session state: a member is not an admin; anonymous callers are signed out.
+  response = await member.get("/api/account/session");
+  assert.equal(response.headers.get("cache-control"), "no-store");
+  const sessionText = await response.text();
+  assert.deepEqual(JSON.parse(sessionText), {
+    signedIn: true,
+    email: lockedEmail,
+    isAdmin: false,
+  });
+  assert.ok(!sessionText.includes(storedToken), "no session token in the header state");
+  response = await fetch(`${base}/api/account/session`);
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get("cache-control"), "no-store");
+  assert.deepEqual(await response.json(), { signedIn: false });
+  checks.push("header session state: email and admin flag only, no-store, signed out by default");
 
   // /admin/users exists for admins only.
   assert.equal((await member.get("/admin/users")).status, 404);

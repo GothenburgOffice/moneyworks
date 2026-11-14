@@ -36,9 +36,10 @@ Light mode uses ivory `#f8f8f0`, charcoal text, a dark action and green
 `#3f7f14` headline accent. The crypto panel is ivory in both. Colours are
 identity and category, never a signal of financial success.
 
-Dark is the static default. The theme toggle is an enhancement: hidden without
-JavaScript, carried across locale links by a validated query value, and never
-stored in browser storage.
+The theme follows the system's light or dark preference until the visitor picks
+one with the header toggle; the pick is kept in `localStorage` and applied by a
+small inline script before the page paints, on every page. Without JavaScript
+the page is dark and the toggle hidden.
 
 ## Typography
 
@@ -63,7 +64,11 @@ stored in browser storage.
 
 - **BrandLogo / SiteHeader:** localized link label, decorative SVG hidden from
   assistive technology, real section anchors, full-document language links.
-  44×44px mobile menu summary that closes on navigation and Escape.
+  44×44px mobile menu summary that closes on navigation and Escape. The account
+  control is a Log in link (icon only on mobile, its label kept as the accessible
+  name); for a signed-in member it opens a small panel with the email, Account
+  settings, Admin for admins and Log out, closing on Escape, outside clicks and
+  tabbing away.
 - **ToolCard:** category, status (available or planned), purpose and native
   expandable details. Planned tools never show fake inputs or results.
 - **ToolView:** a tool's own page (`/[locale]/tools/[tool]`) with its own banner,

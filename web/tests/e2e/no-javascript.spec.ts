@@ -15,6 +15,12 @@ for (const locale of locales) {
       await page.goto(`/${locale}`);
       await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
       await expect(page.locator("[data-theme-toggle]")).toBeHidden();
+      await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+      // The account control falls back to a plain link to the account page.
+      await expect(page.locator("[data-account-control]")).toHaveAttribute(
+        "href",
+        `/${locale}/account`,
+      );
 
       // Native details disclose planned-tool information.
       const crypto = page.locator("#crypto");

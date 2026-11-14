@@ -4,89 +4,129 @@ import { test } from "node:test";
 import { runInNewContext } from "node:vm";
 
 const source = readFileSync(new URL("../public/site-ui.js", import.meta.url), "utf8");
-function setup({ query = "", blockedHistory = false } = {}) {
-  const listeners = {};
-  const attributes = {};
+
+// The inline <head> script from components/theme-script.tsx, run the same way.
+const themeScript = readFileSync(
+  new URL("../src/components/theme-script.tsx", import.meta.url),
+  "utf8",
+)
+  .match(/const script = `([^`]+)`/)[1]
+  .replace("${themeStorageKey}", "theme");
+
+function browser({ stored = null, systemLight = false, blockedStorage = false } = {}) {
+  const store = new Map(stored ? [["theme", stored]] : []);
+  const localStorage = {
+    getItem(key) {
+      if (blockedStorage) throw new Error("SecurityError");
+      return store.has(key) ? store.get(key) : null;
+    },
+    setItem(key, value) {
+      if (blockedStorage) throw new Error("SecurityError");
+      store.set(key, value);
+    },
+  };
+  const media = { matches: systemLight, listener: null };
+  media.addEventListener = (event, listener) => {
+    media.listener = listener;
+  };
+  const windowListeners = {};
+  const window = {
+    addEventListener(event, listener) {
+      windowListeners[event] = listener;
+    },
+    matchMedia: () => media,
+  };
+  return { store, localStorage, media, window, windowListeners, matchMedia: window.matchMedia };
+}
+
+function setup(options) {
+  const env = browser(options);
   const root = { dataset: { theme: "dark" } };
+  runInNewContext(themeScript, {
+    document: { documentElement: root },
+    localStorage: env.localStorage,
+    window: env.window,
+    matchMedia: env.matchMedia,
+  });
+  const clicks = {};
+  const attributes = {};
   const button = {
     hidden: true,
     dataset: { lightLabel: "Switch to light theme", darkLabel: "Switch to dark theme" },
     addEventListener: (event, listener) => {
-      listeners[event] = listener;
+      clicks[event] = listener;
     },
     setAttribute: (name, value) => {
       attributes[name] = value;
     },
   };
-  const links = ["/en", "/sv"].map((href) => ({
-    href,
-    getAttribute() {
-      return this.href;
-    },
-    setAttribute(name, value) {
-      this[name] = value;
-    },
-  }));
-  let preferenceURL = "";
   runInNewContext(source, {
     document: {
       addEventListener() {},
       documentElement: root,
       querySelector: (selector) => (selector === "[data-theme-toggle]" ? button : null),
-      querySelectorAll: (selector) => (selector === "[data-locale-link]" ? links : []),
+      querySelectorAll: () => [],
     },
-    location: { search: query, href: `https://example.test/en${query}` },
-    history: {
-      replaceState(state, title, url) {
-        if (blockedHistory) throw new Error("History unavailable");
-        preferenceURL = url;
-      },
-    },
-    window: { addEventListener() {} },
-    URL,
-    URLSearchParams,
+    localStorage: env.localStorage,
+    window: env.window,
   });
-  return {
-    root,
-    button,
-    attributes,
-    links,
-    click: listeners.click,
-    preferenceURL: () => preferenceURL,
-  };
+  return { ...env, root, button, attributes, click: clicks.click };
 }
-test("C defaults to dark and progressively reveals the localized toggle", () => {
+
+test("the head script follows the system until a theme is picked", () => {
+  assert.equal(setup().root.dataset.theme, "dark");
+  assert.equal(setup({ systemLight: true }).root.dataset.theme, "light");
+  assert.equal(setup({ stored: "dark", systemLight: true }).root.dataset.theme, "dark");
+  assert.equal(setup({ stored: "light" }).root.dataset.theme, "light");
+  assert.equal(setup({ stored: "blue", systemLight: true }).root.dataset.theme, "light");
+  assert.equal(setup({ blockedStorage: true, systemLight: true }).root.dataset.theme, "light");
+});
+
+test("the toggle is revealed with a localized label matching the theme", () => {
   const ui = setup();
-  assert.equal(ui.root.dataset.theme, "dark");
   assert.equal(ui.button.hidden, false);
   assert.equal(ui.attributes["aria-label"], "Switch to light theme");
   assert.equal(ui.attributes["aria-pressed"], "true");
+  const light = setup({ systemLight: true });
+  assert.equal(light.attributes["aria-label"], "Switch to dark theme");
+  assert.equal(light.attributes["aria-pressed"], "false");
 });
 
-test("theme switches, persists and follows locale links", () => {
+test("a picked theme is stored and no URL is touched", () => {
   const ui = setup();
+  assert.equal(ui.store.size, 0, "nothing is stored before a pick");
   ui.click();
   assert.equal(ui.root.dataset.theme, "light");
-  assert.equal(ui.preferenceURL(), "/en?theme=light");
+  assert.equal(ui.store.get("theme"), "light");
   assert.equal(ui.attributes["aria-label"], "Switch to dark theme");
-  assert.equal(ui.attributes["aria-pressed"], "false");
-  assert.equal(ui.links[1].href, "/sv?theme=light");
   ui.click();
   assert.equal(ui.root.dataset.theme, "dark");
-  assert.equal(ui.links[0].href, "/en?theme=dark");
+  assert.equal(ui.store.get("theme"), "dark");
+  assert.doesNotMatch(source, /history\.|location\.|\?theme=/);
 });
-test("explicit language-link preference selects light without browser storage", () => {
-  assert.equal(setup({ query: "?theme=light" }).root.dataset.theme, "light");
+
+test("system changes apply only until a theme is picked", () => {
+  const ui = setup();
+  ui.media.listener({ matches: true });
+  assert.equal(ui.root.dataset.theme, "light");
+  ui.click(); // picks dark
+  ui.media.listener({ matches: true });
+  assert.equal(ui.root.dataset.theme, "dark");
 });
-test("only valid query preferences are accepted", () => {
-  assert.equal(setup({ query: "?theme=dark" }).root.dataset.theme, "dark");
-  assert.equal(setup({ query: "?theme=invalid" }).root.dataset.theme, "dark");
+
+test("another tab's pick is followed", () => {
+  const ui = setup();
+  ui.windowListeners.storage({ key: "theme", newValue: "light" });
+  assert.equal(ui.root.dataset.theme, "light");
+  assert.equal(ui.attributes["aria-pressed"], "false");
+  ui.windowListeners.storage({ key: "theme", newValue: "blue" });
+  assert.equal(ui.root.dataset.theme, "light");
 });
-test("theme and locale navigation work when history updates fail", () => {
-  const ui = setup({ blockedHistory: true });
+
+test("blocked storage still switches the theme for the page", () => {
+  const ui = setup({ blockedStorage: true });
   ui.click();
   assert.equal(ui.root.dataset.theme, "light");
-  assert.equal(ui.links[1].href, "/sv?theme=light");
 });
 
 test("sticky header uses a stable threshold and coalesces passive scroll work", () => {
