@@ -10,6 +10,8 @@ const en = {
     "Money Working does not set analytics, advertising or tracking cookies. Sign-in uses necessary authentication and security cookies. If you pick a light or dark theme, your browser remembers the choice in local storage; it is never sent to us. There is no “accept all” step and browsing does not require an account.",
   cookieLifetime:
     "Sign-in cookies are browser-session cookies by default. A server session expires after 24 hours unless renewed through activity. Logging out revokes the session. Secure deployments use __Host-moneyworks.session_token and __Host-moneyworks.dont_remember; loopback development uses moneyworks-dev equivalents.",
+  browserStorage:
+    "The FIRE calculator keeps what you type in this browser tab (sessionStorage), so reloading or going to another page on the site does not lose it. It is never sent to the site, and it is removed when you close the tab or choose Clear amounts.",
   privacyLead:
     "An account stores your email, verification state, a password hash or a Google account ID, sign-in identities, the time of your last sign-in, whether an admin has locked the account, and session/security records including IP and browser information. Passwords are not stored as readable text.",
   privacyPurpose:
@@ -37,6 +39,8 @@ const sv: PrivacyCopy = {
     "Pengar jobbar använder inte analys-, reklam- eller spårningskakor. Inloggning använder nödvändiga autentiserings- och säkerhetskakor. Om du väljer ljust eller mörkt tema sparar webbläsaren valet i sin lokala lagring; det skickas aldrig till oss. Det finns inget ”godkänn alla”-steg och du behöver inget konto för att läsa sidan.",
   cookieLifetime:
     "Inloggningskakor är normalt sessionskakor. Serverns session löper ut efter 24 timmar om den inte förnyas vid aktivitet. Utloggning återkallar sessionen. Säkra installationer använder __Host-moneyworks.session_token och __Host-moneyworks.dont_remember; lokal utveckling använder motsvarigheter med moneyworks-dev.",
+  browserStorage:
+    "FIRE-kalkylatorn behåller det du skriver i den här webbläsarfliken (sessionStorage), så att det finns kvar om du laddar om eller går till en annan sida på webbplatsen. Det skickas aldrig till webbplatsen och tas bort när du stänger fliken eller väljer Rensa belopp.",
   privacyLead:
     "Kontot lagrar e-postadress, bekräftelsestatus, lösenordshash eller Google-konto-id, inloggningsidentiteter, tidpunkten för senaste inloggning, om en administratör har spärrat kontot samt sessions- och säkerhetsuppgifter som IP-adress och webbläsarinformation. Lösenord lagras inte i läsbar klartext.",
   privacyPurpose:

@@ -2,6 +2,7 @@
 
 import {
   useEffect,
+  useMemo,
   useRef,
   useState,
   useSyncExternalStore,
@@ -11,6 +12,13 @@ import {
 import type { FireCopy } from "@/content/fire";
 import type { Locale } from "@/content/site";
 import { calculateFire, isValidPension, type FirePlan, type Pension } from "@/features/fire/model";
+import {
+  FIRE_STORAGE_KEY,
+  isDefaultFireInputs,
+  parseFireInputs,
+  serializeFireInputs,
+  type StoredFireInputs,
+} from "@/features/fire/stored-inputs";
 import { FireFields, fireFieldDefaults, type FireFieldKey } from "./fire-fields";
 import { fireFormatters } from "./fire-format";
 import { FireResults, type FireCalculation, type FirePhase, type FireStatus } from "./fire-results";
@@ -25,6 +33,44 @@ type Props = { copy: FireCopy; locale: Locale };
 
 const noSubscription = () => () => {};
 
+// The form is kept in sessionStorage: it survives reloads and in-site navigation in
+// this tab and is gone when the tab closes. Blocked storage only loses that.
+function readStored(): string | null {
+  try {
+    return sessionStorage.getItem(FIRE_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+function writeStored(value: string | null) {
+  try {
+    if (value === null) sessionStorage.removeItem(FIRE_STORAGE_KEY);
+    else sessionStorage.setItem(FIRE_STORAGE_KEY, value);
+  } catch {
+    /* Private modes and full quotas just mean the form is not kept. */
+  }
+}
+
+function pensionRow(pension: Pension, number: number): PensionRow {
+  const id = `pension-${number}`;
+  return {
+    id,
+    number,
+    addKind: pension.kind,
+    draft: {
+      kind: pension.kind,
+      name: pension.name,
+      monthly: pension.monthly === 0 ? "" : String(pension.monthly),
+      startAge: String(pension.startAge),
+      endAge: String(pension.endAge),
+      indexed: pension.indexed,
+    },
+    accepted: { ...pension, id },
+    editing: false,
+    invalid: false,
+  };
+}
+
 // False on the server and during hydration, true once React handles events.
 function useHydrated() {
   return useSyncExternalStore(
@@ -36,18 +82,41 @@ function useHydrated() {
 
 export function FireWorkspace({ copy, locale }: Props) {
   const ready = useHydrated();
+  // Read once hydrated; the form remounts with the stored values as its initial state.
+  const initial = useMemo(
+    () => (ready ? parseFireInputs(readStored(), fireFieldDefaults, isValidPension) : null),
+    [ready],
+  );
+  return (
+    <FireForm
+      key={ready ? "client" : "server"}
+      copy={copy}
+      locale={locale}
+      ready={ready}
+      initial={initial}
+    />
+  );
+}
+
+type FormProps = Props & { ready: boolean; initial: StoredFireInputs | null };
+
+function FireForm({ copy, locale, ready, initial }: FormProps) {
   const root = useRef<HTMLDivElement>(null);
   const form = useRef<HTMLFormElement>(null);
   const resultPanel = useRef<HTMLDivElement>(null);
-  const nextId = useRef(0);
+  const nextId = useRef(initial?.pensions.length ?? 0);
   // Focus moves after React has rendered the element it targets.
   const pendingFocus = useRef<string | null>(null);
   const scrollToResult = useRef(false);
 
-  const [goal, setGoal] = useState<FirePlan["goal"]>("portfolio");
-  const [strategy, setStrategy] = useState<FirePlan["strategy"]>("drawdown");
-  const [values, setValues] = useState(fireFieldDefaults);
-  const [pensions, setPensions] = useState<PensionRow[]>([]);
+  const [goal, setGoal] = useState<FirePlan["goal"]>(initial?.goal ?? "portfolio");
+  const [strategy, setStrategy] = useState<FirePlan["strategy"]>(initial?.strategy ?? "drawdown");
+  const [values, setValues] = useState(
+    (initial?.values as typeof fireFieldDefaults | undefined) ?? fireFieldDefaults,
+  );
+  const [pensions, setPensions] = useState<PensionRow[]>(
+    () => initial?.pensions.map((pension, index) => pensionRow(pension, index + 1)) ?? [],
+  );
   const [status, setStatus] = useState<FireStatus>({
     text: copy.waiting,
     warning: false,
@@ -55,6 +124,19 @@ export function FireWorkspace({ copy, locale }: Props) {
   });
   const [calculation, setCalculation] = useState<FireCalculation | null>(null);
   const [phase, setPhase] = useState<FirePhase>("retirement");
+  // Only the hydrated form writes: the server-rendered pass must not clear what it never read.
+  useEffect(() => {
+    if (!ready) return;
+    const inputs = {
+      goal,
+      strategy,
+      values,
+      pensions: pensions.flatMap((pension) => (pension.accepted ? [pension.accepted] : [])),
+    };
+    writeStored(
+      isDefaultFireInputs(inputs, fireFieldDefaults) ? null : serializeFireInputs(inputs),
+    );
+  }, [ready, goal, strategy, values, pensions]);
 
   const format = fireFormatters(locale);
   const currency = values.currency.trim() || copy.units;

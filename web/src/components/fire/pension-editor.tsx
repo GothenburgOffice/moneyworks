@@ -19,7 +19,7 @@ export type PensionRow = {
   // The add button that created the row gets focus back when it disappears.
   addKind: PensionKind;
   draft: PensionDraft;
-  // Accepted values live only in page memory. Editors are drafts, not storage.
+  // Accepted values are kept for the tab with the other inputs; open editors are drafts.
   accepted: Pension | null;
   editing: boolean;
   invalid: boolean;

@@ -244,6 +244,11 @@ is kept in `localStorage` (`theme`), a preference they asked for that never leav
 the browser; nothing is stored until they pick one. Better Auth telemetry is off.
 Anonymous English and Swedish pages were checked to set no cookies.
 
+Tools may keep what a visitor types in `sessionStorage` for that tab (the FIRE
+calculator does): it never leaves the browser, ends when the tab closes and is
+listed on the privacy page. This is storage the visitor asked for by using the
+tool, not tracking, so it needs no consent step.
+
 Authentication cookies necessary for a requested sign-in are exempt from prior
 cookie consent under the [PTS guidance](https://pts.se/internet-och-telefoni/kakor-cookies/).
 Information about purposes, duration, names and account-data handling is still

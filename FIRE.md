@@ -109,12 +109,12 @@ capital and again as payouts.
 
 Payout editors have Save and Cancel actions. Save validates that payout independently
 of other plan fields and collapses it into a summary with Edit and Remove controls.
-Accepted values remain in page memory; collapsed controls are disabled and the
+Accepted values stay with the other inputs; collapsed controls are disabled and the
 calculation reads accepted records, not hidden inputs. Cancel restores an accepted
 record or removes an unsaved draft. Save/cancel open edits before calculating.
 Enter in a payout input saves that row; Enter in other inputs calculates.
 Changing currency updates summaries without conversion. Clear removes all entries.
-No account, database or browser-storage persistence is implied by Save.
+Save keeps the payout for this browser tab, not in an account or the database.
 
 The annual real factor is `(1 + return/100) * (1 - fee/100) / (1 + inflation/100)`;
 the monthly factor is its twelfth root. Rates are constant, not sampled.
@@ -176,7 +176,11 @@ calculation/pension controls are disabled and a notice says why.
 
 Financial values have no form field names, avoiding accidental URL submission.
 The workspace uses a local button/Enter handler, also intercepts submission,
-and makes no network requests. Inputs stay
-in the current page: no cookies, browser storage or account saving.
-Changing language/reloading starts another page. No real pension entitlement is
+and makes no network requests. The form (goal, strategy, field values and
+accepted payouts, not open payout edits) is kept in `sessionStorage` under
+`moneyworks.fire.v1`, so reloading, changing language or visiting another page in
+the same tab keeps it. It is never sent anywhere. Closing the tab removes it, as
+does Clear; a new tab starts empty. Stored data is checked with the model's
+validators on restore and ignored if anything is wrong. No cookies or account
+saving (decision #8). No real pension entitlement is
 invented or retrieved.

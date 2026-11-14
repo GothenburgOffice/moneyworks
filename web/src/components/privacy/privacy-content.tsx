@@ -19,6 +19,7 @@ export function PrivacyContent({ locale, copy, backLabel, controller, google }: 
       <h2>{copy.privacy}</h2>
       <p>{copy.cookieDetail}</p>
       <p>{copy.cookieLifetime}</p>
+      <p>{copy.browserStorage}</p>
       <h2>{copy.controller}</h2>
       {controller ? (
         <p>
