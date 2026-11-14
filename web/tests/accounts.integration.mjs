@@ -102,7 +102,7 @@ try {
   response = await call("/api/auth/sign-in/email", { email, password, rememberMe: false });
   assert.equal(response.status, 403);
   checks.push("unverified sign-in blocked");
-  const verification = link(await mail("Verify your MoneyWorks email"));
+  const verification = link(await mail("Verify your Money Working email"));
   response = await fetch(verification, { redirect: "manual" });
   assert.equal(response.status, 302);
   assert.equal(
@@ -177,7 +177,7 @@ try {
     redirectTo: `${base}/en/account?view=reset`,
   });
   assert.equal(response.status, 200);
-  const recovery = link(await mail("Reset your MoneyWorks password"));
+  const recovery = link(await mail("Reset your Money Working password"));
   const recoveryResponse = await fetch(recovery, { redirect: "manual" });
   assert.equal(recoveryResponse.status, 302);
   const recoveryLocation = new URL(recoveryResponse.headers.get("location"), base);
@@ -228,7 +228,7 @@ try {
   response = await call("/api/auth/sign-up/email", { name: "Test member", email, password });
   assert.equal(response.status, 200, "existing-account registration must not enumerate");
   assert.ok(
-    link(await mail("You already have a MoneyWorks account")).endsWith("/en/account?view=login"),
+    link(await mail("You already have a Money Working account")).endsWith("/en/account?view=login"),
   );
   response = await call("/api/auth/request-password-reset", {
     email: email.replace("@", "-missing@"),
@@ -531,7 +531,7 @@ try {
         googleEmail,
       ])
     ).rows[0],
-    { name: "MoneyWorks member", image: null, emailVerified: true },
+    { name: "Money Working member", image: null, emailVerified: true },
   );
   assert.deepEqual(await methods(googleEmail), ["google"]);
   assert.deepEqual(
@@ -586,7 +586,7 @@ try {
   const memberEmail = "mw-google-member-qa@example.invalid";
   await pool.query(
     `INSERT INTO "User" (id, name, email, "emailVerified", "updatedAt")
-     VALUES ('google-member-qa', 'MoneyWorks member', $1, true, now())`,
+     VALUES ('google-member-qa', 'Money Working member', $1, true, now())`,
     [memberEmail],
   );
   await pool.query(
@@ -611,7 +611,7 @@ try {
     }
     throw new Error("Expected the Google sign-in email.");
   })();
-  assert.ok(googleMail.includes("Sign in to MoneyWorks with Google"));
+  assert.ok(googleMail.includes("Sign in to Money Working with Google"));
   assert.ok(!googleMail.includes("reset-password"), "no recovery token for a Google member");
   checks.push(
     "a password member switching to Google loses the password; recovery sends sign-in help",
@@ -630,7 +630,7 @@ try {
     while (Date.now() < end) {
       const messages = await (await fetch("http://127.0.0.1:3304/messages")).json();
       const text = messages.findLast(
-        (item) => item.includes(memberEmail) && item.includes("Reset your MoneyWorks password"),
+        (item) => item.includes(memberEmail) && item.includes("Reset your Money Working password"),
       );
       if (text) return text;
       await new Promise((resolve) => setTimeout(resolve, 25));
@@ -695,7 +695,7 @@ try {
   const makeMember = async (id, address) => {
     await pool.query(
       `INSERT INTO "User" (id, name, email, "emailVerified", "updatedAt")
-       VALUES ($1, 'MoneyWorks member', $2, true, now())`,
+       VALUES ($1, 'Money Working member', $2, true, now())`,
       [id, address],
     );
     await pool.query(

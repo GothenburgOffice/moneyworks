@@ -29,7 +29,7 @@ function createAuth(secure: boolean, google: GoogleClient) {
   const config = accountConfig();
   if (!config.ready) throw new Error(config.problem);
   return betterAuth({
-    appName: "MoneyWorks",
+    appName: "Money Working",
     baseURL: config.baseURL,
     secret: config.secret,
     trustedOrigins: config.origins,
@@ -85,7 +85,7 @@ function createAuth(secure: boolean, google: GoogleClient) {
             clientSecret: google.clientSecret,
             prompt: "select_account",
             // Store only the address and Google's account id, not the name or photo.
-            mapProfileToUser: () => ({ name: "MoneyWorks member", image: undefined }),
+            mapProfileToUser: () => ({ name: "Money Working member", image: undefined }),
           },
         }
       : {},

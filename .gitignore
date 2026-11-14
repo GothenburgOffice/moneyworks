@@ -15,3 +15,7 @@ CLAUDE.local.md
 # Design-skill state from external AI sessions (Impeccable, Taste); reload it there.
 .impeccable/
 .taste-skill/
+
+# Rendered videos and HyperFrames working files; the shipped files live in web/public/media
+video/out/
+video/**/.hyperframes/

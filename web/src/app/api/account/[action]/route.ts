@@ -76,7 +76,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ act
   if (action === "register") {
     if (!config.registrationEnabled) return redirect("register", "unavailable");
     if (password !== form.get("confirmPassword")) return redirect("register", "passwordMismatch");
-    body = { name: "MoneyWorks member", email, password, callbackURL };
+    body = { name: "Money Working member", email, password, callbackURL };
   }
   if (action === "forgot") body = { email, redirectTo: `${page.href}?view=reset` };
   if (action === "resend") body = { email, callbackURL };

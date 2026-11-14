@@ -2,7 +2,7 @@
 
 MoneyWorks is a self-hosted, country-neutral personal-finance tool hub. It implements a bilingual (English/Swedish) pre-rendered hub, a pension-aware FIRE calculator, reusable site/account/privacy components, a real database health endpoint and an account foundation (email/password, optional Google sign-in). Crypto tax is planned. Nothing is publicly hosted yet.
 
-This file is the shared reference for coding agents (Copilot reads it directly; `CLAUDE.md` imports it). Topic details live in `DESIGN.md`, `FIRE.md` and `AUTH.md`; history, decisions and planned work live in GitHub issues.
+This file is the shared reference for coding agents (Copilot reads it directly; `CLAUDE.md` imports it). Topic details live in `DESIGN.md`, `FIRE.md`, `AUTH.md` and `VIDEO.md`; history, decisions and planned work live in GitHub issues.
 
 ## Shared standards
 
@@ -65,6 +65,7 @@ moneyworks/
 ├── SECURITY.md                   # Supported versions and private vulnerability reporting
 ├── LICENSE                       # MIT, for the code
 ├── ARTWORK.md                    # Artwork under CC BY-NC, not MIT (marks, favicon, video)
+├── VIDEO.md                      # How the walkthrough and teaser videos are made and rebuilt
 ├── CODE_OF_CONDUCT.md            # Expected behavior and how to report it
 ├── ACCESSIBILITY.md              # Accessibility commitment, known limitations, reporting
 ├── Dockerfile                    # development, devcontainer, migration and production targets (Node 22, trixie-slim)
@@ -72,6 +73,7 @@ moneyworks/
 ├── compose.dev.yaml              # Development override: dev target and source mounts
 ├── compose.images.yaml           # Published release image + PostgreSQL
 ├── moneyworks.code-workspace     # VS Code workspace and extension recommendations
+├── video/                        # Video sources and authoring image; never an app dependency
 └── web/
     ├── README.md                 # Pointer to the root README for the app folder
     ├── messages/                 # English/Swedish interface messages
@@ -97,7 +99,7 @@ moneyworks/
 
 ## Component boundaries
 
-- **Localized identity:** `content/brand.ts` selects MoneyWorks/M-W for English and Pengar jobbar/PJ for Swedish. Pass the explicit locale to shared brand, intro and about components; keep names, SVG marks and favicons server-rendered. Language links stay on the current host and never switch domain (owner decision in #7); search engines learn each language's home domain from `LOCALE_ORIGINS`.
+- **Localized identity:** `content/brand.ts` selects the name: Money Working for English, Pengar jobbar for Swedish (decision #92). Both share one mark and one favicon (`public/brand-icon.svg`, `app/favicon.ico`). Pass the explicit locale to shared brand, intro and about components; keep names, the SVG mark and favicons server-rendered. The repository, package, database and image keep the `moneyworks` identifier. Language links stay on the current host and never switch domain (owner decision in #7); search engines learn each language's home domain from `LOCALE_ORIGINS`.
 - **Route orchestration:** Resolve request/query state, auth configuration and sessions in server routes. Pass only the required user fields or public controller/contact details into presentation, never full sessions/configuration.
 - **Presentation:** Reuse `components/account/` for entry, form, tabs and workspace, and `components/privacy/` for privacy rendering. Privacy copy lives in `content/privacy.ts`, independent of account messages.
 - **Pure features:** `features/account/view.ts` parses allowlisted view/feedback queries; `features/tools/catalog.ts` defines tool IDs/status and a neutral card-content contract. Add tools through the catalogue and both translations, not duplicated card calls.
@@ -116,7 +118,7 @@ moneyworks/
 - **Number entry:** Optional zero-based amounts (portfolio, contributions, end reserve, payout amount) start empty with a `0` placeholder; blank means zero. Spending and ages remain required. Normalize redundant leading zeros on blur only, preserving in-progress decimals.
 - **Result phases:** Keep the Savings plan / Retirement plan toggle, both from the same engine. Chart actual savings against a distinct minimum-capital target. Monthly saving to target is a total, not a top-up. Preserve phase on recalculation and reset it on Clear.
 - **Display:** Whole currency units in results, payouts, charts and yearly tables; keep fractional inputs/rates/model precision. Round the minimum required monthly saving up.
-- **Walkthrough video:** Self-hosted native video with local EN/SV subtitles (off by default) and a text version, near the calculator heading. User-initiated playback only; pause on closing the demo or leaving the tool. No third-party player, analytics or video-production dependency in the app.
+- **Walkthrough video:** Self-hosted native video, one narrated file per language in `public/media/fire-demo/<locale>/` with local subtitles (off by default) and a text version, near the calculator heading. The videos are rendered from `video/`; `VIDEO.md` has the process, and narration, captions and the text version must say the same thing. User-initiated playback only; pause on closing the demo or leaving the tool. No third-party player, analytics or video-production dependency in the app.
 
 ## Runtime behavior
 

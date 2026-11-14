@@ -7,7 +7,7 @@ const en = {
   privacyTitle: "Your account. Your information.",
   cookieShort: "Essential sign-in cookies only. No analytics or advertising.",
   cookieDetail:
-    "MoneyWorks does not set analytics, advertising or tracking cookies. Sign-in uses necessary authentication and security cookies. There is no “accept all” step and browsing does not require an account.",
+    "Money Working does not set analytics, advertising or tracking cookies. Sign-in uses necessary authentication and security cookies. There is no “accept all” step and browsing does not require an account.",
   cookieLifetime:
     "Sign-in cookies are browser-session cookies by default. A server session expires after 24 hours unless renewed through activity. Logging out revokes the session. Secure deployments use __Host-moneyworks.session_token and __Host-moneyworks.dont_remember; loopback development uses moneyworks-dev equivalents.",
   privacyLead:

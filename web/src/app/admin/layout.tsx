@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "@/styles/admin.css";
 
 export const metadata: Metadata = {
-  title: "MoneyWorks admin",
+  title: "Money Working admin",
   robots: { index: false, follow: false },
 };
 

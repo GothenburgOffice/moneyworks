@@ -1,7 +1,8 @@
 # MoneyWorks
 
-A self-hosted, country-neutral personal-finance tool hub in English
-(**MoneyWorks**) and Swedish (**Pengar jobbar**).
+A self-hosted, country-neutral personal-finance tool hub. The site is called
+**Money Working** in English and **Pengar jobbar** in Swedish; the repository,
+package and image keep the name `moneyworks`.
 
 - **Working:** a pension-aware FIRE calculator (portfolio needed or earliest
   retirement age, planned drawdown or capital preservation, manual pension
@@ -31,6 +32,7 @@ Financial inputs never leave the browser.
 | [AUTH.md](AUTH.md)                                                 | Accounts, privacy, operator configuration and security boundaries                         |
 | [ACCESSIBILITY.md](ACCESSIBILITY.md)                               | Accessibility commitment, known limitations and how to report a barrier                   |
 | [ARTWORK.md](ARTWORK.md)                                           | Artwork under CC BY-NC 4.0, not MIT (marks, favicon, walkthrough video)                   |
+| [VIDEO.md](VIDEO.md)                                               | How the walkthrough and teaser videos are made and rebuilt                                |
 | [SECURITY.md](SECURITY.md)                                         | Supported versions and how to report a vulnerability privately                            |
 | [CONTRIBUTING.md](CONTRIBUTING.md)                                 | Which outside pull requests are reviewed, and how                                         |
 | [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)                           | Expected behavior and how to report it                                                    |

@@ -21,6 +21,7 @@ export function BrandMark({ locale }: { locale: Locale }) {
 }
 
 export function BrandLogo({ locale, label, compact = false, href = "#top" }: Props) {
+  const brand = getBrand(locale);
   return (
     <a
       className={`brand${compact ? " brand--footer" : ""}`}
@@ -30,8 +31,8 @@ export function BrandLogo({ locale, label, compact = false, href = "#top" }: Pro
     >
       <BrandMark locale={locale} />
       <span className="brand-name">
-        {getBrand(locale).name}
-        <span className="brand-period">.</span>
+        {`${brand.lead} `}
+        <span className="brand-accent">{brand.accent}</span>
       </span>
     </a>
   );

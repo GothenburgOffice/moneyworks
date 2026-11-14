@@ -1,7 +1,7 @@
 # Artwork
 
 The source code in this repository is licensed under the [MIT License](LICENSE).
-The artwork below was made for the MoneyWorks and Pengar jobbar sites that the
+The artwork below was made for the Money Working and Pengar jobbar sites that the
 owner hosts at `moneyworks.finance` and `pengarjobbar.nu`. It is **not** covered
 by the MIT License. It is licensed under
 [Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)](https://creativecommons.org/licenses/by-nc/4.0/):
@@ -11,19 +11,22 @@ written permission.
 
 The Creative Commons license does not grant trademark rights. The names and
 marks identify the owner's sites, so don't present your copy or your work as
-MoneyWorks or Pengar jobbar.
+Money Working or Pengar jobbar.
 
 ## What is not covered
 
-- The MoneyWorks (M/W) and Pengar jobbar (PJ) marks, wherever they appear:
-  - `web/public/moneyworks-mark.svg`
-  - `web/public/pengar-jobbar-mark.svg`
+- The Money Working / Pengar jobbar mark (an M whose rising stroke breaks out
+  into an arrow), wherever it appears:
+  - `web/public/brand-icon.svg`
   - `web/src/app/favicon.ico`
   - the mark path data in `web/src/content/brand.ts` (the `paths` and `icon`
     values), and the marks drawn from it
-- The FIRE calculator walkthrough video, its poster image and its subtitles:
-  `web/public/media/fire-demo.mp4`, `fire-demo-poster.webp` and
-  `fire-demo.en.vtt` / `fire-demo.sv.vtt`.
+- The FIRE calculator videos in both languages: the rendered walkthroughs,
+  posters and subtitles in `web/public/media/fire-demo/`, and their sources in
+  `video/` (compositions, narration recordings and scripts, interface captures).
+  The authoring scripts there (`Dockerfile`, `capture.mjs`, `render.sh`) are MIT.
+  Third-party files in `video/` keep their own licenses (GSAP, Manrope,
+  HyperFrames notice).
 
 ## What stays MIT
 
@@ -37,6 +40,6 @@ mark data it draws is artwork. The self-hosted Manrope font in
 
 You may fork and self-host the code. Before you publish a site, replace the
 artwork above with your own, or follow the CC BY-NC terms (non-commercial use
-with credit). Either way, don't present your copy as MoneyWorks or Pengar
+with credit). Either way, don't present your copy as Money Working or Pengar
 jobbar. Swapping it means editing `web/src/content/brand.ts` and the files
 listed above.

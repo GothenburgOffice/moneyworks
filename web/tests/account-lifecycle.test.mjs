@@ -82,7 +82,7 @@ test("the export holds the member's data and nothing that signs in", () => {
     {
       user: {
         id: "u1",
-        name: "MoneyWorks member",
+        name: "Money Working member",
         image: null,
         email: "member@example.test",
         emailVerified: true,
@@ -123,7 +123,7 @@ test("the export holds the member's data and nothing that signs in", () => {
   assert.equal(data.version, 1);
   assert.equal(data.exportedAt, "2026-11-06T09:30:00.000Z");
   assert.equal(data.account.email, "member@example.test");
-  assert.equal(data.account.name, "MoneyWorks member");
+  assert.equal(data.account.name, "Money Working member");
   assert.equal(data.account.image, null);
   assert.equal(data.account.lastSignInAt, null);
   assert.deepEqual(
