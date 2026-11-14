@@ -32,7 +32,7 @@ Financial inputs never leave the browser.
 | [AUTH.md](AUTH.md)                                                 | Accounts, privacy, operator configuration and security boundaries                         |
 | [ACCESSIBILITY.md](ACCESSIBILITY.md)                               | Accessibility commitment, known limitations and how to report a barrier                   |
 | [ARTWORK.md](ARTWORK.md)                                           | Artwork under CC BY-NC 4.0, not MIT (marks, favicon, walkthrough video)                   |
-| [VIDEO.md](VIDEO.md)                                               | How the walkthrough and teaser videos are made and rebuilt                                |
+| [VIDEO.md](VIDEO.md)                                               | How the site's videos work and the rules they follow                                      |
 | [SECURITY.md](SECURITY.md)                                         | Supported versions and how to report a vulnerability privately                            |
 | [CONTRIBUTING.md](CONTRIBUTING.md)                                 | Which outside pull requests are reviewed, and how                                         |
 | [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)                           | Expected behavior and how to report it                                                    |
