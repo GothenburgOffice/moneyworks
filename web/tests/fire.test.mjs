@@ -12,6 +12,11 @@ import {
   projectSavings,
   monthlySavingToTarget,
 } from "../src/features/fire/model.ts";
+import {
+  isDefaultFireInputs,
+  parseFireInputs,
+  serializeFireInputs,
+} from "../src/features/fire/stored-inputs.ts";
 
 const base = {
   goal: "portfolio",
@@ -384,4 +389,57 @@ test("200 drawdown scenarios agree with independent backward monthly funding", (
     near(required, needed);
     assert.equal(projectRetirement(plan, 55, required).funded, true, `scenario ${i}`);
   }
+});
+
+test("stored FIRE inputs round-trip and reject anything malformed", () => {
+  const fields = { spending: "", portfolio: "", currentAge: "35" };
+  const pension = {
+    id: "pension-1",
+    kind: "employer",
+    name: "Work",
+    monthly: 800,
+    startAge: 65,
+    endAge: 95,
+    indexed: true,
+  };
+  const inputs = {
+    goal: "age",
+    strategy: "preserve",
+    values: { spending: "2400", portfolio: "125000", currentAge: "40" },
+    pensions: [pension],
+  };
+  const parse = (raw) => parseFireInputs(raw, fields, isValidPension);
+  assert.deepEqual(parse(serializeFireInputs(inputs)), inputs);
+
+  // Unknown fields are dropped and missing ones take their default.
+  assert.deepEqual(
+    parse(JSON.stringify({ ...inputs, values: { spending: "2400", extra: "x" } })).values,
+    { spending: "2400", portfolio: "", currentAge: "35" },
+  );
+
+  for (const raw of [
+    null,
+    "",
+    "not json",
+    "null",
+    "[]",
+    JSON.stringify({ ...inputs, goal: "other" }),
+    JSON.stringify({ ...inputs, strategy: 1 }),
+    JSON.stringify({ ...inputs, values: null }),
+    JSON.stringify({ ...inputs, values: { spending: 2400 } }),
+    JSON.stringify({ ...inputs, values: { spending: "1".repeat(41) } }),
+    JSON.stringify({ ...inputs, pensions: "none" }),
+    JSON.stringify({ ...inputs, pensions: [{ ...pension, startAge: 96 }] }),
+    JSON.stringify({ ...inputs, pensions: [{ ...pension, kind: "lottery" }] }),
+  ])
+    assert.equal(parse(raw), null, String(raw));
+
+  assert.equal(
+    isDefaultFireInputs(
+      { goal: "portfolio", strategy: "drawdown", values: fields, pensions: [] },
+      fields,
+    ),
+    true,
+  );
+  assert.equal(isDefaultFireInputs(inputs, fields), false);
 });

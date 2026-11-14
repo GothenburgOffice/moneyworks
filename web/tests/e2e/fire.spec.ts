@@ -202,6 +202,61 @@ for (const locale of locales) {
       await expect(row).toHaveCount(0);
     });
 
+    test("inputs survive reloads and in-site navigation, not a new tab or Clear", async ({
+      page,
+      context,
+    }) => {
+      // Several page loads in one test.
+      test.slow();
+      let calculator = await openCalculator(page);
+      await calculator.getByLabel(copy.ageGoal).check();
+      await calculator.getByLabel(copy.spending).fill("2400");
+      await calculator.getByLabel(copy.portfolio).fill("125000");
+      await calculator.getByRole("button", { name: copy.addEmployer }).click();
+      const row = () => calculator.locator("[data-pension-list] [data-pension-id]");
+      await row().getByLabel(copy.monthlyPayout).fill("800");
+      await row().getByLabel(copy.startAge).fill("65");
+      await row().getByRole("button", { name: copy.savePension }).click();
+      await expect(row().locator("[data-pension-summary]")).toBeVisible();
+      // An unsaved draft is not kept.
+      await calculator.getByRole("button", { name: copy.addGovernment }).click();
+
+      const expectRestored = async () => {
+        await expect(calculator.getByLabel(copy.ageGoal)).toBeChecked();
+        await expect(calculator.getByLabel(copy.spending)).toHaveValue("2400");
+        await expect(calculator.getByLabel(copy.portfolio)).toHaveValue("125000");
+        await expect(row()).toHaveCount(1);
+        await expect(row().locator("[data-pension-summary-amount]")).toHaveText(
+          `${money(locale, 800, copy.units)} ${copy.perMonth}`,
+        );
+      };
+      await page.reload();
+      calculator = await openCalculator(page);
+      await expectRestored();
+
+      await page.goto(`/${locale}`);
+      await page.goBack();
+      calculator = page.locator("[data-fire]");
+      await expect(calculator.getByRole("button", { name: copy.calculate })).toBeEnabled();
+      await expectRestored();
+
+      // sessionStorage belongs to the tab: a new one starts empty.
+      const other = await context.newPage();
+      await other.goto(`/${locale}/tools/fire`);
+      const fresh = other.locator("[data-fire]");
+      await expect(fresh.getByRole("button", { name: copy.calculate })).toBeEnabled();
+      await expect(fresh.getByLabel(copy.spending)).toHaveValue("");
+      await other.close();
+
+      await calculator.getByRole("button", { name: copy.reset }).click();
+      await page.reload();
+      calculator = await openCalculator(page);
+      await expect(calculator.getByLabel(copy.portfolioGoal)).toBeChecked();
+      await expect(calculator.getByLabel(copy.spending)).toHaveValue("");
+      await expect(row()).toHaveCount(0);
+      expect(await page.evaluate(() => sessionStorage.length)).toBe(0);
+    });
+
     test("optional amounts start blank and lose redundant zeros on blur", async ({ page }) => {
       const calculator = await openCalculator(page);
       const portfolio = calculator.getByLabel(copy.portfolio);
