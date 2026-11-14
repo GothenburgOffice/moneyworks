@@ -95,6 +95,11 @@ signed-in admin. It holds:
 - Mail: SMTP host, port, implicit TLS, user, password and from address. External
   SMTP must use TLS; user and password must be present or absent together. The
   password is write-only: the page shows only whether it is set and readable.
+  "Send test email" sends a short message with the saved settings to any address
+  typed in (to compare SPF, DKIM and spam filtering at different providers) and
+  waits for the server's answer. The page shows a fixed result (sent, wrong
+  credentials, no connection, address refused, other failure), never the SMTP
+  server's text, and the address stays out of the URL.
 - Privacy controller name and contact email: real publishable details, not a
   fictitious operator or an inferred personal email.
 - Google sign-in: the OAuth client ID and secret (see [Google sign-in](#google-sign-in)).
@@ -109,7 +114,8 @@ The devcontainer forces registration on and seeds clearly fake privacy details
 own database while none are stored; the account test fixture does the same.
 Neither value is ever read from `.env`, and no production stack sets them.
 
-Test delivery through the configured SMTP service before enabling public signup.
+Test delivery through the configured SMTP service (the test button at `/admin`)
+before enabling public signup.
 The local fixture captures mail only; no real verification/recovery emails were
 sent during tests. Delivery failures are logged without addresses, passwords or
 token URLs. The owner-hosted process must remain running for asynchronous delivery;

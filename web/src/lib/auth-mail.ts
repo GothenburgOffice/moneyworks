@@ -49,16 +49,10 @@ export function queueAccountEmail(to: string, url: string, kind: AccountEmailKin
     .catch(() => console.error("Account email delivery failed; check the SMTP service."));
 }
 
-async function sendAccountEmail(
-  config: Awaited<ReturnType<typeof loadAccountConfig>>,
-  to: string,
-  url: string,
-  kind: AccountEmailKind,
-  locale: string,
-) {
+type MailConfig = Awaited<ReturnType<typeof loadAccountConfig>>;
+
+async function deliver(config: MailConfig, to: string, subject: string, text: string) {
   if (!config.configured) throw new Error("Mail is not configured.");
-  const sv = locale === "sv";
-  const [subject, intro] = texts[kind][sv ? "sv" : "en"];
   const transport = nodemailer.createTransport({
     host: config.mailHost,
     port: config.mailPort,
@@ -74,11 +68,54 @@ async function sendAccountEmail(
       from: config.mailFrom,
       to,
       subject,
-      text: `${intro}\n\n${url}\n\n${sv ? "Om du inte begärde detta kan du ignorera mejlet." : "If you did not request this, you can ignore this email."}`,
+      text,
       disableFileAccess: true,
       disableUrlAccess: true,
     });
   } finally {
     transport.close();
+  }
+}
+
+async function sendAccountEmail(
+  config: MailConfig,
+  to: string,
+  url: string,
+  kind: AccountEmailKind,
+  locale: string,
+) {
+  const sv = locale === "sv";
+  const [subject, intro] = texts[kind][sv ? "sv" : "en"];
+  await deliver(
+    config,
+    to,
+    subject,
+    `${intro}\n\n${url}\n\n${sv ? "Om du inte begärde detta kan du ignorera mejlet." : "If you did not request this, you can ignore this email."}`,
+  );
+}
+
+// The /admin test button: sends with the saved settings and waits for the SMTP
+// server's answer. The result is a fixed category, never the server's own text,
+// so nothing from the SMTP conversation reaches the page or the URL.
+export type TestMailResult =
+  "testSent" | "testNotConfigured" | "testAuth" | "testConnection" | "testRejected" | "testFailed";
+
+export async function sendTestEmail(config: MailConfig, to: string): Promise<TestMailResult> {
+  if (!config.configured) return "testNotConfigured";
+  try {
+    await deliver(
+      config,
+      to,
+      "Money Working test email",
+      "This is a test email from the site settings page. Mail delivery works.",
+    );
+    return "testSent";
+  } catch (error) {
+    const code = (error as { code?: unknown }).code;
+    if (code === "EAUTH" || code === "ENOAUTH") return "testAuth";
+    if (["ECONNECTION", "ETIMEDOUT", "ESOCKET", "EDNS", "ETLS", "EPROTOCOL"].includes(String(code)))
+      return "testConnection";
+    if (code === "EENVELOPE" || code === "EMESSAGE") return "testRejected";
+    return "testFailed";
   }
 }

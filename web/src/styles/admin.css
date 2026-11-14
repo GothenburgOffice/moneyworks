@@ -44,6 +44,19 @@
 .admin-inline {
   margin-bottom: 16px;
 }
+.admin-test-mail {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+.admin-test-mail p {
+  margin: 0;
+}
+.admin-test-mail label {
+  justify-self: stretch;
+}
 .admin:has(.admin-users) {
   max-width: 1120px;
 }

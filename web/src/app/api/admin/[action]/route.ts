@@ -10,7 +10,8 @@ import {
   type UserAction,
 } from "@/features/account/lifecycle";
 import { encryptionReady } from "@/lib/secrets";
-import { loadAccountSettings, saveSettings } from "@/lib/site-settings";
+import { sendTestEmail } from "@/lib/auth-mail";
+import { loadAccountConfig, loadAccountSettings, saveSettings } from "@/lib/site-settings";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -19,7 +20,8 @@ export const dynamic = "force-dynamic";
 // size and type checks as the account forms; admins sign in and out through those.
 export async function POST(request: Request, { params }: { params: Promise<{ action: string }> }) {
   const { action } = await params;
-  if (action !== "settings" && action !== "users") return new Response(null, { status: 404 });
+  if (action !== "settings" && action !== "users" && action !== "testmail")
+    return new Response(null, { status: 404 });
   const config = accountConfig();
   if (!config.ready) return new Response(config.problem, { status: 503 });
   const origin = request.headers.get("origin") || "";
@@ -59,6 +61,13 @@ export async function POST(request: Request, { params }: { params: Promise<{ act
     const response = NextResponse.redirect(url, 303);
     response.headers.set("Cache-Control", "no-store");
     return response;
+  }
+
+  if (action === "testmail") {
+    // Sends with the saved settings (fresh, not the cache); the address stays out of the URL.
+    const to = field("testEmail");
+    if (!validEmail(to)) return redirect("testInvalid");
+    return redirect(await sendTestEmail(await loadAccountConfig(true), to));
   }
 
   const settings = {

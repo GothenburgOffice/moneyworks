@@ -14,6 +14,14 @@ const messages: Record<string, string> = {
     "Not saved: set SETTINGS_ENCRYPTION_KEY (32 random bytes, base64) in .env and restart to store the SMTP password or Google client secret.",
   registrationBlocked:
     "Not saved: public registration needs working mail and real privacy details first.",
+  testSent: "Test email sent. Check the inbox (and the spam folder).",
+  testInvalid: "No test email sent: enter a valid address.",
+  testNotConfigured: "No test email sent: save working mail settings first.",
+  testAuth: "Test email failed: the SMTP server rejected the user or password.",
+  testConnection:
+    "Test email failed: could not connect to the SMTP server. Check the host, port and TLS setting.",
+  testRejected: "Test email failed: the server refused the from or to address.",
+  testFailed: "Test email failed. Check the settings and the SMTP provider's dashboard.",
 };
 
 export default async function AdminPage({
@@ -117,6 +125,26 @@ export default async function AdminPage({
             From address
             <input name="mailFrom" type="email" defaultValue={settings.mailFrom} />
           </label>
+          <div className="admin-test-mail">
+            <p>
+              Send a test email with the saved settings (save changes first) to any address, for
+              example to check SPF, DKIM and spam filtering at different providers.
+            </p>
+            <label>
+              Send test to
+              <input
+                form="admin-test-mail"
+                name="testEmail"
+                type="email"
+                required
+                autoComplete="email"
+                placeholder="name@example.com"
+              />
+            </label>
+            <button type="submit" form="admin-test-mail" disabled={!account.configured}>
+              Send test email
+            </button>
+          </div>
         </fieldset>
         <fieldset>
           <legend>Google sign-in (optional)</legend>
@@ -175,6 +203,8 @@ export default async function AdminPage({
         </fieldset>
         <button type="submit">Save</button>
       </form>
+      {/* Fields above join this form through their form attribute; forms can't nest. */}
+      <form id="admin-test-mail" method="post" action="/api/admin/testmail" hidden />
     </>
   );
 }
