@@ -18,8 +18,8 @@ Issues labelled [`decision`](https://github.com/GothenburgOffice/moneyworks/issu
 are the decision log: open ones need answering before dependent work starts,
 closed ones record what was decided.
 
-Pages are server-rendered HTML (the hub and tool pages are pre-rendered and
-never read the database) and their content is readable without JavaScript; a small script adds theme switching, and tools such as the FIRE
+Pages are server-rendered HTML, so their content is readable without JavaScript
+and by search engines; a small script adds theme switching, and tools such as the FIRE
 calculator run as React client components that need JavaScript.
 Financial inputs never leave the browser.
 
