@@ -37,21 +37,37 @@ for (const locale of locales) {
       await expect(page).toHaveURL(new RegExp(`/${locale}/account`));
       await signIn(page, locale, email);
       await expect(page.getByRole("heading", { level: 1 })).toHaveText(copy.futureTitle);
-      await expect(page.getByText(email)).toBeVisible();
+      await expect(page.locator("main").getByText(email)).toBeVisible();
       await expect(page.getByText(copy.verified)).toBeVisible();
 
       // The language link keeps the account view, and the session.
-      await page.locator(`[data-locale-link][hreflang="${other}"]`).click();
+      await page.locator(`.language-switcher a[hreflang="${other}"]`).click();
       await expect(page).toHaveURL(new RegExp(`/${other}/account\\?view=login`));
       await expect(page.getByRole("heading", { level: 1 })).toHaveText(
         getAccountCopy(other).futureTitle,
       );
-      await page.goBack();
 
-      await page.getByRole("button", { name: copy.logout }).click();
+      // A cached public page asks for the member after load and shows the account menu,
+      // in the theme picked on the account page.
+      await page.goto(`/${locale}/account`);
+      await page.locator("[data-theme-toggle]").click();
+      const theme = await page.locator("html").getAttribute("data-theme");
+      await page.goto(`/${locale}/tools/fire`);
+      await expect(page.locator("html")).toHaveAttribute("data-theme", theme ?? "");
+      const menu = page.getByRole("button", { name: copy.accountMenu });
+      await menu.click();
+      const panel = page.locator(".account-menu-panel");
+      await expect(panel.getByText(email)).toBeVisible();
+      await expect(panel.getByRole("link", { name: copy.admin })).toHaveCount(0);
+      await panel.getByRole("link", { name: copy.accountSettings }).click();
+      await expect(page.getByRole("heading", { level: 1 })).toHaveText(copy.futureTitle);
+
+      await page.getByRole("button", { name: copy.accountMenu }).click();
+      await page.locator(".account-menu-panel").getByRole("button", { name: copy.logout }).click();
       await expect(page.getByRole("heading", { level: 1 })).toHaveText(copy.loginTitle);
-      await page.reload();
-      await expect(page.getByRole("button", { name: copy.login })).toBeVisible();
+      await page.goto(`/${locale}`);
+      await expect(page.locator("[data-account-control]")).toHaveAccessibleName(copy.login);
+      await expect(page.getByRole("button", { name: copy.accountMenu })).toHaveCount(0);
       await expect(page.getByText(email)).toHaveCount(0);
     });
 
