@@ -70,7 +70,7 @@ const en = {
   calculate: "Calculate plan",
   reset: "Clear amounts",
   privacy:
-    "Calculated in this page. Save accepts a payout for the current page only. Inputs are not sent, stored in your browser or added to your account. Reloading or changing language clears the plan.",
+    "Calculated in this page and never sent to the site. This browser tab keeps your inputs while you use the site, so reloading or visiting another page does not lose them. Closing the tab, or Clear amounts, removes them. A payout you are editing is kept once you save it.",
   noJS: "JavaScript is needed to calculate. The method and assumptions remain readable without it.",
   waiting: "Enter your spending and select Calculate plan.",
   changed: "Inputs changed. Calculate again to update the result.",
@@ -216,7 +216,7 @@ const sv: FireCopy = {
   calculate: "Beräkna planen",
   reset: "Rensa belopp",
   privacy:
-    "Beräknas på denna sida. Spara godkänner en utbetalning bara för den aktuella sidan. Uppgifterna skickas inte, lagras inte i webbläsaren och läggs inte till på kontot. Planen rensas vid omladdning eller språkbyte.",
+    "Beräknas på denna sida och skickas aldrig till webbplatsen. Den här webbläsarfliken behåller uppgifterna medan du använder webbplatsen, så de finns kvar om du laddar om eller besöker en annan sida. När du stänger fliken, eller väljer Rensa belopp, tas de bort. En utbetalning som du redigerar behålls när du har sparat den.",
   noJS: "JavaScript behövs för beräkningen. Metod och antaganden går att läsa utan det.",
   waiting: "Ange dina utgifter och välj Beräkna planen.",
   changed: "Uppgifterna ändrades. Beräkna igen för ett uppdaterat resultat.",
