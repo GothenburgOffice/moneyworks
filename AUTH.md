@@ -31,7 +31,14 @@ calculator is client-local and does not save inputs to an account.
 
 The `/en` and `/sv` homepage and tool pages remain SSG with metadata and native navigation.
 Reading account cookies is confined to the separate dynamic account route and
-auth endpoints. The header's generic Account link does not make home dynamic.
+the API endpoints. Public pages are cached for everyone and never read the session
+on the server. The header's account control is a client component: the server
+renders a plain Log in link, and after load the browser calls
+`GET /api/account/session`, which answers `{ signedIn, email, isAdmin }` with
+`Cache-Control: no-store` and nothing else from the session (no token, IP or
+browser details). Signed-in members get a small menu with Account settings, Admin
+for admins and a Log out form posting to `/api/account/logout`. Any failure,
+including a database outage (503), answers signed out, so the page still works.
 Account HTML is private/no-store, noindex and anti-framing. It overrides the
 site-wide `same-origin` referrer policy with `strict-origin`: recovery URLs carry
 tokens in the query, and `same-origin` would send the full URL as `Referer` to the
@@ -226,7 +233,9 @@ the user row before it deletes sessions, so one of the two always catches it.
 The application uses a necessary-only profile, not a fake consent banner:
 the footer contains a small persistent explanation plus native Cookies & privacy
 disclosure. No accept-all, pre-ticked consent or consent-dismissal cookie exists.
-Locale cookies are disabled; language and theme use URLs. Better Auth telemetry is off.
+Locale cookies are disabled; the language is in the URL. A theme the visitor picks
+is kept in `localStorage` (`theme`), a preference they asked for that never leaves
+the browser; nothing is stored until they pick one. Better Auth telemetry is off.
 Anonymous English and Swedish pages were checked to set no cookies.
 
 Tools may keep what a visitor types in `sessionStorage` for that tab (the FIRE

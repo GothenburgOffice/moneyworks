@@ -5,9 +5,9 @@ import type { Locale } from "./site";
 const en = {
   privacy: "Cookies & privacy",
   privacyTitle: "Your account. Your information.",
-  cookieShort: "Essential sign-in cookies only. No analytics or advertising.",
+  cookieShort: "Sign-in cookies and settings kept in your browser. No analytics or advertising.",
   cookieDetail:
-    "Money Working does not set analytics, advertising or tracking cookies. Sign-in uses necessary authentication and security cookies. There is no “accept all” step and browsing does not require an account.",
+    "Money Working does not set analytics, advertising or tracking cookies. Sign-in uses necessary authentication and security cookies. If you pick a light or dark theme, your browser remembers the choice in local storage; it is never sent to us. There is no “accept all” step and browsing does not require an account.",
   cookieLifetime:
     "Sign-in cookies are browser-session cookies by default. A server session expires after 24 hours unless renewed through activity. Logging out revokes the session. Secure deployments use __Host-moneyworks.session_token and __Host-moneyworks.dont_remember; loopback development uses moneyworks-dev equivalents.",
   browserStorage:
@@ -33,9 +33,10 @@ export type PrivacyCopy = { [K in keyof typeof en]: string };
 const sv: PrivacyCopy = {
   privacy: "Kakor och integritet",
   privacyTitle: "Ditt konto. Dina uppgifter.",
-  cookieShort: "Bara nödvändiga inloggningskakor. Ingen analys eller reklam.",
+  cookieShort:
+    "Inloggningskakor och inställningar som sparas i din webbläsare. Ingen analys eller reklam.",
   cookieDetail:
-    "Pengar jobbar använder inte analys-, reklam- eller spårningskakor. Inloggning använder nödvändiga autentiserings- och säkerhetskakor. Det finns inget ”godkänn alla”-steg och du behöver inget konto för att läsa sidan.",
+    "Pengar jobbar använder inte analys-, reklam- eller spårningskakor. Inloggning använder nödvändiga autentiserings- och säkerhetskakor. Om du väljer ljust eller mörkt tema sparar webbläsaren valet i sin lokala lagring; det skickas aldrig till oss. Det finns inget ”godkänn alla”-steg och du behöver inget konto för att läsa sidan.",
   cookieLifetime:
     "Inloggningskakor är normalt sessionskakor. Serverns session löper ut efter 24 timmar om den inte förnyas vid aktivitet. Utloggning återkallar sessionen. Säkra installationer använder __Host-moneyworks.session_token och __Host-moneyworks.dont_remember; lokal utveckling använder motsvarigheter med moneyworks-dev.",
   browserStorage:
