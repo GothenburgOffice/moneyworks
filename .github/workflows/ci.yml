@@ -178,7 +178,12 @@ jobs:
         run: npx playwright install --with-deps --only-shell chromium
       - name: Browser tests in English and Swedish, desktop and mobile
         working-directory: web
-        run: TEST_BASE_URL="$BASE_URL" npm run test:e2e
+        # The dev server compiles a route on its first request, and that compile makes
+        # Fast Refresh reload open pages. Compile the route every page fetches after
+        # load (the header's session check) first, so no reload lands mid-test.
+        run: |
+          curl --silent --show-error --output /dev/null --max-time 120 "$BASE_URL/api/account/session"
+          TEST_BASE_URL="$BASE_URL" npm run test:e2e
       - name: Upload browser test report
         if: failure()
         uses: actions/upload-artifact@v7.0.2
