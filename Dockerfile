@@ -2,7 +2,7 @@
 # One Dockerfile for every stack; web/ is the build context:
 #   docker build --file Dockerfile --target production --tag moneyworks web
 # Node 22 is the oldest supported line, so newer-only APIs fail in development.
-FROM node:22.23.4-trixie-slim AS base
+FROM node:22.23.5-trixie-slim AS base
 # Prisma's migration engine links against OpenSSL.
 RUN apt-get update \
     && apt-get install --yes --no-install-recommends ca-certificates openssl \
@@ -110,7 +110,7 @@ FROM dependencies AS migration-tools
 RUN npm query "#prisma, #prisma *" > /tmp/prisma-cli.json \
     && node -e 'const fs = require("node:fs"); for (const { location } of JSON.parse(fs.readFileSync("/tmp/prisma-cli.json"))) fs.cpSync(location, `/migrate/${location}`, { recursive: true });'
 
-FROM node:22.23.4-trixie-slim AS production
+FROM node:22.23.5-trixie-slim AS production
 RUN apt-get update \
     && apt-get install --yes --no-install-recommends openssl \
     && rm -rf /var/lib/apt/lists/*
