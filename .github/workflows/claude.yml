@@ -74,10 +74,15 @@ jobs:
           # off unless they are named in --allowedTools. A search query leaves the runner, so it can
           # carry a short piece of repository text to the search service; WebFetch stays off, since a
           # fetched URL could carry far more, to any host.
+          # Permission mode: pinned to acceptEdits. From v1.0.273 the action runs mention sessions
+          # in auto mode, where a tool that is not listed can still be approved; acceptEdits keeps
+          # --allowedTools a strict list. WebFetch is denied by name as well, so the boundary does
+          # not depend on the mode.
           claude_args: >-
             --model claude-sonnet-5-5
+            --permission-mode acceptEdits
             --allowedTools "WebSearch"
-            --disallowedTools "Bash,Edit,MultiEdit,Write,NotebookEdit,Read(./.git/**),Read(//proc/**)"
+            --disallowedTools "Bash,Edit,MultiEdit,Write,NotebookEdit,WebFetch,Read(./.git/**),Read(//proc/**)"
 
       # ---- API-key path: the same job done with `claude -p` ----
       # What the action did for us is done by these steps: refuse an author without write
