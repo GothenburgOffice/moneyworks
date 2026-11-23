@@ -59,6 +59,9 @@
     "tailwindcss": "4.3.5",
     "typescript": "6.0.3"
   },
+  "overrides": {
+    "effect": "3.22.5"
+  },
   "allowScripts": {
     "prisma@7.10.1": true,
     "@swc/core@1.16.20": true,
